@@ -215,6 +215,38 @@ a { color: inherit; }
 .slot figcaption { font: 400 .6875rem/1.6 var(--mono); }
 .slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
+/* Reel: a vertical video that plays on scroll */
+.reel { width: 100%; max-width: 360px; justify-self: center; }
+.reel figcaption { margin-top: 10px; font-size: .9375rem; }
+.reel__frame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  background: var(--black-heat);
+}
+.reel video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.reel__sound {
+  position: absolute; right: 10px; bottom: 10px;
+  padding: 8px 12px;
+  border: 0;
+  background: var(--black-heat);
+  color: var(--white-heat);
+  font: 600 .6875rem/1 var(--mono);
+  cursor: pointer;
+}
+.reel__sound:focus-visible { outline-color: var(--white-heat); outline-offset: -3px; }
+
+/* Without a video file: Instagram's embed, zoomed so its video fills the frame
+   and its header and black side bars fall outside. Instagram's inline styles
+   beat margins, so this uses a transform. Its frame also insists on 326px,
+   too wide for the smallest phones. */
+.reel__frame.is-embed .instagram-media { margin: 0 !important; min-width: 0 !important; width: 100% !important; }
+.reel__frame.is-embed iframe {
+  min-width: 0 !important;
+  transform-origin: 50% 0;
+  transform: scale(1.42) translateY(-54px);
+}
+
 /* KM 4: log */
 .log { margin-top: clamp(32px, 5vw, 64px); display: grid; gap: clamp(36px, 5vw, 64px); }
 .log__row {

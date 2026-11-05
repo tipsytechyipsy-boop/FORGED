@@ -90,3 +90,62 @@ if (upcoming.length === 0) {
 } else if (events[0].classList.contains('is-past')) {
   nextRun.textContent = upcoming[0].toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '') + '. Details coming soon.';
 }
+
+/* ---------- Reels: play each video while it's on screen ---------- */
+function loadInstagramEmbeds() {
+  if (window.instgrm) {
+    window.instgrm.Embeds.process();
+  } else if (!document.getElementById('instagram-embed')) {
+    const script = document.createElement('script');
+    script.id = 'instagram-embed';
+    script.src = 'https://www.instagram.com/embed.js';
+    script.async = true;
+    document.body.append(script);
+  }
+}
+
+function startReel(reel) {
+  const frame = reel.querySelector('.reel__frame');
+  const video = reel.querySelector('video');
+  const sound = reel.querySelector('.reel__sound');
+
+  // No video file yet, so fall back to Instagram's embed (which can't autoplay).
+  function showEmbed() {
+    frame.classList.add('is-embed');
+    frame.innerHTML = '';
+    const embed = document.createElement('blockquote');
+    embed.className = 'instagram-media';
+    embed.dataset.instgrmPermalink = reel.dataset.permalink;
+    embed.dataset.instgrmVersion = '14';
+    frame.append(embed);
+    loadInstagramEmbeds();
+  }
+  // The file may have already failed before this script ran.
+  if (video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+    showEmbed();
+    return;
+  }
+  reel.querySelector('source').addEventListener('error', showEmbed);
+
+  sound.addEventListener('click', () => {
+    video.muted = !video.muted;
+    sound.textContent = video.muted ? 'Sound on' : 'Sound off';
+    sound.setAttribute('aria-pressed', String(!video.muted));
+  });
+
+  // People who ask for less motion get normal controls instead of autoplay.
+  if (reducedMotion) {
+    video.controls = true;
+    sound.hidden = true;
+    return;
+  }
+  new IntersectionObserver((entries) => {
+    // Fast scrolling can batch several changes; only the latest one counts.
+    if (entries[entries.length - 1].isIntersecting) {
+      video.play().catch(() => { video.controls = true; });
+    } else {
+      video.pause();
+    }
+  }, { threshold: 0.5 }).observe(video);
+}
+document.querySelectorAll('.reel').forEach(startReel);

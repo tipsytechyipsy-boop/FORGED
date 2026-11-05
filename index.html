@@ -124,9 +124,15 @@
               <p>Our first social run, and Calangute's first-ever 5K community run. Good music at sunrise, with MC Sammy on the mic.</p>
               <p class="log__where">Calangute, Goa</p>
             </div>
-            <figure class="slot">
-              <figcaption>Photo needed<br>calangute-group.jpg</figcaption>
-              <img src="assets/photos/calangute-group.jpg" alt="Runners gathered after the 5K Social Run in Calangute" loading="lazy" onerror="this.remove()">
+            <!-- Each reel plays its assets/video file on scroll. Until that file exists, main.js shows the Instagram embed. -->
+            <figure class="reel" data-permalink="https://www.instagram.com/reel/De7T_1iu7zw/">
+              <div class="reel__frame">
+                <video muted loop playsinline preload="metadata" aria-label="FORGED's first social run in Calangute">
+                  <source src="assets/video/first-social-run.mp4" type="video/mp4">
+                </video>
+                <button class="reel__sound" type="button" aria-pressed="false">Sound on</button>
+              </div>
+              <figcaption><a class="link" href="https://www.instagram.com/reel/De7T_1iu7zw/" target="_blank" rel="noopener">Watch on Instagram</a></figcaption>
             </figure>
           </article>
           <article class="log__row">
@@ -136,9 +142,14 @@
               <p>A Halloween social run with Ninety7, where the only pacers were ghosts. Costumes, coffee, an ice bath and a spooky little treat.</p>
               <p class="log__where">FORGED × Ninety7</p>
             </div>
-            <figure class="slot">
-              <figcaption>Photo needed<br>run-for-treats.jpg</figcaption>
-              <img src="assets/photos/run-for-treats.jpg" alt="Runners in Halloween costumes at Run for Treats" loading="lazy" onerror="this.remove()">
+            <figure class="reel" data-permalink="https://www.instagram.com/reel/DfJi7iSOjgl/">
+              <div class="reel__frame">
+                <video muted loop playsinline preload="metadata" aria-label="Run for Treats, FORGED's Halloween social run">
+                  <source src="assets/video/run-for-treats.mp4" type="video/mp4">
+                </video>
+                <button class="reel__sound" type="button" aria-pressed="false">Sound on</button>
+              </div>
+              <figcaption><a class="link" href="https://www.instagram.com/reel/DfJi7iSOjgl/" target="_blank" rel="noopener">Watch on Instagram</a></figcaption>
             </figure>
           </article>
         </div>
@@ -183,6 +194,5 @@
     <a class="watch__join" href="https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t" target="_blank" rel="noopener">Join</a>
   </aside>
 
-  <script src="main.js"></script>
-</body>
+  <script src="main.js"></script></body>
 </html>
