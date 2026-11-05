@@ -218,6 +218,372 @@ function runPreloader(onReveal) {
 }
 
 
+/* ---------- Molten wordmark: touch the metal and it heats, sags, sparks and cools ---------- */
+function startMolten() {
+  const hero = document.getElementById('hero');
+  const mark = document.querySelector('.ingot .wordmark');
+  const hint = document.getElementById('ingot-hint');
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const between = (min, max) => min + Math.random() * (max - min);
+
+  // Heat lives on a small grid that the browser stretches smoothly over the
+  // letters. The wordmark's mask keeps it on the metal, and it costs very little.
+  const W = 192;
+  const H = 31;
+  const glow = document.createElement('canvas');
+  glow.className = 'molten__glow';
+  glow.width = W;
+  glow.height = H;
+  glow.setAttribute('aria-hidden', 'true');
+  mark.prepend(glow);
+  const glowCtx = glow.getContext('2d');
+  const image = glowCtx.createImageData(W, H);
+  const pixels = new Uint32Array(image.data.buffer);
+  let heat = new Float32Array(W * H);
+  let spare = new Float32Array(W * H);
+
+  // Colour by temperature: dull red, orange, yellow, then white-hot.
+  const STOPS = [
+    [0, 120, 10, 10, 0],
+    [0.1, 163, 20, 26, 0.5],
+    [0.32, 242, 70, 24, 0.92],
+    [0.62, 255, 170, 40, 1],
+    [0.92, 255, 240, 190, 1],
+    [1, 255, 255, 245, 1],
+  ];
+  const ramp = new Uint32Array(256);
+  ramp.forEach((_, i) => {
+    const t = i / 255;
+    const to = STOPS.findIndex((stop) => stop[0] >= t);
+    const a = STOPS[Math.max(0, to - 1)];
+    const b = STOPS[to];
+    const mix = b === a ? 0 : (t - a[0]) / (b[0] - a[0]);
+    const channel = (n) => a[n] + (b[n] - a[n]) * mix;
+    ramp[i] = ((Math.round(channel(4) * 255) << 24) | (Math.round(channel(3)) << 16) | (Math.round(channel(2)) << 8) | Math.round(channel(1))) >>> 0;
+  });
+
+  // A soft noise tile that scrolls through the heat, so it churns like liquid.
+  const NOISE_H = 64;
+  let noise = Float32Array.from({ length: W * NOISE_H }, () => Math.random());
+  for (let pass = 0; pass < 10; pass++) {
+    noise = noise.map((_, i) => {
+      const x = i % W;
+      const y = (i - x) / W;
+      return (noise[i] * 2 + noise[y * W + (x + 1) % W] + noise[y * W + (x + W - 1) % W]
+        + noise[((y + 1) % NOISE_H) * W + x] + noise[((y + NOISE_H - 1) % NOISE_H) * W + x]) / 6;
+    });
+  }
+  const noiseMin = Math.min(...noise);
+  const noiseRange = Math.max(...noise) - noiseMin;
+  noise = noise.map((n) => (n - noiseMin) / noiseRange);
+
+  // Where the metal actually is, read from the artwork, so sparks and drips
+  // start on a letter and not in a gap.
+  let metal = new Uint8Array(W * H).fill(1);
+  const lowest = new Uint8Array(W).fill(H - 1);
+  const art = new Image();
+  art.onload = () => {
+    try {
+      const reader = document.createElement('canvas');
+      reader.width = W;
+      reader.height = H;
+      const readerCtx = reader.getContext('2d', { willReadFrequently: true });
+      readerCtx.drawImage(art, 0, 0, W, H);
+      const alpha = readerCtx.getImageData(0, 0, W, H).data;
+      const found = new Uint8Array(W * H);
+      let count = 0;
+      for (let i = 0; i < found.length; i++) {
+        if (alpha[i * 4 + 3] > 110) {
+          found[i] = 1;
+          count++;
+          lowest[i % W] = Math.floor(i / W);
+        }
+      }
+      if (count > found.length * 0.2) metal = found;
+    } catch (error) { /* Without the map, sparks can start anywhere on the word. */ }
+  };
+  art.src = 'assets/wordmark.svg';
+
+  // Sparks and drips can leave the letters, so they get their own layer.
+  const air = document.createElement('canvas');
+  air.className = 'molten__air';
+  air.setAttribute('aria-hidden', 'true');
+  hero.append(air);
+  const airCtx = air.getContext('2d');
+  let airScale = 1;
+  function fitAir() {
+    airScale = Math.min(devicePixelRatio || 1, 1.5);
+    const w = Math.round(hero.clientWidth * airScale);
+    const h = Math.round(hero.clientHeight * airScale);
+    if (air.width !== w || air.height !== h) {
+      air.width = w;
+      air.height = h;
+    }
+  }
+
+  const particles = [];
+  const MAX_PARTICLES = 170;
+
+  function addHeat(cx, cy, radius, amount) {
+    const reach = Math.ceil(radius * 1.6);
+    const falloff = radius * radius * 0.5;
+    for (let y = Math.max(0, Math.floor(cy - reach)); y <= Math.min(H - 1, Math.ceil(cy + reach)); y++) {
+      for (let x = Math.max(0, Math.floor(cx - reach)); x <= Math.min(W - 1, Math.ceil(cx + reach)); x++) {
+        const distance = (x - cx) ** 2 + (y - cy) ** 2;
+        const i = y * W + x;
+        heat[i] = Math.min(1, heat[i] + amount * Math.exp(-distance / falloff));
+      }
+    }
+  }
+
+  function throwSparks(clientX, clientY, count, aimX, aimY) {
+    const from = hero.getBoundingClientRect();
+    for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
+      const life = between(0.3, 0.85);
+      particles.push({
+        drip: false,
+        x: clientX - from.left,
+        y: clientY - from.top,
+        vx: aimX * 0.5 + between(-190, 190),
+        vy: aimY * 0.25 + between(-430, -40),
+        age: 0,
+        life,
+      });
+    }
+  }
+
+  // A brush about a fingertip wide on phones, and a bit more on big screens.
+  function brushSize(box) {
+    return clamp(24 / (box.width / W), 3.5, 6);
+  }
+
+  function burnAlong(from, to, box, withSparks) {
+    const toGrid = (point) => [((point.x - box.left) / box.width) * W, ((point.y - box.top) / box.height) * H];
+    const [x0, y0] = toGrid(from);
+    const [x1, y1] = toGrid(to);
+    const radius = brushSize(box);
+    const steps = clamp(Math.ceil(Math.hypot(x1 - x0, y1 - y0) / (radius * 0.5)), 1, 40);
+    for (let i = 1; i <= steps; i++) {
+      addHeat(x0 + ((x1 - x0) * i) / steps, y0 + ((y1 - y0) * i) / steps, radius, 0.16);
+    }
+    const col = Math.floor(clamp(x1, 0, W - 1));
+    const row = Math.floor(clamp(y1, 0, H - 1));
+    if (withSparks && metal[row * W + col]) {
+      const moved = Math.hypot(to.x - from.x, to.y - from.y);
+      throwSparks(to.x, to.y, Math.min(6, Math.round(moved / 12)), (to.x - from.x) * 18, (to.y - from.y) * 18);
+    }
+    wake();
+  }
+
+  let sweep = null;
+  let scroll = 0;
+  let awake = false;
+  let lastTime = 0;
+  let spareTime = 0;
+  let box = null;
+
+  function step() {
+    scroll = (scroll + 0.35) % NOISE_H;
+    let warm = false;
+    for (let y = 0; y < H; y++) {
+      const above = y > 0 ? (y - 1) * W : y * W;
+      const below = y < H - 1 ? (y + 1) * W : y * W;
+      for (let x = 0; x < W; x++) {
+        const i = y * W + x;
+        const here = heat[i];
+        const left = heat[y * W + Math.max(0, x - 1)];
+        const right = heat[y * W + Math.min(W - 1, x + 1)];
+        const up = heat[above + x];
+        const down = heat[below + x];
+        // Spread out, sag downward like something melting, and cool.
+        let next = here + 0.12 * ((left + right + up + down) / 4 - here);
+        next += 0.05 * (up - next);
+        next = next * 0.985 - 0.0016;
+        if (next < 0.004) next = 0;
+        else warm = true;
+        spare[i] = next;
+      }
+    }
+    [heat, spare] = [spare, heat];
+
+    // Very hot metal at the bottom of a letter lets go of a drop.
+    if (box && particles.length < MAX_PARTICLES) {
+      const from = hero.getBoundingClientRect();
+      for (let tries = 0; tries < 4; tries++) {
+        const x = Math.floor(Math.random() * W);
+        const y = lowest[x];
+        if (heat[y * W + x] > 0.4 && Math.random() < 0.14) {
+          particles.push({
+            drip: true,
+            x: box.left - from.left + ((x + 0.5) / W) * box.width,
+            y: box.top - from.top + ((y + 0.6) / H) * box.height,
+            vx: between(-5, 5),
+            vy: between(10, 40),
+            age: 0,
+            life: between(0.55, 1.05),
+            size: between(1.2, 2.8),
+          });
+        }
+      }
+    }
+    return warm;
+  }
+
+  function paintHeat() {
+    const shift = Math.floor(scroll);
+    for (let y = 0; y < H; y++) {
+      const noiseRow = ((y + NOISE_H - shift) % NOISE_H) * W;
+      for (let x = 0; x < W; x++) {
+        const i = y * W + x;
+        const value = heat[i];
+        if (value === 0) {
+          pixels[i] = 0;
+        } else {
+          // The churn shows most while the metal is mid-heat.
+          const churned = value * (0.82 + 0.36 * noise[noiseRow + x]);
+          pixels[i] = ramp[Math.min(255, Math.floor(churned * 255))];
+        }
+      }
+    }
+    glowCtx.putImageData(image, 0, 0);
+  }
+
+  function paintAir(seconds) {
+    airCtx.setTransform(airScale, 0, 0, airScale, 0, 0);
+    airCtx.clearRect(0, 0, air.width, air.height);
+    airCtx.globalCompositeOperation = 'lighter';
+    airCtx.lineCap = 'round';
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.age += seconds;
+      if (p.age >= p.life) {
+        particles.splice(i, 1);
+        continue;
+      }
+      const left = 1 - p.age / p.life;
+      p.vy += (p.drip ? 780 : 1050) * seconds;
+      p.vx *= p.drip ? 1 : 0.985;
+      p.x += p.vx * seconds;
+      p.y += p.vy * seconds;
+      airCtx.globalAlpha = Math.sqrt(left);
+      const hue = 12 + 36 * left;
+      const light = 48 + 40 * left;
+      if (p.drip) {
+        airCtx.fillStyle = `hsl(${hue} 100% ${light}%)`;
+        airCtx.beginPath();
+        airCtx.ellipse(p.x, p.y, p.size, p.size + Math.min(5, p.vy * 0.012), 0, 0, Math.PI * 2);
+        airCtx.fill();
+      } else {
+        airCtx.strokeStyle = `hsl(${hue} 100% ${light}%)`;
+        airCtx.lineWidth = 0.8 + left;
+        airCtx.beginPath();
+        airCtx.moveTo(p.x, p.y);
+        airCtx.lineTo(p.x - p.vx * 0.022, p.y - p.vy * 0.022);
+        airCtx.stroke();
+      }
+    }
+  }
+
+  function tick(now) {
+    const seconds = Math.min(0.05, (now - lastTime) / 1000);
+    lastTime = now;
+    box = mark.getBoundingClientRect();
+
+    if (sweep) {
+      // Once after the page opens, heat runs through the word on its own.
+      const t = Math.min(1, (now - sweep.start) / 1250);
+      const at = {
+        x: box.left + box.width * (0.02 + 0.96 * t),
+        y: box.top + box.height * (0.52 + 0.26 * Math.sin(t * 15)),
+      };
+      if (sweep.last) burnAlong(sweep.last, at, box, Math.random() < 0.55);
+      sweep.last = at;
+      if (t >= 1) sweep = null;
+    }
+
+    // Same speed on 60 Hz and 120 Hz screens.
+    spareTime += seconds;
+    let warm = true;
+    let stepped = false;
+    while (spareTime >= 1 / 60) {
+      warm = step();
+      stepped = true;
+      spareTime -= 1 / 60;
+    }
+    if (stepped) paintHeat();
+    paintAir(seconds);
+
+    if (warm || particles.length || sweep) {
+      requestAnimationFrame(tick);
+    } else {
+      awake = false;
+      paintHeat();
+      airCtx.clearRect(0, 0, air.width, air.height);
+    }
+  }
+
+  function wake() {
+    if (awake) return;
+    awake = true;
+    fitAir();
+    lastTime = performance.now();
+    requestAnimationFrame(tick);
+  }
+
+  const dismissHint = () => hint.classList.remove('is-on');
+  // No touching once the camera has started flying into the letters.
+  const canTouch = () => !mark.style.transform && !document.getElementById('ice');
+  let last = null;
+
+  mark.addEventListener('pointerdown', (event) => {
+    if (!canTouch()) return;
+    dismissHint();
+    sweep = null;
+    const here = { x: event.clientX, y: event.clientY };
+    last = here;
+    // Pressing is a hammer blow: a big hot spot, a shudder and a shower of sparks.
+    const rect = mark.getBoundingClientRect();
+    addHeat(((here.x - rect.left) / rect.width) * W, ((here.y - rect.top) / rect.height) * H, brushSize(rect) * 1.5, 1.05);
+    throwSparks(here.x, here.y, 26, 0, -120);
+    mark.animate(
+      [{ transform: 'scale(1.012, .975)' }, { transform: 'none' }],
+      { duration: 200, easing: 'cubic-bezier(.2,.7,.2,1)' },
+    );
+    wake();
+  });
+  mark.addEventListener('pointermove', (event) => {
+    if (!canTouch()) return;
+    const here = { x: event.clientX, y: event.clientY };
+    if (last) {
+      dismissHint();
+      sweep = null;
+      burnAlong(last, here, mark.getBoundingClientRect(), true);
+    }
+    last = here;
+  });
+  const letGo = () => { last = null; };
+  mark.addEventListener('pointerleave', letGo);
+  mark.addEventListener('pointercancel', letGo);
+  mark.addEventListener('pointerup', (event) => {
+    if (event.pointerType !== 'mouse') letGo();
+  });
+  addEventListener('scroll', dismissHint, { passive: true });
+  new ResizeObserver(() => { if (awake) fitAir(); }).observe(hero);
+
+  return {
+    // Once the hammering has finished, show what the metal can do.
+    showOff() {
+      setTimeout(() => {
+        if (!canTouch() || last) return;
+        hint.classList.add('is-on');
+        sweep = { start: performance.now(), last: null };
+        wake();
+      }, 1750);
+    },
+  };
+}
+const molten = reducedMotion ? null : startMolten();
+
 /* ---------- The route: a road with a molten trail up to the next run ---------- */
 function setupRoute() {
   const route = document.getElementById('route');
@@ -339,6 +705,7 @@ if (!reducedMotion) {
   runPreloader(() => {
     hammerOut();
     runRoute();
+    molten.showOff();
   });
 }
 
