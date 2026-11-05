@@ -225,6 +225,20 @@ a { color: inherit; }
   text-wrap: balance;
 }
 .hero__line em { font-style: normal; color: var(--orange-to); }
+/* Wide screens are often short, so the headline runs long to leave the road room */
+@media (min-width: 861px) {
+  .hero__body { grid-template-columns: minmax(0, 1fr) minmax(250px, 340px); }
+  .hero__line {
+    max-width: none;
+    font-size: clamp(1.75rem, min(1rem + 3.3vw, 6.6svh), 4rem);
+    text-wrap: wrap;
+  }
+  .hero__line em { display: block; }
+}
+/* Very short screens: shrink the wordmark too, instead of losing the road */
+@media (min-width: 861px) and (max-height: 720px) {
+  .ingot { width: min(100%, 140svh); margin-inline: auto; }
+}
 .hero__aside { display: grid; gap: 10px; justify-items: start; }
 .hero__aside .label { color: var(--orange-to); }
 .hero__next { font-size: 1.125rem; margin-bottom: 10px; }

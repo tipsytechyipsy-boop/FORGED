@@ -243,7 +243,7 @@ function setupRoute() {
     const h = route.clientHeight;
     // Too little room for a road and its labels, so leave it out.
     const compact = w < 600;
-    if (h < (compact ? 170 : 120)) {
+    if (h < (compact ? 170 : 104)) {
       route.classList.add('is-squeezed');
       return;
     }
@@ -286,11 +286,21 @@ function setupRoute() {
     route.classList.add('is-ready');
   }
   layout();
-  let resizeTimer;
-  addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(layout, 100);
-  });
+  // Redraw whenever the space changes, including when web fonts arrive and
+  // the headline changes height, not just when the window is resized.
+  let queuedLayout = false;
+  const redraw = () => {
+    if (queuedLayout) return;
+    queuedLayout = true;
+    requestAnimationFrame(() => {
+      queuedLayout = false;
+      layout();
+    });
+  };
+  const watcher = new ResizeObserver(redraw);
+  watcher.observe(route.parentElement);
+  watcher.observe(route.parentElement.querySelector('.hero__body'));
+  if (document.fonts) document.fonts.ready.then(redraw);
 
   // Burn the trail up to the next stop, lighting each stop as it passes.
   return function runRoute() {
@@ -458,6 +468,13 @@ function startScrollEffects() {
   });
   fitFlight();
   update();
+  // Web fonts can change the hero's height after this first check.
+  if (document.fonts) {
+    document.fonts.ready.then(() => {
+      fitFlight();
+      requestUpdate();
+    });
+  }
 }
 if (!reducedMotion) startScrollEffects();
 
