@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FORGED Run Club | Running Goa differently</title>
-  <meta name="description" content="FORGED is a fitness and running club in Goa, founded by Millennia Rose. Social runs, themed mornings and a community that shows up. Everyone's welcome.">
+  <meta name="description" content="FORGED is a fitness and running club in Goa, founded by Millennia Rose. Social runs, themed experiences and a community that shows up. Everyone's welcome.">
   <meta name="theme-color" content="#0A0809">
   <meta property="og:title" content="FORGED Run Club">
   <meta property="og:description" content="Miles, people & experiences. Running Goa differently.">
@@ -13,13 +13,28 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=Martian+Mono:wght@400;600&family=Schibsted+Grotesk:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="preload" href="assets/ice-block.webp" as="image">
+  <link rel="preload" href="assets/ice-logo.webp" as="image">
   <link rel="stylesheet" href="styles.css">
+  <noscript><style>.ice { display: none; }</style></noscript>
 </head>
 <body>
+  <!-- Preloader: main.js cracks this block of ice open to reveal the logo -->
+  <div class="ice" id="ice" aria-hidden="true">
+    <div class="ice__stage" id="ice-stage">
+      <img class="ice__logo" src="assets/ice-logo.webp" alt="" width="640" height="640">
+      <div class="ice__shards" id="ice-shards"></div>
+      <img class="ice__block" src="assets/ice-block.webp" alt="" width="640" height="640">
+      <svg class="ice__cracks" id="ice-cracks" viewBox="0 0 100 100"></svg>
+    </div>
+    <div class="ice__flash" id="ice-flash"></div>
+  </div>
+
   <a class="skip" href="#next">Skip to the next runs</a>
 
   <!-- KM 0: black heat -->
-  <header class="hero" data-km="0">
+  <div class="hero-pin" id="hero-pin">
+  <header class="hero" data-km="0" id="hero">
     <nav class="nav" aria-label="Main">
       <a class="nav__brand" href="#top" id="top" aria-label="FORGED home">
         <img src="assets/mark.png" alt="" width="40" height="40">
@@ -27,23 +42,52 @@
       </a>
       <ul class="nav__links">
         <li><a href="#next">Next runs</a></li>
-        <li><a href="#mornings">The mornings</a></li>
+        <li><a href="#mornings">The runs</a></li>
         <li><a href="#founder">Founder</a></li>
         <li><a href="#log">Run log</a></li>
       </ul>
     </nav>
 
+    <section class="route" id="route" aria-label="FORGED runs, past and upcoming">
+      <p class="label route__title">The route so far</p>
+      <svg class="route__road" id="route-road" aria-hidden="true">
+        <defs>
+          <linearGradient id="route-heat" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#4A0C10"/>
+            <stop offset=".35" stop-color="#C91F18"/>
+            <stop offset=".7" stop-color="#F2571B"/>
+            <stop offset=".92" stop-color="#FFC53A"/>
+            <stop offset="1" stop-color="#FFFBF0"/>
+          </linearGradient>
+          <filter id="route-glow" x="-5%" y="-60%" width="110%" height="220%"><feGaussianBlur stdDeviation="8"/></filter>
+        </defs>
+        <path class="route__edge"></path>
+        <path class="route__asphalt"></path>
+        <path class="route__dash"></path>
+        <path class="route__glow" pathLength="1"></path>
+        <path class="route__molten" pathLength="1"></path>
+        <g class="route__embers" id="route-embers"></g>
+      </svg>
+      <ol class="route__stops">
+        <li class="route__stop" data-date="2026-10-25"><a href="#log"><b>25 Oct</b> <span>5K Social Run</span></a></li>
+        <li class="route__stop" data-date="2026-10-31"><a href="#log"><b>31 Oct</b> <span>Run for Treats</span></a></li>
+        <li class="route__stop" data-date="2026-11-14"><a href="#next"><b>14 Nov</b> <span>Chase the Sun</span></a></li>
+        <li class="route__stop" data-date="2026-11-22"><a href="#next"><b>22 Nov</b> <span>Details soon</span></a></li>
+      </ol>
+    </section>
+
     <div class="hero__body">
       <p class="hero__line">Miles, people &amp; experiences. <em>Running Goa differently.</em></p>
       <div class="hero__aside">
         <p class="label">Next run</p>
-        <p class="hero__next" id="next-run">Sat 14 Nov. Registration opens soon.</p>
+        <p class="hero__next" id="next-run">Chase the Sun: a free 3K beach run. Sat 14 Nov, 5 PM, Anjuna.</p>
         <a class="btn btn--hot" href="https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t" target="_blank" rel="noopener">Join the run club on WhatsApp</a>
       </div>
     </div>
 
-    <h1 class="ingot" id="ingot"><span class="wordmark" role="img" aria-label="FORGED"></span></h1>
+    <h1 class="ingot" id="ingot"><span class="wordmark" role="img" aria-label="FORGED"><i class="wordmark__heat" id="wordmark-heat"></i></span></h1>
   </header>
+  </div>
 
   <main>
     <!-- KM 1: blood red -->
@@ -56,16 +100,21 @@
           <article class="date date--lead" data-event-date="2026-11-14">
             <p class="date__day" aria-hidden="true">14</p>
             <div>
-              <h3 class="date__title">Saturday 14 November</h3>
-              <p>An exclusive FORGED experience with limited spots. Please register only if you're certain you can come, so everyone who wants a place gets a fair chance.</p>
-              <p class="date__status" data-status>Registration opens soon. It's announced in the WhatsApp group.</p>
+              <h3 class="date__title">Chase the Sun</h3>
+              <p class="date__meta">Sat 14 Nov 2026 · 5:00 PM · 3K beach run<br>Meeting point: Paloma, Anjuna, Goa<br>FORGED × Paloma</p>
+              <p>Run the beach, then stay for a live DJ and sunset beats, fun games, social mixers and a curated fruit platter, hosted by MC Zemora and MC Joann. Every participant gets an exclusive Paloma gift voucher.</p>
+              <p>Spots are limited, so please register only if you're certain you can come.</p>
+              <p class="date__status" data-status>Registration is free and opens soon. You're confirmed automatically once you register.</p>
+            </div>
+            <div class="poster">
+              <img src="assets/photos/chase-the-sun.webp" alt="Chase the Sun poster: FORGED and Paloma present a 3K beach run on 14 November 2026 at 5 PM, from Paloma, Anjuna, Goa, with a sun setting over the sea behind palm trees." width="1062" height="1314" loading="lazy">
             </div>
           </article>
           <article class="date" data-event-date="2026-11-22">
             <p class="date__day" aria-hidden="true">22</p>
             <div>
               <h3 class="date__title">Sunday 22 November</h3>
-              <p>Save the morning. The plan is still under wraps.</p>
+              <p>Save the date. The plan is still under wraps.</p>
               <p class="date__status" data-status>Details coming soon.</p>
             </div>
           </article>
@@ -76,9 +125,9 @@
     <!-- KM 2: cherry -->
     <section class="band band--cherry" id="mornings" data-km="2">
       <div class="wrap">
-        <p class="label">KM 2 &nbsp;/&nbsp; The mornings</p>
+        <p class="label">KM 2 &nbsp;/&nbsp; The runs</p>
         <h2 class="head">You don't need to be a runner.</h2>
-        <p class="lede">No experience and no pressure. Kids, teens, adults, elders: everyone's in. Fitness shouldn't feel like punishment, so we keep adding reasons to get out of bed.</p>
+        <p class="lede">No experience and no pressure. Kids, teens, adults, elders: everyone's in. Fitness shouldn't feel like punishment, so we keep adding reasons to show up.</p>
 
         <h3 class="label list-label">What's happened at a FORGED run so far</h3>
         <ul class="perks">
@@ -95,10 +144,14 @@
     <!-- KM 3: orange -->
     <section class="band band--orange" id="founder" data-km="3">
       <div class="wrap founder">
-        <figure class="slot slot--portrait">
-          <figcaption>Photo needed<br>millennia.jpg</figcaption>
-          <img src="assets/photos/millennia.jpg" alt="Millennia Rose, founder of FORGED" loading="lazy" onerror="this.remove()">
-        </figure>
+        <div class="plate">
+          <figure class="plate__frame">
+            <div class="plate__photo">
+              <img src="assets/photos/millennia.jpg" alt="Millennia Rose, founder of FORGED, holding up a race medal" width="846" height="891" loading="lazy">
+            </div>
+            <figcaption class="plate__tag"><span>Founder</span> <span>Millennia Rose</span></figcaption>
+          </figure>
+        </div>
         <div>
           <p class="label">KM 3 &nbsp;/&nbsp; Founder</p>
           <h2 class="head">Started by someone who dodged school sports day.</h2>
@@ -180,6 +233,7 @@
       <footer class="foot wrap">
         <p>FORGED® Fitness &amp; Running Club, Goa</p>
         <p>Founded by Millennia Rose</p>
+        <p>Created by Benniton Fernandes</p>
       </footer>
     </section>
   </main>

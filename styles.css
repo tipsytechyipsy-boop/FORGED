@@ -3,7 +3,7 @@
 
 :root {
   --black-heat: #0A0809;
-  --blood-from: #1A0A0C;
+  --blood-from: #4A0C10; /* the colour the hero's metal melts into */
   --blood-to: #7E1015;
   --cherry-from: #8E1217;
   --cherry-to: #C91F18;
@@ -51,6 +51,42 @@ a { color: inherit; }
   text-transform: uppercase;
 }
 
+/* Preloader: a block of ice that breaks open into the logo */
+.ice {
+  position: fixed; inset: 0; z-index: 30;
+  display: grid; place-items: center;
+  overflow: hidden;
+  background: var(--black-heat);
+  cursor: pointer;
+  /* Failsafe: never trap the page if the script doesn't run */
+  animation: ice-failsafe 0s linear 7s forwards;
+}
+@keyframes ice-failsafe { to { visibility: hidden; } }
+.ice__stage { position: relative; width: min(46vmin, 300px); aspect-ratio: 1; }
+.ice__stage img, .ice__shards, .ice__cracks { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ice__logo { visibility: hidden; }
+.ice__cracks { overflow: visible; pointer-events: none; }
+.ice__cracks path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.ice__shard {
+  position: absolute; inset: 0;
+  background: url("assets/ice-block.webp") center / 100% 100% no-repeat;
+  visibility: hidden;
+}
+.ice__chip { position: absolute; background: #F4F9FB; visibility: hidden; }
+.ice__flash {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgb(235 247 252 / .55), transparent 55%);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) { .ice { display: none; } }
+
 /* Buttons and links */
 .btn {
   display: inline-block;
@@ -71,6 +107,7 @@ a { color: inherit; }
 
 /* KM 0: hero */
 .hero {
+  background: var(--black-heat);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -87,13 +124,99 @@ a { color: inherit; }
 .nav__links a { text-decoration: none; }
 .nav__links a:hover { text-decoration: underline; text-underline-offset: .3em; }
 
-.hero__body {
+/* The route: an asphalt road with a molten trail, and the club's real runs as stops */
+.route {
+  --road: 26px;
+  position: relative;
   flex: 1;
+  min-height: 0;
+  margin-top: clamp(12px, 2vh, 24px);
+  visibility: hidden;
+}
+.route.is-ready { visibility: visible; }
+.route__title { position: absolute; left: 39%; top: 0; transform: translateX(-50%); white-space: nowrap; color: #9C9690; }
+.route__road { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.route__road path { fill: none; stroke-linecap: round; }
+.route__edge { stroke: #3B3533; stroke-width: calc(var(--road) + 3px); }
+.route__asphalt { stroke: #1C1818; stroke-width: var(--road); }
+.route__road .route__dash { stroke: #8C8680; stroke-width: 2; stroke-linecap: butt; stroke-dasharray: 12 14; }
+.route__molten { stroke: url(#route-heat); stroke-width: calc(var(--road) * .42); }
+.route__glow { stroke: url(#route-heat); stroke-width: calc(var(--road) * .9); opacity: .75; filter: url(#route-glow); }
+.route__ember {
+  fill: #FFC53A;
+  opacity: 0;
+  animation: route-ember var(--life) ease-out var(--wait) infinite;
+}
+@keyframes route-ember {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; fill: #FFFBF0; }
+  12% { opacity: 1; }
+  100% { transform: translate(var(--drift), var(--rise)) scale(.2); opacity: 0; fill: #F2571B; }
+}
+
+.route__stops { margin: 0; padding: 0; list-style: none; }
+.route__stop { position: absolute; width: 0; height: 0; }
+.route__stop::before {
+  content: "";
+  position: absolute; left: -8px; top: -8px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 3px solid #8C8680;
+  background: #1C1818;
+}
+.route__stop a {
+  position: absolute; left: 0;
+  transform: translateX(-50%);
+  width: max-content;
+  text-align: center;
+  text-decoration: none;
+  font: 400 .6875rem/1.4 var(--mono);
+  color: #9C9690;
+}
+.route__stop.is-peak a { top: calc(var(--road) / 2 + 8px); }
+.route__stop.is-valley a { bottom: calc(var(--road) / 2 + 8px); }
+.route__stop a:hover span { color: var(--white-heat); text-decoration: underline; text-underline-offset: .25em; }
+.route__stop b {
+  display: block;
+  font: 900 clamp(1.125rem, .9rem + .9vw, 1.75rem)/1.05 var(--display);
+  font-variation-settings: "wdth" 105;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+.route__stop.is-done::before { background: #FFF1D6; border-color: #C91F18; }
+.route__stop.is-next::before {
+  border-color: #FFC53A;
+  background: var(--white-heat);
+  box-shadow: 0 0 0 0 rgb(255 197 58 / .8), 0 0 18px 4px rgb(255 197 58 / .8);
+  animation: route-pulse 1.6s ease-out infinite;
+}
+.route__stop.is-next b { color: var(--orange-to); }
+.route__stop.is-next span { color: var(--steel); }
+.route__stop.is-next a::before {
+  content: "Next up";
+  display: table;
+  margin: 0 auto 5px;
+  padding: 2px 6px;
+  background: var(--orange-from);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: .625rem;
+  text-transform: uppercase;
+}
+@keyframes route-pulse {
+  to { box-shadow: 0 0 0 20px rgb(255 197 58 / 0), 0 0 18px 4px rgb(255 197 58 / .8); }
+}
+.route.is-squeezed { display: none; }
+.route.is-compact .route__title { display: none; }
+.route.is-compact .is-peak a { top: auto; bottom: calc(var(--road) / 2 + 7px); }
+.route.is-compact .is-valley a { bottom: auto; top: calc(var(--road) / 2 + 7px); }
+
+.hero__body {
+  margin-top: auto;
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(250px, 1fr);
   gap: 32px clamp(32px, 6vw, 96px);
   align-items: end;
-  padding-block: clamp(40px, 8vh, 96px) clamp(24px, 4vh, 48px);
+  padding-block: clamp(16px, 3vh, 32px) clamp(24px, 4vh, 48px);
 }
 .hero__line {
   font: 700 clamp(1.75rem, 1rem + 3.3vw, 4rem)/1.04 var(--display);
@@ -118,6 +241,17 @@ a { color: inherit; }
 
 /* Hero: wide as the page, glowing at the bottom edge */
 .ingot { transform-origin: 50% 100%; }
+.ingot .wordmark { position: relative; }
+.wordmark__heat { position: absolute; inset: 0; background: var(--blood-from); opacity: 0; }
+
+/* Scroll: the hero pins while the camera flies into the metal */
+.has-flight .hero-pin { height: 225svh; }
+.has-flight .hero { position: sticky; top: 0; }
+.hero.is-flying .nav,
+.hero.is-flying .route,
+.hero.is-flying .hero__body { visibility: hidden; }
+.hero.is-molten { background: var(--blood-from); }
+.hero.is-molten .ingot { visibility: hidden; }
 .ingot .wordmark {
   background: linear-gradient(180deg, var(--steel) 0 42%, #FFC53A 66%, #F2571B 82%, #A3141A 100%);
 }
@@ -155,11 +289,24 @@ a { color: inherit; }
 .dates {
   margin-top: clamp(40px, 6vw, 80px);
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: clamp(32px, 5vw, 72px);
-  align-items: end;
+  gap: clamp(48px, 6vw, 88px);
 }
 .date { display: grid; gap: 16px; }
+/* The next run gets the poster beside it */
+.date--lead {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+  grid-template-rows: auto 1fr;
+  column-gap: clamp(32px, 5vw, 72px);
+}
+.date--lead > .poster { grid-column: 2; grid-row: 1 / span 2; }
+.poster img { width: 100%; height: auto; box-shadow: 10px 10px 0 #FFC53A; }
+.date--lead .date__title {
+  margin-bottom: 12px;
+  font-size: clamp(1.75rem, 1rem + 2.2vw, 3rem);
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
 .date__day {
   font: 900 clamp(7rem, 15vw, 13rem)/.8 var(--display);
   font-variation-settings: "wdth" 120;
@@ -167,8 +314,10 @@ a { color: inherit; }
 }
 .date--lead .date__day { font-size: clamp(9rem, 26vw, 23rem); }
 .date__title { font: 800 1.375rem/1.2 var(--display); margin-bottom: 8px; font-variation-settings: "wdth" 100; }
+.date__meta { margin-bottom: 12px; font: 400 .75rem/1.6 var(--mono); }
 .date > div { max-width: 46ch; }
-.date__status { margin-top: 12px; font-weight: 600; }
+.date > div > p + p { margin-top: 12px; }
+.date__status { font-weight: 600; }
 .date.is-past .date__day { opacity: .35; }
 
 /* KM 2: list */
@@ -211,7 +360,28 @@ a { color: inherit; }
   place-items: center;
   text-align: center;
 }
-.slot--portrait { aspect-ratio: 4 / 5; }
+
+/* Founder photo: a steel plate with the logo's bottom-right corner cut away.
+   The offset lives on the wrapper because a clip-path would cut it off. */
+.plate { --cut: clamp(36px, 4vw, 56px); filter: drop-shadow(10px 10px 0 #C91F18); }
+.plate__frame {
+  padding: 10px 10px 0;
+  background: var(--ink);
+  color: var(--white-heat);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+}
+.plate__photo { aspect-ratio: 4 / 5; overflow: hidden; }
+.plate__photo img { width: 100%; height: 100%; object-fit: cover; }
+.plate__tag {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px var(--cut) 13px 2px;
+  font: 600 .75rem/1.3 var(--mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.plate__tag span:first-child { color: var(--orange-to); }
 .slot figcaption { font: 400 .6875rem/1.6 var(--mono); }
 .slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
@@ -334,11 +504,15 @@ a { color: inherit; }
 
 /* Tablet and phone */
 @media (max-width: 860px) {
-  .nav__links { display: none; }  .hero__body { grid-template-columns: 1fr; align-items: end; }
+  .nav__links { display: none; }
+  .route__stop span { display: none; }
+  .hero__body { grid-template-columns: 1fr; align-items: end; }
   .dates, .founder, .log__row { grid-template-columns: minmax(0, 1fr); }
   .thanks ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .date--lead .date__day { font-size: clamp(9rem, 44vw, 20rem); }
-  .slot--portrait { max-width: 420px; }
+  .date--lead { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .date--lead > .poster { grid-column: auto; grid-row: auto; max-width: 440px; margin: 16px 10px 0 0; }
+  .plate { max-width: 420px; margin-right: 10px; }
   .perks small { font-size: .625rem; }
 }
 @media (max-width: 480px) {
@@ -347,5 +521,7 @@ a { color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .route__stop.is-next::before { animation: none; }
+  .route__embers { display: none; }
   .btn { transition: none; }
 }
