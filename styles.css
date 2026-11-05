@@ -74,7 +74,7 @@ a { color: inherit; }
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  padding: 20px var(--gutter) calc(var(--slant) + 20px);
+  padding: 20px var(--gutter) calc(var(--slant) + 76px); /* keeps the wordmark clear of the watch */
   overflow: hidden;
 }
 .nav { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
@@ -106,22 +106,20 @@ a { color: inherit; }
 .hero__aside .label { color: var(--orange-to); }
 .hero__next { font-size: 1.125rem; margin-bottom: 10px; }
 
-/* The word itself: wide as the page, glowing at the bottom edge */
-.ingot {
-  font: 900 15.6vw/.84 var(--display);
-  font-variation-settings: "wdth" 150;
-  letter-spacing: -.012em;
-  text-align: center;
-  white-space: nowrap;
-  transform-origin: 50% 100%;
+/* The official wordmark, used as a mask so it can take any colour */
+.wordmark {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3847 / 622;
+  background: currentColor;
+  -webkit-mask: url("assets/wordmark.svg") center / 100% 100% no-repeat;
+  mask: url("assets/wordmark.svg") center / 100% 100% no-repeat;
 }
-.ingot span {
-  display: inline-block;
-  padding-bottom: .03em;
+
+/* Hero: wide as the page, glowing at the bottom edge */
+.ingot { transform-origin: 50% 100%; }
+.ingot .wordmark {
   background: linear-gradient(180deg, var(--steel) 0 42%, #FFC53A 66%, #F2571B 82%, #A3141A 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* Bands: a slanted cut between each heat, echoing the streaks in the logo */
@@ -253,7 +251,7 @@ a { color: inherit; }
   font-variation-settings: "wdth" 110;
   text-transform: uppercase;
 }
-.finish__line span { color: #C91F18; }
+.finish__line .wordmark { margin-top: .12em; color: #C91F18; }
 .finish__actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: center; }
 .foot {
   margin-top: clamp(64px, 9vw, 120px);
@@ -304,9 +302,7 @@ a { color: inherit; }
 
 /* Tablet and phone */
 @media (max-width: 860px) {
-  .nav__links { display: none; }
-  .hero { padding-bottom: calc(var(--slant) + 76px); } /* keeps the word clear of the watch */
-  .hero__body { grid-template-columns: 1fr; align-items: end; }
+  .nav__links { display: none; }  .hero__body { grid-template-columns: 1fr; align-items: end; }
   .dates, .founder, .log__row { grid-template-columns: minmax(0, 1fr); }
   .thanks ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .date--lead .date__day { font-size: clamp(9rem, 44vw, 20rem); }

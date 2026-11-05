@@ -1,68 +1,31 @@
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ---------- The word: fit it to the page, then hammer it out ---------- */
-const ingot = document.getElementById('ingot');
-const word = ingot.firstElementChild;
-
-function fitIngot() {
-  const available = ingot.clientWidth;
-  ingot.style.fontSize = '100px';
-  ingot.style.fontVariationSettings = '"wdth" 150';
-  const size = (available / word.offsetWidth) * 100;
-  ingot.style.fontSize = `${size}px`;
-  ingot.style.fontVariationSettings = '';
-}
-
+/* ---------- The wordmark: hammer it out to full width ---------- */
 function hammerOut() {
-  // Three blows, each spreading the metal wider and cooling it a little.
+  const ingot = document.getElementById('ingot');
+  // Three blows: each one spreads the metal wider and cools it a little.
   const blows = [
-    { wdth: 50,  heat: 2.2 },
-    { wdth: 88,  heat: 1.9 },
-    { wdth: 122, heat: 1.5 },
-    { wdth: 150, heat: 1.2 },
+    { width: 0.34, heat: 2.2 },
+    { width: 0.58, heat: 1.9 },
+    { width: 0.8, heat: 1.5 },
+    { width: 1, heat: 1 },
   ];
-  const hold = 0.28; // share of each beat spent resting before the next blow
+  const beat = 1 / (blows.length - 1);
+  const strike = 0.08; // share of the animation each blow takes to land
   const frames = [];
   blows.forEach((blow, i) => {
-    const start = i === 0 ? 0 : (i - 1 + hold) / (blows.length - 1);
-    const end = i / (blows.length - 1);
+    const at = i * beat;
+    const pose = { transform: `scaleX(${blow.width})`, filter: `brightness(${blow.heat})` };
     if (i > 0) {
-      frames.push({
-        offset: start,
-        fontVariationSettings: `"wdth" ${blows[i - 1].wdth}`,
-        filter: `brightness(${blows[i - 1].heat * 0.9})`,
-        transform: 'translateY(0)',
-        easing: 'cubic-bezier(.7,0,1,.6)',
-      });
+      // Rest until just before the blow, then land it fast.
+      const rest = blows[i - 1];
+      frames.push({ offset: at - strike, transform: `scaleX(${rest.width})`, filter: `brightness(${rest.heat * 0.9})`, easing: 'cubic-bezier(.7,0,1,.6)' });
     }
-    frames.push({
-      offset: i === 0 ? 0 : Math.min(start + 0.1, end),
-      fontVariationSettings: `"wdth" ${blow.wdth}`,
-      filter: `brightness(${blow.heat})`,
-      transform: i === 0 ? 'translateY(0)' : 'translateY(.012em)',
-      easing: 'ease-out',
-    });
+    frames.push({ offset: at, easing: 'linear', ...pose });
   });
-  frames.push({
-    offset: 1,
-    fontVariationSettings: '"wdth" 150',
-    filter: 'brightness(1)',
-    transform: 'translateY(0)',
-  });
-  frames.sort((a, b) => a.offset - b.offset);
-  ingot.animate(frames, { duration: 1500, delay: 150, fill: 'backwards' });
+  ingot.animate(frames, { duration: 1400, delay: 200, fill: 'backwards' });
 }
-
-const fontsReady = document.fonts ? document.fonts.load('900 100px Anybody').then(() => document.fonts.ready) : Promise.resolve();
-fontsReady.then(() => {
-  fitIngot();
-  if (!reducedMotion) hammerOut();
-});
-let resizeTimer;
-addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(fitIngot, 120);
-});
+if (!reducedMotion) hammerOut();
 
 /* ---------- The watch: scroll position told as distance and time ---------- */
 const MINUTES_PER_KM = 6.4; // easy social pace, from a 06:00 start
