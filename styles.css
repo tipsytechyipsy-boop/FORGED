@@ -99,6 +99,21 @@ a { color: inherit; }
   transition: padding .18s ease-out;
 }
 .btn:hover { padding-right: 2.5em; }
+/* A band of heat sweeps across on hover or tap */
+.btn, .watch__join { position: relative; overflow: hidden; }
+.btn::after, .watch__join::after {
+  content: "";
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 60%;
+  background: linear-gradient(100deg, transparent, rgb(255 251 240 / .65) 45%, rgb(255 197 58 / .55) 60%, transparent);
+  transform: translateX(-120%) skewX(-16deg);
+  pointer-events: none;
+}
+.btn:hover::after, .btn:active::after, .btn:focus-visible::after,
+.watch__join:hover::after, .watch__join:active::after, .watch__join:focus-visible::after {
+  transform: translateX(220%) skewX(-16deg);
+  transition: transform .65s cubic-bezier(.3, .6, .3, 1);
+}
 .btn:focus-visible { clip-path: none; }
 .btn--hot { background: var(--orange-from); color: var(--ink); }
 .btn--ink { background: var(--ink); color: var(--white-heat); }
@@ -115,14 +130,34 @@ a { color: inherit; }
   overflow: hidden;
 }
 .nav { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
-.nav__brand {
-  display: flex; align-items: center; gap: 12px;
-  font: 400 .6875rem/1.45 var(--mono);
+.nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--steel); }
+.nav__brand .nav__word { width: 112px; }
+.nav__links { display: flex; gap: clamp(18px, 2.6vw, 40px); }
+.nav__links a {
+  position: relative;
+  display: block;
+  padding-block: 8px;
+  font: 600 .75rem/1 var(--mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
   text-decoration: none;
+  color: var(--steel);
+  transition: color .18s ease-out;
 }
-.nav__links { display: flex; gap: clamp(16px, 2.4vw, 36px); font-size: .9375rem; }
-.nav__links a { text-decoration: none; }
-.nav__links a:hover { text-decoration: underline; text-underline-offset: .3em; }
+.nav__links small { margin-right: 3px; font: inherit; color: var(--orange-to); }
+/* Hover: a line of heat runs in under the link */
+.nav__links a::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #C91F18, #F2571B, #FFC53A, #FFFBF0);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .26s cubic-bezier(.2, .7, .2, 1);
+}
+.nav__links a:hover { color: var(--white-heat); }
+.nav__links a:hover::after,
+.nav__links a:focus-visible::after { transform: scaleX(1); }
 
 /* The route: an asphalt road with a molten trail, and the club's real runs as stops */
 .route {
@@ -341,12 +376,35 @@ a { color: inherit; }
 
 /* KM 2: list */
 .list-label { margin-top: clamp(48px, 7vw, 88px); }
-.perks { margin-top: 14px; border-top: 2px solid currentColor; }
+.perks { position: relative; margin-top: 14px; }
 .perks li {
   display: flex; justify-content: space-between; align-items: baseline; gap: 20px;
-  padding-block: 14px;
-  border-bottom: 2px solid currentColor;
+  position: relative;
+  padding-block: 15px;
 }
+/* Divider lines are drawn so they can run in like the road */
+.perks::before,
+.perks li::after,
+.log__row::before {
+  content: "";
+  position: absolute; left: 0; right: 0;
+  height: 2px;
+  background: currentColor;
+  transform-origin: left;
+  transition: transform .8s cubic-bezier(.2, .7, .2, 1);
+}
+.perks::before, .log__row::before { top: 0; }
+.perks li::after { bottom: 0; }
+.perks li > * { transition: opacity .5s ease-out .1s, transform .6s cubic-bezier(.2, .7, .2, 1) .1s; }
+.has-reveals .perks:not(.is-in)::before,
+.has-reveals .perks li:not(.is-in)::after,
+.has-reveals .log__row:not(.is-in)::before { transform: scaleX(0); }
+.has-reveals .perks li:not(.is-in) > * { opacity: 0; transform: translateX(-14px); }
+
+/* Headlines stamp in line by line */
+.head.is-waiting { opacity: 0; }
+.head__line { display: block; overflow: hidden; padding-top: .08em; margin-top: -.08em; white-space: nowrap; }
+.head__line > span { display: block; }
 .perks span {
   font: 800 clamp(1.3125rem, 1rem + 1.9vw, 2.75rem)/1.05 var(--display);
   font-variation-settings: "wdth" 92;
@@ -443,7 +501,7 @@ a { color: inherit; }
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: clamp(20px, 5vw, 72px);
   align-items: center;
-  border-top: 2px solid currentColor;
+  position: relative;
   padding-top: 20px;
 }
 .log__date, .log__where { font: 400 .75rem/1.5 var(--mono); }
@@ -510,6 +568,30 @@ a { color: inherit; }
   transform: scaleX(0); transform-origin: left;
   background: linear-gradient(90deg, #A3141A, #F2571B, #FFC53A, #FFFBF0);
 }
+/* Finish: a tag pops up on the watch at 5.00 km */
+.watch__done {
+  position: absolute; right: 0; bottom: calc(100% + 6px);
+  padding: 4px 8px;
+  background: #C91F18;
+  color: var(--white-heat);
+  font: 600 .6875rem/1.2 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  opacity: 0;
+  transform: translateY(8px) scale(.9);
+  transform-origin: 100% 100%;
+  transition: opacity .15s ease-out, transform .15s ease-out;
+  pointer-events: none;
+}
+.watch.is-finished .watch__done {
+  opacity: 1;
+  transform: none;
+  transition: opacity .2s ease-out, transform .34s cubic-bezier(.2, 1.6, .4, 1);
+}
+.finish { position: relative; }
+.finish__line { position: relative; z-index: 1; }
+.finish__ember { position: absolute; z-index: 0; border-radius: 50%; pointer-events: none; }
+
 .watch__join {
   display: flex; align-items: center;
   padding-inline: 14px;
@@ -541,6 +623,8 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .route__stop.is-next::before { animation: none; }
+  .btn::after, .watch__join::after { display: none; }
+  .watch__done { transition: none; }
   .route__embers { display: none; }
   .btn { transition: none; }
 }

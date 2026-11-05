@@ -355,6 +355,7 @@ function updateWatch() {
   kmEl.textContent = km.toFixed(2);
   timeEl.textContent = `06:${String(minutes).padStart(2, '0')}`;
   barEl.style.transform = `scaleX(${km / 5})`;
+  document.getElementById('watch').classList.toggle('is-finished', km >= 5);
 }
 function requestWatchUpdate() {
   if (!ticking) {
@@ -435,6 +436,33 @@ function startScrollEffects() {
     pin.classList.toggle('is-molten', t >= 1);
   }
 
+  let emberBurstDone = false;
+  function burstEmbers(wordmark) {
+    wordmark.animate(
+      [{ transform: 'scale(1.025)' }, { transform: 'scaleX(1)' }],
+      { duration: 280, easing: 'cubic-bezier(.2,.7,.2,1)' },
+    );
+    const area = wordmark.closest('.finish');
+    const from = area.getBoundingClientRect();
+    const box = wordmark.getBoundingClientRect();
+    const colours = ['#C91F18', '#F2571B', '#F98F22', '#FFC53A'];
+    for (let i = 0; i < 36; i++) {
+      const size = 3 + Math.random() * 6;
+      const ember = document.createElement('i');
+      ember.className = 'finish__ember';
+      ember.style.cssText = `left:${box.left - from.left + Math.random() * box.width}px;top:${box.top - from.top + box.height * (0.2 + Math.random() * 0.7)}px;width:${size}px;height:${size}px;background:${colours[i % colours.length]}`;
+      area.append(ember);
+      const rise = box.height * 0.8 + Math.random() * Math.min(innerHeight * 0.45, 300);
+      ember.animate(
+        [
+          { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+          { transform: `translate(${(Math.random() - 0.5) * 120}px, ${-rise}px) scale(.15)`, opacity: 0 },
+        ],
+        { duration: 800 + Math.random() * 900, easing: 'cubic-bezier(.15,.7,.4,1)' },
+      ).finished.then(() => ember.remove());
+    }
+  }
+
   let queued = false;
   function update() {
     queued = false;
@@ -442,7 +470,13 @@ function startScrollEffects() {
     numerals.forEach((numeral) => {
       numeral.style.fontVariationSettings = `"wdth" ${60 + 60 * smooth(arrival(numeral))}`;
     });
-    finishMark.style.transform = `scaleX(${0.34 + 0.66 * smooth(arrival(finishMark))})`;
+    const landed = arrival(finishMark);
+    finishMark.style.transform = `scaleX(${0.34 + 0.66 * smooth(landed)})`;
+    // The wordmark's last blow throws off embers, once, if anyone's there to see it.
+    if (!emberBurstDone && landed >= 1 && !document.getElementById('ice')) {
+      emberBurstDone = true;
+      burstEmbers(finishMark);
+    }
   }
   function requestUpdate() {
     if (!queued) {
@@ -461,6 +495,62 @@ function startScrollEffects() {
   update();
 }
 if (!reducedMotion) startScrollEffects();
+
+/* ---------- Reveals: headlines stamp in and divider lines run across, once each ---------- */
+function startReveals() {
+  document.documentElement.classList.add('has-reveals');
+
+  function stampIn(head) {
+    const original = head.innerHTML;
+    head.classList.remove('is-waiting');
+    // Wrap each word to find where the lines actually break on this screen.
+    head.innerHTML = original
+      .split(/<br\s*\/?>/i)
+      .map((part) => part.trim().split(/\s+/).map((word) => `<span>${word}</span>`).join(' '))
+      .join('<br>');
+    const lines = [];
+    let lastTop = null;
+    [...head.querySelectorAll('span')].forEach((word) => {
+      if (word.offsetTop !== lastTop) {
+        lines.push([]);
+        lastTop = word.offsetTop;
+      }
+      lines[lines.length - 1].push(word.outerHTML);
+    });
+    head.innerHTML = lines
+      .map((words) => `<span class="head__line"><span>${words.join(' ')}</span></span>`)
+      .join('');
+    const landed = [...head.querySelectorAll('.head__line > span')].map((line, i) => line.animate(
+      [{ transform: 'translateY(112%)' }, { transform: 'none' }],
+      { duration: 560, delay: i * 90, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' },
+    ).finished);
+    // Put the plain text back so the headline can rewrap on resize.
+    Promise.all(landed).then(() => { head.innerHTML = original; });
+  }
+
+  const heads = [...document.querySelectorAll('.head')];
+  heads.forEach((head) => head.classList.add('is-waiting'));
+  const headWatcher = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        headWatcher.unobserve(entry.target);
+        stampIn(entry.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -8% 0px' });
+  heads.forEach((head) => headWatcher.observe(head));
+
+  const lineWatcher = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        lineWatcher.unobserve(entry.target);
+        entry.target.classList.add('is-in');
+      }
+    });
+  }, { rootMargin: '0px 0px -6% 0px' });
+  document.querySelectorAll('.perks, .perks li, .log__row').forEach((el) => lineWatcher.observe(el));
+}
+if (!reducedMotion) startReveals();
 
 /* ---------- Dates: keep the page honest once a run has happened ---------- */
 const today = new Date();
