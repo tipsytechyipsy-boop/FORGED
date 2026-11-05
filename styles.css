@@ -579,13 +579,62 @@ a { color: inherit; }
 }
 .finish__line .wordmark { margin-top: .12em; color: #C91F18; }
 .finish__actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: center; }
+/* Footer: past the finish line the metal has cooled back to black */
 .foot {
   margin-top: clamp(64px, 9vw, 120px);
-  padding-block: 20px 96px;
-  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 24px;
-  font: 400 .6875rem/1.6 var(--mono);
-  border-top: 2px solid var(--ink);
+  padding-block: calc(var(--slant) + clamp(36px, 5vw, 64px)) 124px; /* clears the watch */
+  background: var(--black-heat);
+  color: var(--steel);
+  clip-path: polygon(0 var(--slant), 100% 0, 100% 100%, 0 100%);
 }
+.foot__in {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end;
+  gap: 36px 48px;
+}
+.foot__club { font: 400 .75rem/1.7 var(--mono); }
+.foot__name { font-weight: 600; }
+.foot__links { display: flex; gap: 20px; margin-top: 14px; }
+.foot__links a {
+  display: block;
+  padding-block: 4px;
+  color: var(--orange-to);
+  font-weight: 600;
+  text-underline-offset: .3em;
+}
+.foot__links a:hover { color: #FFC53A; }
+.foot__credit span {
+  display: block;
+  margin-bottom: 8px;
+  font: 600 .6875rem/1 var(--mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--orange-to);
+}
+.foot__credit strong {
+  display: block;
+  font: 800 clamp(1.375rem, 3.1vw, 2.5rem)/1.05 var(--display);
+  font-variation-settings: "wdth" 100;
+  background: linear-gradient(180deg, var(--steel) 0 40%, #FFC53A 66%, #F2571B 84%, #A3141A 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: font-variation-settings .35s cubic-bezier(.2, .7, .2, 1);
+}
+.foot__credit a {
+  display: inline-flex; align-items: flex-start; gap: .3em;
+  text-decoration: none;
+}
+.foot__credit a i {
+  font: 600 clamp(.875rem, 1.6vw, 1.25rem)/1 var(--mono);
+  font-style: normal;
+  color: #FFC53A;
+  transition: transform .25s ease-out;
+}
+/* The name gets hammered out a little wider on hover, and the arrow lifts */
+.foot__credit a:hover strong, .foot__credit a:focus-visible strong { font-variation-settings: "wdth" 112; }
+.foot__credit a:hover i, .foot__credit a:focus-visible i { transform: translate(3px, -3px); }
+.foot__credit a:focus-visible { outline: 2px solid #FFC53A; outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { .foot__credit strong, .foot__credit a i { transition: none; } }
 
 /* The watch */
 .watch {
