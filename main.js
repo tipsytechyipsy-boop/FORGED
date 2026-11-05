@@ -156,14 +156,31 @@ function runPreloader(onReveal) {
     block.style.visibility = 'hidden';
     crackBox.style.visibility = 'hidden';
     logo.style.visibility = 'visible';
-    const target = document.querySelector('.nav__brand img').getBoundingClientRect();
+    const navF = document.querySelector('.nav__f img');
+    const orged = document.querySelector('.nav__orged');
+    const target = navF.getBoundingClientRect();
     const from = logo.getBoundingClientRect();
-    // Land the logo on the nav icon, if the nav is on screen.
+    // The logo flies up and becomes the F of the name, if the nav is on screen.
     if (target.bottom > 0) {
       const scale = target.width / from.width;
       const x = target.left + target.width / 2 - (from.left + from.width / 2);
       const y = target.top + target.height / 2 - (from.top + from.height / 2);
       stage.animate([{ transform: 'none' }, { transform: `translate(${x}px, ${y}px) scale(${scale})` }], { duration: 620, easing: 'cubic-bezier(.65,0,.2,1)', fill: 'forwards' });
+      // Only one F: the nav's stays hidden until the flying one lands on it.
+      navF.animate([{ opacity: 0 }, { opacity: 0 }], { duration: 620 });
+      // It hits, and the rest of the name comes out of the F, hot, then cools to steel.
+      navF.animate(
+        [{ filter: 'brightness(1.7)', transform: 'scale(1.14)' }, { filter: 'none', transform: 'none' }],
+        { duration: 300, delay: 620, easing: 'ease-out' },
+      );
+      orged.animate(
+        [
+          { clipPath: 'inset(0 100% 0 0)', transform: 'translateX(-10px)', backgroundColor: '#FFC53A' },
+          { clipPath: 'inset(0 0 0 0)', transform: 'none', backgroundColor: '#FFC53A', offset: 0.45 },
+          { clipPath: 'inset(0 0 0 0)', transform: 'none', backgroundColor: getComputedStyle(orged).color },
+        ],
+        { duration: 900, delay: 600, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards' },
+      );
     }
     ice.style.pointerEvents = 'none';
     const background = ice.animate([{ backgroundColor: '#0A0809' }, { backgroundColor: 'rgb(10 8 9 / 0)' }], { duration: 620, easing: 'ease-in', fill: 'forwards' });

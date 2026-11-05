@@ -130,8 +130,32 @@ a { color: inherit; }
   overflow: hidden;
 }
 .nav { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
-.nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--steel); }
-.nav__brand .nav__word { width: 112px; }
+/* The logo is the F: it sits in the F's place and the wordmark supplies ORGED.
+   Multipliers come from the art: the logo's visible area is 584 of 640 tall,
+   starting 20 across and 29 down; in the wordmark, ORGED starts at 641 of 3847. */
+.nav__brand {
+  --h: 26px;
+  display: flex; align-items: center;
+  text-decoration: none;
+  color: var(--steel);
+}
+.nav__f { position: relative; flex: none; width: calc(var(--h) * 1.06); height: var(--h); }
+.nav__f img {
+  position: absolute;
+  left: calc(var(--h) * -.0342);
+  top: calc(var(--h) * -.0497);
+  width: calc(var(--h) * 1.096);
+  height: calc(var(--h) * 1.096);
+  max-width: none;
+}
+.nav__orged {
+  flex: none;
+  width: calc(var(--h) * 3206 / 622);
+  height: var(--h);
+  background: currentColor;
+  -webkit-mask: url("assets/wordmark.svg") right center / calc(var(--h) * 3847 / 622) 100% no-repeat;
+  mask: url("assets/wordmark.svg") right center / calc(var(--h) * 3847 / 622) 100% no-repeat;
+}
 .nav__links { display: flex; gap: clamp(18px, 2.6vw, 40px); }
 .nav__links a {
   position: relative;
