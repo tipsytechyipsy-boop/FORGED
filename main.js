@@ -238,18 +238,12 @@ function setupRoute() {
 
   let reached = 1; // share of the road's length covered by the trail
   function layout() {
-    route.classList.remove('is-squeezed');
     const w = route.clientWidth;
     const h = route.clientHeight;
-    // Too little room for a road and its labels, so leave it out.
-    const compact = w < 600;
-    if (h < (compact ? 170 : 104)) {
-      route.classList.add('is-squeezed');
-      return;
-    }
-    const width = compact ? 14 : 26;
+    const width = innerWidth < 600 ? 14 : 26;
     route.style.setProperty('--road', `${width}px`);
-    // Narrow bends can't hold a label, so on phones labels sit outside them.
+    // A steep road has narrow bends that can't hold a label, so labels sit outside them.
+    const compact = h / w > 0.33;
     route.classList.toggle('is-compact', compact);
     const top = compact ? 66 : width / 2 + 18;
     const low = compact ? h - 34 : h - width / 2 - 3;
@@ -399,23 +393,17 @@ function startScrollEffects() {
   // How far an element has travelled up the screen on its way in.
   const arrival = (el) => clamp((innerHeight - el.getBoundingClientRect().top) / (innerHeight * 0.55));
 
-  let flying = false;
+  document.documentElement.classList.add('has-flight');
   function fitFlight() {
-    // A hero taller than the screen can't pin, so it just scrolls normally.
-    document.documentElement.classList.remove('has-flight');
-    flying = hero.offsetHeight <= innerHeight + 1;
-    document.documentElement.classList.toggle('has-flight', flying);
-    if (!flying) {
-      mark.style.transform = '';
-      heat.style.opacity = 0;
-      fading.forEach((el) => { el.style.opacity = ''; el.style.transform = ''; });
-      hero.classList.remove('is-flying', 'is-molten');
-    }
+    document.documentElement.style.setProperty('--hero-h', `${hero.offsetHeight}px`);
   }
 
   function flyInto() {
+    // The hero pins once its bottom edge is on screen, which is at a negative
+    // offset when it's taller than the screen.
     const travel = pin.offsetHeight - hero.offsetHeight;
-    const progress = clamp(-pin.getBoundingClientRect().top / travel);
+    const pinsAt = parseFloat(getComputedStyle(hero).top) || 0;
+    const progress = clamp((pinsAt - pin.getBoundingClientRect().top) / travel);
     const box = ingot.getBoundingClientRect();
     const t = clamp((progress - 0.03) / 0.97);
 
@@ -444,12 +432,13 @@ function startScrollEffects() {
     });
     hero.classList.toggle('is-flying', gone >= 1);
     hero.classList.toggle('is-molten', t >= 1);
+    pin.classList.toggle('is-molten', t >= 1);
   }
 
   let queued = false;
   function update() {
     queued = false;
-    if (flying) flyInto();
+    flyInto();
     numerals.forEach((numeral) => {
       numeral.style.fontVariationSettings = `"wdth" ${60 + 60 * smooth(arrival(numeral))}`;
     });
@@ -462,19 +451,14 @@ function startScrollEffects() {
     }
   }
   addEventListener('scroll', requestUpdate, { passive: true });
-  addEventListener('resize', () => {
+  addEventListener('resize', requestUpdate);
+  // The hero's height can change on resize and when web fonts arrive.
+  new ResizeObserver(() => {
     fitFlight();
     requestUpdate();
-  });
+  }).observe(hero);
   fitFlight();
   update();
-  // Web fonts can change the hero's height after this first check.
-  if (document.fonts) {
-    document.fonts.ready.then(() => {
-      fitFlight();
-      requestUpdate();
-    });
-  }
 }
 if (!reducedMotion) startScrollEffects();
 

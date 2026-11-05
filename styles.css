@@ -128,10 +128,13 @@ a { color: inherit; }
 .route {
   --road: 26px;
   position: relative;
-  flex: 1;
-  min-height: 0;
+  flex: 1 0 auto;
+  min-height: 150px; /* never squeezed out: the hero grows and scrolls instead */
   margin-top: clamp(12px, 2vh, 24px);
   visibility: hidden;
+}
+@media (max-width: 599.98px) {
+  .route { min-height: 205px; }
 }
 .route.is-ready { visibility: visible; }
 .route__title { position: absolute; left: 39%; top: 0; transform: translateX(-50%); white-space: nowrap; color: #9C9690; }
@@ -205,7 +208,6 @@ a { color: inherit; }
 @keyframes route-pulse {
   to { box-shadow: 0 0 0 20px rgb(255 197 58 / 0), 0 0 18px 4px rgb(255 197 58 / .8); }
 }
-.route.is-squeezed { display: none; }
 .route.is-compact .route__title { display: none; }
 .route.is-compact .is-peak a { top: auto; bottom: calc(var(--road) / 2 + 7px); }
 .route.is-compact .is-valley a { bottom: auto; top: calc(var(--road) / 2 + 7px); }
@@ -259,8 +261,11 @@ a { color: inherit; }
 .wordmark__heat { position: absolute; inset: 0; background: var(--blood-from); opacity: 0; }
 
 /* Scroll: the hero pins while the camera flies into the metal */
-.has-flight .hero-pin { height: 225svh; }
-.has-flight .hero { position: sticky; top: 0; }
+/* --hero-h is set by main.js. A hero taller than the screen scrolls until its
+   bottom edge arrives, then pins, so the dive works on any screen height. */
+.has-flight .hero-pin { height: calc(var(--hero-h, 100svh) + 125svh); }
+.has-flight .hero { position: sticky; top: calc(100svh - var(--hero-h, 100svh)); }
+.hero-pin.is-molten { background: var(--blood-from); }
 .hero.is-flying .nav,
 .hero.is-flying .route,
 .hero.is-flying .hero__body { visibility: hidden; }
