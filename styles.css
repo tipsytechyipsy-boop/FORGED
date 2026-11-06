@@ -79,6 +79,55 @@ a { color: inherit; }
   visibility: hidden;
 }
 .ice__chip { position: absolute; background: #F4F9FB; visibility: hidden; }
+/* Cold light around the block, which becomes forge heat when it breaks */
+.ice__glow { position: absolute; inset: 0; pointer-events: none; }
+.ice__glow--cold {
+  background: radial-gradient(circle at 50% 48%, rgb(150 215 240 / .2), rgb(60 120 160 / .08) 32%, transparent 60%);
+  animation: ice-breathe 2.4s ease-in-out infinite;
+}
+.ice__glow--hot {
+  background: radial-gradient(circle at 50% 48%, rgb(255 197 58 / .55), rgb(242 87 27 / .3) 30%, rgb(163 20 26 / .12) 55%, transparent 75%);
+  opacity: 0;
+}
+@keyframes ice-breathe { 50% { opacity: .55; transform: scale(1.05); } }
+/* Frost drifting up through the dark; it turns to embers when the ice breaks */
+.ice__frost { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.ice__frost i {
+  position: absolute; bottom: -10px;
+  width: var(--s); height: var(--s);
+  border-radius: 50%;
+  background: #DDF3FA;
+  opacity: 0;
+  animation: frost-rise var(--life) linear var(--wait) infinite;
+  transition: background-color .3s ease-out;
+}
+.ice.is-hot .ice__frost i { background: #F98F22; }
+@keyframes frost-rise {
+  10% { opacity: .7; }
+  to { transform: translate(var(--drift), -105vh); opacity: 0; }
+}
+/* Impact rings from each blow */
+.ice__ring {
+  position: absolute; left: 25%; top: 20%;
+  width: 40%; aspect-ratio: 1;
+  margin: -20% 0 0 -20%;
+  border: 2px solid rgb(225 246 255 / .9);
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* Temperature: from ice to forge */
+.ice__read {
+  position: absolute; left: 50%;
+  top: calc(50% + min(23vmin, 150px) + 26px);
+  display: grid; justify-items: center; gap: 6px;
+  transform: translateX(-50%);
+  color: #CFE9F2;
+  white-space: nowrap;
+  transition: color .3s ease-out;
+}
+.ice__temp { font: 600 clamp(1.25rem, 3vmin, 1.75rem)/1 var(--mono); font-variant-numeric: tabular-nums; }
+.ice__msg { font: 400 .6875rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
+.ice.is-hot .ice__read { color: #FFC53A; }
 .ice__flash {
   position: absolute; inset: 0;
   background: radial-gradient(circle at 50% 50%, rgb(235 247 252 / .55), transparent 55%);
@@ -372,6 +421,74 @@ a { color: inherit; }
 
 .wrap { max-width: 1320px; margin-inline: auto; padding-inline: var(--gutter); }
 
+/* Grain: a faint print texture over each colour band */
+.band { overflow-x: clip; }
+.band::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: .14;
+  pointer-events: none;
+}
+.band > :not(.ghost) { position: relative; z-index: 1; }
+
+/* Ghost words: giant outlines drifting behind each section */
+.ghost {
+  position: absolute; z-index: 0;
+  top: calc(var(--slant) + clamp(20px, 3vw, 48px));
+  right: -.04em;
+  font: 900 clamp(5.5rem, 21vw, 21rem)/.8 var(--display);
+  font-variation-settings: "wdth" 120;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 2px currentColor;
+  opacity: .22;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Tape: race tape across the cut between two sections */
+.tape { position: relative; z-index: 3; height: 0; overflow-x: clip; }
+.tape__belt {
+  position: absolute; left: -4%; right: -4%;
+  top: calc(var(--slant) * -.5);
+  transform: translateY(-50%) rotate(-2deg);
+  overflow: hidden;
+  padding-block: 9px;
+  border-block: 3px solid;
+  box-shadow: 0 10px 24px rgb(0 0 0 / .25);
+}
+.tape--ink .tape__belt { background: var(--ink); color: #FFC53A; border-color: #F2571B; }
+.tape--fire .tape__belt { background: #FFC53A; color: var(--ink); border-color: var(--ink); transform: translateY(-50%) rotate(-2deg); }
+.tape__track { display: flex; width: max-content; }
+.tape__run { display: flex; align-items: center; flex: none; }
+.tape__run span {
+  padding-inline: 18px;
+  font: 800 clamp(.9375rem, 1.6vw, 1.375rem)/1 var(--display);
+  font-variation-settings: "wdth" 115;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tape__run i { font-style: normal; font-size: .75em; color: #F2571B; }
+/* The finish line: chequered, with the word in the middle */
+.tape--finish .tape__belt {
+  display: grid; place-items: center;
+  padding-block: 7px;
+  border-color: var(--ink);
+  background: repeating-conic-gradient(var(--ink) 0 25%, #FFFBF0 0 50%) 0 0 / 22px 22px;
+}
+.tape--finish span {
+  padding: 4px 16px;
+  background: #C91F18;
+  color: #FFFBF0;
+  font: 900 clamp(.9375rem, 1.6vw, 1.375rem)/1 var(--display);
+  font-variation-settings: "wdth" 120;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.tape--fire .tape__run i { color: #C91F18; }
+
 .head {
   margin-top: 14px;
   font: 900 clamp(2.25rem, 1rem + 5.2vw, 5.75rem)/.96 var(--display);
@@ -414,6 +531,33 @@ a { color: inherit; }
   letter-spacing: -.02em;
 }
 .date--lead .date__day { font-size: clamp(9rem, 26vw, 23rem); }
+/* Chase the Sun: the 14 is a window onto a sunset. main.js sets --sun from
+   0 (high) to 1 (gone) as the numeral travels up the screen. */
+.date--lead .date__day {
+  /* Sizes are in em because the digits are .68em tall from the top of the
+     box; the horizon sits at .47em, about two-thirds of the way down. */
+  --sun: .35;
+  background:
+    /* ripples on the water */
+    repeating-linear-gradient(180deg, transparent 0 .016em, rgb(255 226 170 / .2) .016em .02em) 0 .47em / 100% .21em no-repeat,
+    /* the sun's path of light across the sea */
+    radial-gradient(ellipse .14em .22em at 72% 0, rgb(255 220 140 / calc(.85 - var(--sun) * .55)), transparent) 0 .47em / 100% .21em no-repeat,
+    /* the sun, clipped at the horizon so it sinks into the sea */
+    radial-gradient(circle at 72% calc(.1em + var(--sun) * .5em), #FFFBF0 0 .07em, #FFE7A3 .095em, rgb(255 170 60 / .55) .2em, transparent .42em) 0 0 / 100% .47em no-repeat,
+    /* sky and sea; the sky deepens as the sun goes down */
+    linear-gradient(180deg,
+      color-mix(in srgb, #FFB347, #2B0A2E calc(var(--sun) * 100%)) 0,
+      color-mix(in srgb, #FF8A3D, #9B1B3A calc(var(--sun) * 100%)) .28em,
+      color-mix(in srgb, #FFE08A, #FF5A1F calc(var(--sun) * 100%)) .47em,
+      #A8344A .47em,
+      #6E1838 .54em,
+      #24071A .68em) 0 0 / 100% .68em no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* a faint rim keeps the digits readable once the sky goes dark */
+  -webkit-text-stroke: 2px rgb(255 197 58 / .28);
+}
 .date__title { font: 800 1.375rem/1.2 var(--display); margin-bottom: 8px; font-variation-settings: "wdth" 100; }
 .date__meta { margin-bottom: 12px; font: 400 .75rem/1.6 var(--mono); }
 .date > div { max-width: 46ch; }
@@ -458,6 +602,79 @@ a { color: inherit; }
   font-variation-settings: "wdth" 92;
 }
 .perks small { font: 400 .6875rem/1.4 var(--mono); white-space: nowrap; }
+.perks span { flex: 1; transition: transform .25s ease-out; }
+
+/* Perk stickers: a yellow badge per perk, slapped on at a slight angle */
+.perk__icon {
+  --tilt: -6deg;
+  flex: none;
+  align-self: center;
+  display: grid; place-items: center;
+  width: clamp(40px, 4vw, 52px); aspect-ratio: 1;
+  border-radius: 50%;
+  background: #FFC53A;
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: rotate(var(--tilt));
+}
+.perks li:nth-child(2n) .perk__icon { --tilt: 7deg; }
+.perks li:nth-child(3n) .perk__icon { --tilt: -3deg; }
+.perk__icon svg {
+  width: 56%; height: 56%;
+  fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.has-reveals .perks li > .perk__icon { opacity: 1; transition: none; }
+.has-reveals .perks li:not(.is-in) > .perk__icon { opacity: 1; transform: rotate(var(--tilt)) scale(0); }
+.has-reveals .perks li.is-in > .perk__icon { animation: sticker .5s cubic-bezier(.3, 1.7, .5, 1) .15s backwards; }
+@keyframes sticker {
+  from { transform: rotate(calc(var(--tilt) - 40deg)) scale(0); }
+}
+.perks li:hover .perk__icon { animation: wiggle .4s ease-in-out; }
+.perks li:hover span { transform: translateX(6px); }
+@keyframes wiggle {
+  25% { transform: rotate(calc(var(--tilt) + 12deg)) scale(1.08); }
+  75% { transform: rotate(calc(var(--tilt) - 10deg)) scale(1.04); }
+}
+
+/* Rubber stamp on each run that has happened */
+.log__row > div:first-child { position: relative; }
+.stamp {
+  position: absolute; bottom: -14px; right: 8%;
+  display: grid; justify-items: center;
+  padding: 6px 12px 7px;
+  border: 4px double #C91F18;
+  border-radius: 6px;
+  color: #C91F18;
+  font: 900 clamp(1.25rem, 2.2vw, 1.75rem)/.95 var(--display);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  transform: rotate(-12deg);
+  opacity: .82;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.stamp small { font: 600 .5625rem/1.2 var(--mono); letter-spacing: .08em; }
+.has-reveals .log__row:not(.is-in) .stamp { opacity: 0; }
+.has-reveals .log__row.is-in .stamp { animation: stamp .38s cubic-bezier(.5, 0, .7, .2) .45s backwards; }
+@keyframes stamp {
+  from { opacity: 0; transform: rotate(-20deg) scale(2.6); }
+  80% { opacity: .9; transform: rotate(-11deg) scale(.94); }
+}
+
+/* Reels: pinned up like photos, with a strip of tape */
+.reel { position: relative; transform: rotate(1.6deg); transition: transform .3s ease-out; }
+.log__row:nth-child(2n) .reel { transform: rotate(-1.8deg); }
+.reel:hover, .log__row:nth-child(2n) .reel:hover { transform: none; }
+.reel__frame { box-shadow: 8px 8px 0 var(--ink); }
+.reel::before {
+  content: "";
+  position: absolute; z-index: 2;
+  top: -14px; left: 50%;
+  width: 96px; height: 28px;
+  background: rgb(255 251 240 / .72);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .15);
+  transform: translateX(-50%) rotate(-4deg);
+}
 
 /* KM 3: founder */
 .founder {
@@ -488,7 +705,25 @@ a { color: inherit; }
 
 /* Founder photo: a steel plate with the logo's bottom-right corner cut away.
    The offset lives on the wrapper because a clip-path would cut it off. */
-.plate { --cut: clamp(36px, 4vw, 56px); filter: drop-shadow(10px 10px 0 #C91F18); }
+.plate { position: relative; --cut: clamp(36px, 4vw, 56px); filter: drop-shadow(10px 10px 0 #C91F18); }
+/* Founder seal: a stamp on the corner of the photo that turns as you scroll */
+.seal {
+  position: absolute; z-index: 2;
+  top: calc(clamp(84px, 9vw, 120px) * -.38);
+  right: calc(clamp(84px, 9vw, 120px) * -.38);
+  width: clamp(84px, 9vw, 120px);
+  height: auto;
+  overflow: visible;
+}
+.seal circle { fill: #FFC53A; stroke: var(--ink); stroke-width: 2; }
+@media (max-width: 600px) {
+  .seal { right: -6px; }
+}
+.seal text {
+  fill: var(--ink);
+  font: 700 10.5px/1 var(--mono);
+  letter-spacing: .08em;
+}
 .plate__frame {
   padding: 10px 10px 0;
   background: var(--ink);
@@ -666,6 +901,38 @@ a { color: inherit; }
 .foot__credit a:focus-visible { outline: 2px solid #FFC53A; outline-offset: 4px; }
 @media (prefers-reduced-motion: reduce) { .foot__credit strong, .foot__credit a i { transition: none; } }
 
+/* Motion: rise in, tilt, pull */
+.has-motion .rise {
+  opacity: 0;
+  translate: 0 28px;
+  transition: opacity .6s ease-out var(--d, 0s), translate .9s cubic-bezier(.16, 1, .3, 1) var(--d, 0s);
+}
+.has-motion .rise.is-up { opacity: 1; translate: 0 0; }
+.poster, .plate { transition: transform .45s cubic-bezier(.2, .7, .2, 1); will-change: transform; }
+.plate__photo img { transform: scale(1.12); }
+.btn, .watch__join { transition: padding .18s ease-out, translate .3s cubic-bezier(.2, .7, .2, 1); }
+
+/* Easter egg: the forge overheats */
+.overheat__flash {
+  position: fixed; inset: 0; z-index: 40;
+  background: radial-gradient(circle at 50% 60%, #FFFBF0, #FFC53A 35%, #F2571B 65%, #A3141A);
+  pointer-events: none;
+}
+.overheat__ember { position: fixed; z-index: 41; border-radius: 50%; pointer-events: none; }
+.overheat__toast {
+  position: fixed; left: 50%; top: 22px; z-index: 42;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 12px 16px;
+  background: var(--ink);
+  color: var(--white-heat);
+  box-shadow: 6px 6px 0 #F2571B;
+  font: 600 .8125rem/1.35 var(--mono);
+  text-align: center;
+  transform: translate(-50%, -140%);
+  pointer-events: none;
+}
+
 /* The watch */
 .watch {
   position: fixed;
@@ -680,14 +947,53 @@ a { color: inherit; }
 }
 .watch__face {
   display: grid;
-  grid-template-columns: auto auto;
-  gap: 5px 16px;
+  grid-template-columns: auto auto auto;
+  gap: 5px 12px;
   padding: 9px 12px 8px;
   font: 400 .6875rem/1.2 var(--mono);
   font-variant-numeric: tabular-nums;
 }
 .watch__km b { font-weight: 600; font-size: .875rem; }
 .watch__time { align-self: end; text-align: right; }
+/* Heart rate: climbs when you scroll hard, settles when you slow down */
+.watch__bpm { align-self: end; white-space: nowrap; }
+.watch__bpm i {
+  display: inline-block;
+  margin-right: 4px;
+  font-style: normal;
+  color: #F2571B;
+  animation: heartbeat var(--beat, .83s) ease-out infinite;
+}
+@keyframes heartbeat {
+  0%, 40%, 100% { transform: scale(1); }
+  15% { transform: scale(1.35); }
+}
+.watch.is-redline { animation: redline .12s linear infinite; }
+.watch.is-redline .watch__bpm b { color: #FFC53A; }
+@keyframes redline {
+  25% { transform: translate(1px, -1px); }
+  75% { transform: translate(-1px, 1px); }
+}
+.watch__easy {
+  position: absolute; right: 0; bottom: calc(100% + 6px);
+  padding: 4px 8px;
+  background: #FFC53A;
+  color: var(--ink);
+  font: 600 .6875rem/1.2 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(8px) scale(.9);
+  transform-origin: 100% 100%;
+  transition: opacity .15s ease-out, transform .15s ease-out;
+  pointer-events: none;
+}
+.watch.is-redline:not(.is-finished) .watch__easy {
+  opacity: 1;
+  transform: none;
+  transition: opacity .2s ease-out, transform .34s cubic-bezier(.2, 1.6, .4, 1);
+}
 .watch__track { grid-column: 1 / -1; height: 3px; background: rgb(255 255 255 / .22); }
 .watch__track i {
   display: block; height: 100%; width: 100%;
@@ -742,7 +1048,8 @@ a { color: inherit; }
   .perks small { font-size: .625rem; }
 }
 @media (max-width: 480px) {
-  .perks li { flex-direction: column; gap: 4px; }
+  .perks li { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; }
+  .perks li .perk__icon { grid-row: span 2; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -750,6 +1057,7 @@ a { color: inherit; }
   .route__stop.is-next::before { animation: none; }
   .btn::after, .watch__join::after { display: none; }
   .watch__done { transition: none; }
+  .watch__bpm i { animation: none; }
   .route__embers { display: none; }
   .btn { transition: none; }
 }

@@ -60,6 +60,11 @@ function runPreloader(onReveal) {
   const flash = document.getElementById('ice-flash');
   const shardBox = document.getElementById('ice-shards');
   const crackBox = document.getElementById('ice-cracks');
+  const hot = document.getElementById('ice-hot');
+  const frost = document.getElementById('ice-frost');
+  const readout = document.getElementById('ice-read');
+  const tempEl = document.getElementById('ice-temp');
+  const msgEl = document.getElementById('ice-msg');
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const between = (min, max) => min + Math.random() * (max - min);
 
@@ -87,7 +92,40 @@ function runPreloader(onReveal) {
     return { shard, cx, cy };
   });
 
+  // Frost drifting up through the dark.
+  for (let i = 0; i < 28; i++) {
+    const speck = document.createElement('i');
+    speck.style.cssText = `left:${(Math.random() * 100).toFixed(1)}%;--s:${(1.5 + Math.random() * 3).toFixed(1)}px;--life:${(4 + Math.random() * 5).toFixed(1)}s;--wait:${(-Math.random() * 8).toFixed(1)}s;--drift:${(Math.random() * 80 - 40).toFixed(0)}px`;
+    frost.append(speck);
+  }
+
+  // The readout counts its way to each new temperature.
+  let shownTemp = -18;
+  function heatTo(target, ms) {
+    const from = shownTemp;
+    const start = performance.now();
+    shownTemp = target;
+    (function frame(now) {
+      const t = Math.min(1, (now - start) / ms);
+      const eased = 1 - (1 - t) ** 3;
+      tempEl.textContent = Math.round(from + (target - from) * eased).toLocaleString('en-IN');
+      if (t < 1) requestAnimationFrame(frame);
+    })(start);
+  }
+
+  function ring(power) {
+    const wave = document.createElement('i');
+    wave.className = 'ice__ring';
+    stage.append(wave);
+    wave.animate(
+      [{ transform: 'scale(.2)', opacity: 0.9 }, { transform: `scale(${1.6 + power * 0.9})`, opacity: 0 }],
+      { duration: 520, easing: 'cubic-bezier(.2,.7,.3,1)' },
+    ).finished.then(() => wave.remove());
+  }
+
   function strike(power, cracks) {
+    ring(power);
+    heatTo(Math.round(-18 + power * 8), 260);
     const kick = 2 + power * 2.5;
     stage.animate([
       { transform: 'none' },
@@ -140,6 +178,12 @@ function runPreloader(onReveal) {
       ], { duration: 1000, fill: 'forwards' });
     });
     throwChips(size);
+    // Ice to forge: the cold light flares into heat and the frost turns to embers.
+    ice.classList.add('is-hot');
+    hot.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1.1)', offset: 0.35 }, { opacity: 0.75, transform: 'none' }], { duration: 900, easing: 'ease-out', fill: 'forwards' });
+    ring(3.2);
+    heatTo(1300, 700);
+    msgEl.textContent = 'Forged';
     logo.animate([
       { transform: 'scale(.97)', filter: 'brightness(1.5)' },
       { transform: 'scale(1.03)', filter: 'brightness(1.15)', offset: 0.35 },
@@ -183,6 +227,8 @@ function runPreloader(onReveal) {
       );
     }
     ice.style.pointerEvents = 'none';
+    [hot, frost, readout].forEach((layer) => layer.animate([{ opacity: getComputedStyle(layer).opacity }, { opacity: 0 }], { duration: 380, easing: 'ease-in', fill: 'forwards' }));
+    ice.querySelector('.ice__glow--cold').style.display = 'none';
     const background = ice.animate([{ backgroundColor: '#0A0809' }, { backgroundColor: 'rgb(10 8 9 / 0)' }], { duration: 620, easing: 'ease-in', fill: 'forwards' });
     background.finished.then(() => ice.remove());
   }
@@ -751,6 +797,122 @@ addEventListener('scroll', requestWatchUpdate, { passive: true });
 addEventListener('resize', requestWatchUpdate);
 updateWatch();
 
+/* ---------- Easter egg: tap the logo five times fast and the forge overheats ---------- */
+function startOverheat() {
+  const brand = document.querySelector('.nav__brand');
+  let taps = [];
+  let busy = false;
+
+  function overheat() {
+    busy = true;
+    const toast = document.createElement('p');
+    toast.className = 'overheat__toast';
+    toast.setAttribute('role', 'status');
+    toast.textContent = 'You overheated the forge. Cool down at the next run.';
+    document.body.append(toast);
+    toast.animate(
+      [{ transform: 'translate(-50%, -140%)' }, { transform: 'translate(-50%, 0)' }],
+      { duration: reducedMotion ? 1 : 420, easing: 'cubic-bezier(.2,1.5,.4,1)', fill: 'forwards' },
+    );
+
+    if (!reducedMotion) {
+      const flash = document.createElement('div');
+      flash.className = 'overheat__flash';
+      document.body.append(flash);
+      flash.animate([{ opacity: 0.95 }, { opacity: 0.6, offset: 0.2 }, { opacity: 0 }], { duration: 900, easing: 'ease-out' })
+        .finished.then(() => flash.remove());
+      document.querySelector('main').animate(
+        [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ transform: i === 7 ? 'none' : `translate(${(Math.random() - 0.5) * 18}px, ${(Math.random() - 0.5) * 12}px)` })),
+        { duration: 420, easing: 'linear' },
+      );
+      const colours = ['#C91F18', '#F2571B', '#F98F22', '#FFC53A', '#FFFBF0'];
+      for (let i = 0; i < 70; i++) {
+        const size = 3 + Math.random() * 7;
+        const ember = document.createElement('i');
+        ember.className = 'overheat__ember';
+        ember.style.cssText = `left:${Math.random() * innerWidth}px;top:${innerHeight + 10}px;width:${size}px;height:${size}px;background:${colours[i % colours.length]}`;
+        document.body.append(ember);
+        ember.animate(
+          [
+            { transform: 'translate(0, 0)', opacity: 1 },
+            { transform: `translate(${(Math.random() - 0.5) * 160}px, ${-innerHeight * (0.5 + Math.random() * 0.6)}px) scale(.2)`, opacity: 0 },
+          ],
+          { duration: 1200 + Math.random() * 1400, delay: Math.random() * 400, easing: 'cubic-bezier(.15,.7,.4,1)', fill: 'backwards' },
+        ).finished.then(() => ember.remove());
+      }
+    }
+
+    setTimeout(() => {
+      toast.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' })
+        .finished.then(() => { toast.remove(); busy = false; });
+    }, 3200);
+  }
+
+  brand.addEventListener('click', () => {
+    const now = performance.now();
+    taps = taps.filter((t) => now - t < 2500);
+    taps.push(now);
+    if (taps.length >= 5 && !busy) {
+      taps = [];
+      overheat();
+    }
+  });
+}
+startOverheat();
+
+/* ---------- Tapes: run along on their own, faster while you scroll ---------- */
+const tapeRuns = reducedMotion ? [] : [...document.querySelectorAll('.tape__track')].map((track, i) => track.animate(
+  [{ transform: 'translateX(0)' }, { transform: 'translateX(-50%)' }],
+  { duration: 26000, iterations: Infinity, direction: i % 2 ? 'reverse' : 'normal' },
+));
+
+/* ---------- Heart rate: scroll hard and the watch notices ---------- */
+function startHeartRate() {
+  const watch = document.getElementById('watch');
+  const bpmEl = document.getElementById('watch-bpm');
+  const heart = watch.querySelector('.watch__bpm i');
+  const RESTING = 72;
+  let bpm = RESTING;
+  let speed = 0; // smoothed scroll speed, px per second
+  let lastY = scrollY;
+  let lastTime = performance.now();
+  let running = false;
+  let shown = RESTING;
+
+  function tick(now) {
+    const seconds = Math.min(0.1, Math.max(0.001, (now - lastTime) / 1000));
+    lastTime = now;
+    const moved = Math.abs(scrollY - lastY);
+    lastY = scrollY;
+    speed += (moved / seconds - speed) * Math.min(1, seconds * 6);
+    const target = RESTING + Math.min(118, speed / 22);
+    // The heart climbs fast and recovers slowly, like a real one.
+    bpm += (target - bpm) * Math.min(1, seconds * (target > bpm ? 2.2 : 0.8));
+    const whole = Math.round(bpm);
+    if (whole !== shown) {
+      shown = whole;
+      bpmEl.textContent = whole;
+      heart.style.setProperty('--beat', `${(60 / whole).toFixed(2)}s`);
+    }
+    tapeRuns.forEach((run) => { run.playbackRate = 1 + Math.min(7, speed / 350); });
+    if (bpm > 162) watch.classList.add('is-redline');
+    else if (bpm < 140) watch.classList.remove('is-redline');
+    if (bpm - RESTING > 0.6 || speed > 5) {
+      requestAnimationFrame(tick);
+    } else {
+      running = false;
+    }
+  }
+  addEventListener('scroll', () => {
+    if (running) return;
+    running = true;
+    lastY = scrollY;
+    lastTime = performance.now();
+    requestAnimationFrame(tick);
+  }, { passive: true });
+}
+if (!reducedMotion) startHeartRate();
+
 /* ---------- Scroll: fly into the metal, and hammer things out as they arrive ---------- */
 function startScrollEffects() {
   const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -772,7 +934,10 @@ function startScrollEffects() {
   ];
 
   const numerals = [...document.querySelectorAll('.date__day')];
+  const sunNumeral = document.querySelector('.date--lead .date__day');
   const finishMark = document.querySelector('.finish__line .wordmark');
+  const ghosts = [...document.querySelectorAll('.ghost')];
+  const seal = document.querySelector('.seal');
   finishMark.style.transformOrigin = '0 50%';
 
   // How far an element has travelled up the screen on its way in.
@@ -851,9 +1016,20 @@ function startScrollEffects() {
   function update() {
     queued = false;
     flyInto();
+    // Ghost words drift sideways as their section passes.
+    ghosts.forEach((ghost) => {
+      const band = ghost.parentElement.getBoundingClientRect();
+      if (band.bottom < 0 || band.top > innerHeight) return;
+      const passed = clamp((innerHeight - band.top) / (innerHeight + band.height));
+      ghost.style.transform = `translateX(${((0.5 - passed) * 14).toFixed(2)}vw)`;
+    });
+    seal.style.transform = `rotate(${(scrollY * 0.12).toFixed(1)}deg)`;
     numerals.forEach((numeral) => {
       numeral.style.fontVariationSettings = `"wdth" ${60 + 60 * smooth(arrival(numeral))}`;
     });
+    // The sun in the 14 sets as it rises up the screen.
+    const sunAt = sunNumeral.getBoundingClientRect();
+    sunNumeral.style.setProperty('--sun', clamp((innerHeight * 0.85 - sunAt.top) / (innerHeight * 0.75)).toFixed(3));
     const landed = arrival(finishMark);
     finishMark.style.transform = `scaleX(${0.34 + 0.66 * smooth(landed)})`;
     // The wordmark's last blow throws off embers, once, if anyone's there to see it.
@@ -935,6 +1111,93 @@ function startReveals() {
   document.querySelectorAll('.perks, .perks li, .log__row').forEach((el) => lineWatcher.observe(el));
 }
 if (!reducedMotion) startReveals();
+
+/* ---------- Motion: things rise in, labels decode, photos tilt, buttons pull ---------- */
+function startMotion() {
+  document.documentElement.classList.add('has-motion');
+
+  // Text, images and buttons rise in as they arrive, a beat apart.
+  const risers = document.querySelectorAll([
+    'main .lede', 'main .date > div > p:not(.date__day)', '.poster', '.plate',
+    '.founder > div > p:not(.label):not(.lede)', '.pull', '.log__row > div:first-child > p',
+    '.reel', '.finish__actions', '.follow__list li',
+  ].join(','));
+  risers.forEach((el) => el.classList.add('rise'));
+  const riseWatcher = new IntersectionObserver((entries) => {
+    entries.filter((entry) => entry.isIntersecting).forEach((entry, i) => {
+      riseWatcher.unobserve(entry.target);
+      entry.target.style.setProperty('--d', `${i * 80}ms`);
+      entry.target.classList.add('is-up');
+    });
+  }, { rootMargin: '0px 0px -8% 0px' });
+  risers.forEach((el) => riseWatcher.observe(el));
+
+  // Section labels decode like a race timer settling on a reading.
+  const GLYPHS = '#%&@$*+=<>/0123456789';
+  function decode(label) {
+    const final = label.textContent;
+    const start = performance.now();
+    const length = 650;
+    (function frame(now) {
+      const done = Math.min(1, (now - start) / length);
+      const settled = Math.floor(done * final.length);
+      label.textContent = [...final].map((ch, i) => (
+        i < settled || /\s/.test(ch) ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
+      )).join('');
+      if (done < 1) requestAnimationFrame(frame);
+      else label.textContent = final;
+    })(start);
+  }
+  const labels = document.querySelectorAll('main .label');
+  const labelWatcher = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      labelWatcher.unobserve(entry.target);
+      decode(entry.target);
+    });
+  }, { rootMargin: '0px 0px -10% 0px' });
+  labels.forEach((label) => labelWatcher.observe(label));
+
+  // The founder's photo drifts inside its frame as you scroll past.
+  const photo = document.querySelector('.plate__photo img');
+  let queued = false;
+  function drift() {
+    queued = false;
+    const box = photo.parentElement.getBoundingClientRect();
+    if (box.bottom < 0 || box.top > innerHeight) return;
+    const passed = Math.min(1, Math.max(0, (innerHeight - box.top) / (innerHeight + box.height)));
+    photo.style.transform = `scale(1.12) translateY(${((0.5 - passed) * 7).toFixed(2)}%)`;
+  }
+  addEventListener('scroll', () => {
+    if (!queued) {
+      queued = true;
+      requestAnimationFrame(drift);
+    }
+  }, { passive: true });
+  drift();
+
+  // With a mouse: the poster and photo tilt toward the pointer, buttons pull toward it.
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  document.querySelectorAll('.poster, .plate').forEach((card) => {
+    card.addEventListener('pointermove', (event) => {
+      const box = card.getBoundingClientRect();
+      const x = (event.clientX - box.left) / box.width - 0.5;
+      const y = (event.clientY - box.top) / box.height - 0.5;
+      card.style.transform = `perspective(900px) rotateX(${(-y * 9).toFixed(2)}deg) rotateY(${(x * 11).toFixed(2)}deg)`;
+    });
+    card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+  });
+  document.querySelectorAll('.btn, .watch__join').forEach((button) => {
+    button.addEventListener('pointermove', (event) => {
+      const box = button.getBoundingClientRect();
+      const x = event.clientX - (box.left + box.width / 2);
+      const y = event.clientY - (box.top + box.height / 2);
+      button.style.translate = `${(x * 0.18).toFixed(1)}px ${(y * 0.3).toFixed(1)}px`;
+    });
+    button.addEventListener('pointerleave', () => { button.style.translate = ''; });
+  });
+}
+if (!reducedMotion) startMotion();
 
 /* ---------- Dates: keep the page honest once a run has happened ---------- */
 const today = new Date();

@@ -21,6 +21,9 @@
 <body>
   <!-- Preloader: main.js cracks this block of ice open to reveal the logo -->
   <div class="ice" id="ice" aria-hidden="true">
+    <div class="ice__glow ice__glow--cold"></div>
+    <div class="ice__glow ice__glow--hot" id="ice-hot"></div>
+    <div class="ice__frost" id="ice-frost"></div>
     <div class="ice__stage" id="ice-stage">
       <img class="ice__logo" src="assets/ice-logo.webp" alt="" width="640" height="640">
       <div class="ice__shards" id="ice-shards"></div>
@@ -28,6 +31,10 @@
       <svg class="ice__cracks" id="ice-cracks" viewBox="0 0 100 100"></svg>
     </div>
     <div class="ice__flash" id="ice-flash"></div>
+    <div class="ice__read" id="ice-read">
+      <span class="ice__temp"><b id="ice-temp">-18</b>&deg;C</span>
+      <span class="ice__msg" id="ice-msg">Breaking the ice</span>
+    </div>
   </div>
 
   <a class="skip" href="#next">Skip to the next runs</a>
@@ -123,8 +130,11 @@
       </div>
     </section>
 
+    <div class="tape tape--ink" aria-hidden="true"><div class="tape__belt"><div class="tape__track"><div class="tape__run"><span>Miles</span><i>&#9670;</i> <span>People</span><i>&#9670;</i> <span>Experiences</span><i>&#9670;</i> <span>Running Goa differently</span><i>&#9670;</i></div><div class="tape__run"><span>Miles</span><i>&#9670;</i> <span>People</span><i>&#9670;</i> <span>Experiences</span><i>&#9670;</i> <span>Running Goa differently</span><i>&#9670;</i></div></div></div></div>
+
     <!-- KM 2: cherry -->
     <section class="band band--cherry" id="mornings" data-km="2">
+      <p class="ghost" aria-hidden="true">ANYONE</p>
       <div class="wrap">
         <p class="label">KM 2 &nbsp;/&nbsp; The runs</p>
         <h2 class="head">You don't need to be a runner.</h2>
@@ -132,20 +142,27 @@
 
         <h3 class="label list-label">What's happened at a FORGED run so far</h3>
         <ul class="perks">
-          <li><span>MC on the mic, DJ on the decks</span><small>5K Social Run</small></li>
-          <li><span>An ice bath</span><small>Run for Treats</small></li>
-          <li><span>Coffee &amp; avocado toast</span><small>Run for Treats</small></li>
-          <li><span>Costumes, strongly encouraged</span><small>Run for Treats</small></li>
-          <li><span>Games &amp; prizes</span><small>5K Social Run</small></li>
-          <li><span>Craft kombucha</span><small>Run for Treats</small></li>
+          <li><i class="perk__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></i><span>MC on the mic, DJ on the decks</span><small>5K Social Run</small></li>
+          <li><i class="perk__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5L12 12l8-4.5M12 12v9"/></svg></i><span>An ice bath</span><small>Run for Treats</small></li>
+          <li><i class="perk__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 10h12v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 3c-1 1.5 1 2.5 0 4M12 3c-1 1.5 1 2.5 0 4"/></svg></i><span>Coffee &amp; avocado toast</span><small>Run for Treats</small></li>
+          <li><i class="perk__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 9c3-2.2 6.5-2.2 9.5 0 3-2.2 6.5-2.2 9.5 0 0 5.5-3 7.5-5.2 7.5-2 0-3-2-4.3-2s-2.3 2-4.3 2C5.5 16.5 2.5 14.5 2.5 9z"/><circle cx="7.6" cy="11.2" r="1.4"/><circle cx="16.4" cy="11.2" r="1.4"/></svg></i><span>Costumes, strongly encouraged</span><small>Run for Treats</small></li>
+          <li><i class="perk__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 2.6 4M16 6h2.5a2.5 2.5 0 0 1-2.6 4M12 13v4M9 17h6M8 20.5h8"/></svg></i><span>Games &amp; prizes</span><small>5K Social Run</small></li>
+          <li><i class="perk__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 3h4M10.5 3v4L8 10.5V20a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-9.5L13.5 7V3"/><path d="M8 13.5h8"/></svg></i><span>Craft kombucha</span><small>Run for Treats</small></li>
         </ul>
       </div>
     </section>
 
     <!-- KM 3: orange -->
     <section class="band band--orange" id="founder" data-km="3">
+      <p class="ghost" aria-hidden="true">FOUNDER</p>
       <div class="wrap founder">
         <div class="plate">
+          <svg class="seal" viewBox="0 0 120 120" aria-hidden="true">
+            <defs><path id="seal-ring" d="M60 60m-45 0a45 45 0 1 1 90 0a45 45 0 1 1-90 0"/></defs>
+            <circle cx="60" cy="60" r="59"/>
+            <text><textPath href="#seal-ring" textLength="280">FOUNDER &#8226; FORGED RUN CLUB &#8226; GOA &#8226;</textPath></text>
+            <image href="assets/ice-logo.webp" x="40" y="40" width="40" height="40"/>
+          </svg>
           <figure class="plate__frame">
             <div class="plate__photo">
               <img src="assets/photos/millennia.jpg" alt="Millennia Rose, founder of FORGED, holding up a race medal" width="846" height="891" loading="lazy">
@@ -164,8 +181,11 @@
       </div>
     </section>
 
+    <div class="tape tape--fire" aria-hidden="true"><div class="tape__belt"><div class="tape__track"><div class="tape__run"><span>No experience needed</span><i>&#9670;</i> <span>Everyone's welcome</span><i>&#9670;</i> <span>Come for one run</span><i>&#9670;</i></div><div class="tape__run"><span>No experience needed</span><i>&#9670;</i> <span>Everyone's welcome</span><i>&#9670;</i> <span>Come for one run</span><i>&#9670;</i></div></div></div></div>
+
     <!-- KM 4: lemon -->
     <section class="band band--lemon" id="log" data-km="4">
+      <p class="ghost" aria-hidden="true">LOGGED</p>
       <div class="wrap">
         <p class="label">KM 4 &nbsp;/&nbsp; Run log</p>
         <h2 class="head">October, logged.</h2>
@@ -174,6 +194,7 @@
           <article class="log__row">
             <div>
               <p class="log__date">25 Oct 2026 · 06:00 · 5K</p>
+              <span class="stamp" aria-hidden="true">Done<small>5K logged</small></span>
               <h3 class="log__title">The 5K Social Run</h3>
               <p>Our first social run, and Calangute's first-ever 5K community run. Good music at sunrise, with MC Sammy on the mic.</p>
               <p class="log__where">Calangute, Goa</p>
@@ -192,6 +213,7 @@
           <article class="log__row">
             <div>
               <p class="log__date">31 Oct 2026 · 06:00 · 5K</p>
+              <span class="stamp" aria-hidden="true">Done<small>5K logged</small></span>
               <h3 class="log__title">Run for Treats</h3>
               <p>A Halloween social run with Ninety7, where the only pacers were ghosts. Costumes, coffee, an ice bath and a spooky little treat.</p>
               <p class="log__where">FORGED × Ninety7</p>
@@ -210,8 +232,11 @@
       </div>
     </section>
 
+    <div class="tape tape--finish" aria-hidden="true"><div class="tape__belt"><span>Finish</span></div></div>
+
     <!-- KM 5: white heat -->
     <section class="band band--white" id="join" data-km="5">
+      <p class="ghost" aria-hidden="true">SEE YOU</p>
       <div class="wrap finish">
         <p class="label">KM 5 &nbsp;/&nbsp; Finish</p>
         <h2 class="finish__line">Lace up.<br>Show up.<br>Get <span class="wordmark" role="img" aria-label="FORGED"></span></h2>
@@ -262,9 +287,11 @@
   <aside class="watch" id="watch">
     <div class="watch__face" aria-hidden="true">
       <span class="watch__km"><b id="watch-km">0.00</b> km</span>
+      <span class="watch__bpm"><i aria-hidden="true">♥</i><b id="watch-bpm">72</b></span>
       <span class="watch__time" id="watch-time">06:00</span>
       <span class="watch__track"><i id="watch-bar"></i></span>
       <span class="watch__done">Finished</span>
+      <span class="watch__easy">Easy! It&rsquo;s a social run</span>
     </div>
     <a class="watch__join" href="https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t" target="_blank" rel="noopener">Join</a>
   </aside>
