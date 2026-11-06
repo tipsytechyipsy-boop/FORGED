@@ -570,6 +570,44 @@ a { color: inherit; }
   text-transform: uppercase;
 }
 .finish__line .wordmark { margin-top: .12em; color: #C91F18; }
+/* Follow: one tile per channel, under the main button */
+.follow { margin-top: clamp(40px, 6vw, 64px); }
+.follow__list {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+.follow__tile {
+  position: relative;
+  display: flex; align-items: center; gap: 14px;
+  height: 100%;
+  padding: 16px 18px;
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  text-decoration: none;
+  overflow: hidden;
+  transition: background-color .2s ease-out, color .2s ease-out;
+}
+.follow__icon { flex: none; width: 28px; height: 28px; fill: currentColor; transition: fill .2s ease-out; }
+.follow__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.follow__text b { font: 800 1.0625rem/1.15 var(--display); }
+.follow__text small { font: 400 .75rem/1.35 var(--mono); }
+.follow__arrow { margin-left: auto; font: 600 1.125rem/1 var(--mono); transition: transform .25s ease-out; }
+/* Hover: the tile goes ink-dark, the icon catches fire */
+.follow__tile:hover, .follow__tile:focus-visible { background: var(--ink); color: var(--white-heat); }
+.follow__tile:hover .follow__icon, .follow__tile:focus-visible .follow__icon { fill: #F2571B; }
+.follow__tile:hover .follow__arrow, .follow__tile:focus-visible .follow__arrow { transform: translate(3px, -3px); }
+.follow__tile:focus-visible { outline: 3px solid #F2571B; outline-offset: 3px; }
+@media (max-width: 860px) {
+  .follow__list { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .follow__tile, .follow__icon, .follow__arrow { transition: none; }
+}
+
 .finish__actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: center; }
 /* Footer: past the finish line the metal has cooled back to black */
 .foot {
