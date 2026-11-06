@@ -947,12 +947,19 @@ events.forEach((event) => {
   if (date < today) {
     event.classList.add('is-past');
     event.querySelector('[data-status]').textContent = 'This one is done. New dates land in the WhatsApp group first.';
+    event.querySelector('[data-register]')?.remove();
   } else {
     upcoming.push(date);
   }
 });
 
 const nextRun = document.getElementById('next-run');
+// The hero button registers for the next run, until that run has happened.
+if (events[0].classList.contains('is-past')) {
+  const cta = document.getElementById('hero-cta');
+  cta.href = 'https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t';
+  cta.textContent = 'Join the run club on WhatsApp';
+}
 if (upcoming.length === 0) {
   nextRun.textContent = 'New dates land in the WhatsApp group first.';
 } else if (events[0].classList.contains('is-past')) {
