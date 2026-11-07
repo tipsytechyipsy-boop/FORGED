@@ -1257,13 +1257,26 @@ function startReel(reel) {
     embed.dataset.instgrmVersion = '14';
     frame.append(embed);
     loadInstagramEmbeds();
+    // Instagram's frame arrives without a title; give it one for screen readers.
+    new MutationObserver((changes, watcher) => {
+      const iframe = frame.querySelector('iframe');
+      if (iframe) {
+        iframe.title = video.getAttribute('aria-label') || 'Instagram reel';
+        watcher.disconnect();
+      }
+    }).observe(frame, { childList: true, subtree: true });
   }
-  // The file may have already failed before this script ran.
-  if (video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
-    showEmbed();
-    return;
-  }
-  reel.querySelector('source').addEventListener('error', showEmbed);
+  // Nothing loads until the reel is close to the screen: not the video, and
+  // not Instagram's embed, which is over a megabyte on its own.
+  const source = reel.querySelector('source');
+  source.addEventListener('error', showEmbed);
+  const nearby = new IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return;
+    nearby.disconnect();
+    source.src = source.dataset.src;
+    video.load();
+  }, { rootMargin: '600px 0px' });
+  nearby.observe(reel);
 
   sound.addEventListener('click', () => {
     video.muted = !video.muted;
