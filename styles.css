@@ -511,12 +511,24 @@ a { color: inherit; }
 }
 .date { display: grid; gap: 16px; }
 /* The next run gets the poster beside it */
-.date--lead {
+.date--lead, .date--split {
   grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
   grid-template-rows: auto 1fr;
   column-gap: clamp(32px, 5vw, 72px);
 }
-.date--lead > .poster { grid-column: 2; grid-row: 1 / span 2; }
+.date--lead > .poster, .date--split > .poster { grid-column: 2; grid-row: 1 / span 2; }
+.date--rave .poster img { box-shadow: 10px 10px 0 #3D6BFF; }
+/* Run & Rave: the 22 pulses like a light rig, at 128 beats a minute */
+.date--rave .date__day {
+  color: #FFF4EC;
+  text-shadow: 0 0 .04em #9DB4FF, 0 0 .18em rgb(61 107 255 / .7);
+  animation: rave-pulse .469s ease-out infinite;
+}
+@keyframes rave-pulse {
+  0% { text-shadow: 0 0 .04em #DCE5FF, 0 0 .32em rgb(61 107 255 / .95); }
+  100% { text-shadow: 0 0 .02em #9DB4FF, 0 0 .12em rgb(61 107 255 / .45); }
+}
+@media (prefers-reduced-motion: reduce) { .date--rave .date__day { animation: none; } }
 .poster img { width: 100%; height: auto; box-shadow: 10px 10px 0 #FFC53A; }
 .date--lead .date__title {
   margin-bottom: 12px;
@@ -807,6 +819,30 @@ a { color: inherit; }
 .finish__line .wordmark { margin-top: .12em; color: #C91F18; }
 /* Follow: one tile per channel, under the main button */
 .follow { margin-top: clamp(40px, 6vw, 64px); }
+
+/* Work with FORGED: one dark strip with the email, for brands and press */
+.collab {
+  margin-top: 12px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 14px 32px;
+  padding: clamp(18px, 2.4vw, 28px) clamp(18px, 2.6vw, 32px);
+  background: var(--ink);
+  color: var(--white-heat);
+}
+.collab .label { color: #F98F22; }
+.collab__line { margin-top: 6px; font-size: .9375rem; }
+.collab__mail {
+  display: inline-flex; align-items: flex-start; gap: .25em;
+  color: #FFC53A;
+  font: 800 clamp(1.375rem, 1rem + 1.8vw, 2.25rem)/1.1 var(--display);
+  font-variation-settings: "wdth" 100;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.collab__mail i { font: 600 .6em/1 var(--mono); font-style: normal; transition: transform .25s ease-out; }
+.collab__mail:hover { color: var(--white-heat); }
+.collab__mail:hover i { transform: translate(3px, -3px); }
+.collab__mail:focus-visible { outline: 2px solid #FFC53A; outline-offset: 4px; }
 .follow__list {
   margin-top: 14px;
   display: grid;
@@ -1042,8 +1078,8 @@ a { color: inherit; }
   .hero__body { grid-template-columns: 1fr; align-items: end; }
   .dates, .founder, .log__row { grid-template-columns: minmax(0, 1fr); }
   .date--lead .date__day { font-size: clamp(9rem, 44vw, 20rem); }
-  .date--lead { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
-  .date--lead > .poster { grid-column: auto; grid-row: auto; max-width: 440px; margin: 16px 10px 0 0; }
+  .date--lead, .date--split { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .date--lead > .poster, .date--split > .poster { grid-column: auto; grid-row: auto; max-width: 440px; margin: 16px 10px 0 0; }
   .plate { max-width: 420px; margin-right: 10px; }
   .perks small { font-size: .625rem; }
 }

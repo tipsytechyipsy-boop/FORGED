@@ -1217,7 +1217,7 @@ events.forEach((event) => {
 });
 
 const nextRun = document.getElementById('next-run');
-// The hero button registers for the next run, until that run has happened.
+// If the hero button points at a run's registration, it goes back to the group once that run has happened.
 if (events[0].classList.contains('is-past')) {
   const cta = document.getElementById('hero-cta');
   cta.href = 'https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t';

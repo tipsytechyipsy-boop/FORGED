@@ -30,6 +30,7 @@
         "address": { "@type": "PostalAddress", "addressRegion": "Goa", "addressCountry": "IN" },
         "areaServed": "Goa, India",
         "founder": { "@type": "Person", "name": "Millennia Rose", "sameAs": "https://www.instagram.com/millennia_rose_/" },
+        "email": "hello@theforged.in",
         "sameAs": [
           "https://www.instagram.com/the_forged.in/",
           "https://strava.app.link/1jWiydcPL7b",
@@ -54,9 +55,23 @@
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "INR",
-          "availability": "https://schema.org/LimitedAvailability",
-          "url": "https://docs.google.com/forms/d/e/1FAIpQLSdwrnJekcMLMp1JOR74rMlmUZdW4DtUmxrj_0FcmXAlEj2_pA/viewform?usp=dialog"
+          "availability": "https://schema.org/SoldOut"
         },
+        "organizer": { "@id": "https://theforged.in/#club" }
+      },
+      {
+        "@type": "Event",
+        "name": "Run & Rave: FORGED on the Goa Velha Highway",
+        "startDate": "2026-11-22",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "location": {
+          "@type": "Place",
+          "name": "Goa Velha Highway",
+          "address": { "@type": "PostalAddress", "addressLocality": "Goa Velha", "addressRegion": "Goa", "addressCountry": "IN" }
+        },
+        "image": "https://theforged.in/assets/photos/run-and-rave.webp",
+        "description": "A run and a rave in one, with a DJ on wheels. Time, route and registration coming soon.",
         "organizer": { "@id": "https://theforged.in/#club" }
       }
     ]
@@ -132,7 +147,7 @@
         <li class="route__stop" data-date="2026-10-25"><a href="#log"><b>25 Oct</b> <span>5K Social Run</span></a></li>
         <li class="route__stop" data-date="2026-10-31"><a href="#log"><b>31 Oct</b> <span>Run for Treats</span></a></li>
         <li class="route__stop" data-date="2026-11-14"><a href="#next"><b>14 Nov</b> <span>Chase the Sun</span></a></li>
-        <li class="route__stop" data-date="2026-11-22"><a href="#next"><b>22 Nov</b> <span>Details soon</span></a></li>
+        <li class="route__stop" data-date="2026-11-22"><a href="#next"><b>22 Nov</b> <span>Run &amp; Rave</span></a></li>
       </ol>
     </section>
 
@@ -141,7 +156,7 @@
       <div class="hero__aside">
         <p class="label">Next run</p>
         <p class="hero__next" id="next-run">Chase the Sun: a free 3K beach run. Sat 14 Nov, 5 PM, Anjuna.</p>
-        <a class="btn btn--hot" id="hero-cta" href="https://docs.google.com/forms/d/e/1FAIpQLSdwrnJekcMLMp1JOR74rMlmUZdW4DtUmxrj_0FcmXAlEj2_pA/viewform?usp=dialog" target="_blank" rel="noopener">Register for Chase the Sun</a>
+        <a class="btn btn--hot" id="hero-cta" href="https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t" target="_blank" rel="noopener">Join the run club on WhatsApp</a>
       </div>
     </div>
 
@@ -164,19 +179,22 @@
               <p class="date__meta">Sat 14 Nov 2026 · 5:00 PM · 3K beach run<br>Meeting point: Paloma, Anjuna, Goa<br>FORGED × Paloma</p>
               <p>Run the beach, then stay for a live DJ and sunset beats, fun games, social mixers and a curated fruit platter, hosted by MC Zemora and MC Joann. Every participant gets an exclusive Paloma gift voucher.</p>
               <p>Spots are limited, so please register only if you're certain you can come.</p>
-              <p class="date__status" data-status>Registration is free and open now. You're confirmed automatically once you register.</p>
-              <p class="date__register" data-register><a class="btn btn--hot" href="https://docs.google.com/forms/d/e/1FAIpQLSdwrnJekcMLMp1JOR74rMlmUZdW4DtUmxrj_0FcmXAlEj2_pA/viewform?usp=dialog" target="_blank" rel="noopener">Register now</a></p>
+              <p class="date__status" data-status>Registration has closed. Registered? See you on the beach.</p>
             </div>
             <div class="poster">
               <img src="assets/photos/chase-the-sun.webp" alt="Chase the Sun poster: FORGED and Paloma present a 3K beach run on 14 November 2026 at 5 PM, from Paloma, Anjuna, Goa, with a sun setting over the sea behind palm trees." width="1062" height="1314" loading="lazy">
             </div>
           </article>
-          <article class="date" data-event-date="2026-11-22">
+          <article class="date date--split date--rave" data-event-date="2026-11-22">
             <p class="date__day" aria-hidden="true">22</p>
             <div>
-              <h3 class="date__title">Sunday 22 November</h3>
-              <p>Save the date. The plan is still under wraps.</p>
-              <p class="date__status" data-status>Details coming soon.</p>
+              <h3 class="date__title">Run &amp; Rave</h3>
+              <p class="date__meta">Sun 22 Nov 2026 · Goa Velha Highway, Goa<br>FORGED Fitness &amp; Running Club</p>
+              <p>A run and a rave in one. Hit the Goa Velha highway with the club and a DJ on wheels, with the beats going the whole way.</p>
+              <p class="date__status" data-status>Save the date. Time, route and registration coming soon.</p>
+            </div>
+            <div class="poster">
+              <img src="assets/photos/run-and-rave.webp" alt="FORGED Run and Rave poster: runners on a highway at dusk behind a truck with a DJ on top, in front of a huge orange sun. Coming soon, save the date, 22 November 2026, Goa Velha Highway." width="1000" height="1484" loading="lazy">
             </div>
           </article>
         </div>
@@ -317,6 +335,13 @@
             </a></li>
           </ul>
         </div>
+        <div class="collab">
+          <div>
+            <h3 class="label">Work with FORGED</h3>
+            <p class="collab__line">Brand partnerships, collabs, events and press.</p>
+          </div>
+          <a class="collab__mail" href="mailto:hello@theforged.in?subject=Working%20with%20FORGED">hello@theforged.in<i aria-hidden="true">↗</i></a>
+        </div>
       </div>
       <footer class="foot">
         <div class="foot__in wrap">
@@ -328,6 +353,7 @@
               <a href="https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t" target="_blank" rel="noopener">WhatsApp group</a>
               <a href="https://whatsapp.com/channel/0029VbE5Pk15K3zUKYkaoM41" target="_blank" rel="noopener">WhatsApp Channel</a>
               <a href="https://strava.app.link/1jWiydcPL7b" target="_blank" rel="noopener">Strava</a>
+              <a href="mailto:hello@theforged.in">hello@theforged.in</a>
             </p>
           </div>
           <p class="foot__credit"><span>Developed by</span> <a href="https://abba-creators.onrender.com/index.html" target="_blank" rel="noopener"><strong>ABBA CREATORS</strong><i aria-hidden="true">↗</i></a></p>
