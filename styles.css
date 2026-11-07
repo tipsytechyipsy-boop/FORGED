@@ -64,7 +64,8 @@ a { color: inherit; }
 @keyframes ice-failsafe { to { visibility: hidden; } }
 .ice__stage { position: relative; width: min(46vmin, 300px); aspect-ratio: 1; }
 .ice__stage img, .ice__shards, .ice__cracks { position: absolute; inset: 0; width: 100%; height: 100%; }
-.ice__logo { visibility: hidden; }
+/* The logo is painted from the start, hidden under the block until it breaks */
+.ice__logo { visibility: visible; }
 .ice__cracks { overflow: visible; pointer-events: none; }
 .ice__cracks path {
   fill: none;
