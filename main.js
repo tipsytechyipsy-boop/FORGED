@@ -1238,7 +1238,7 @@ const SUPABASE = {
 };
 
 function startRsvp() {
-  const form = document.getElementById('rsvp');
+  const form = document.getElementById('rsvp-form');
   if (!form || !SUPABASE.url || !SUPABASE.key) return;
   if (form.closest('.is-past')) return;
   const event = form.dataset.event;
@@ -1332,6 +1332,28 @@ function startRsvp() {
   });
 }
 startRsvp();
+
+// theforged.in/#rsvp is the link to share: the ice breaks as usual, then
+// the page glides down to the "Are you in?" card for the next event.
+function openRsvpLink() {
+  if (location.hash !== '#rsvp') return;
+  const land = () => {
+    const target = ['rsvp-form', 'rsvp-done', 'run-for-the-mind']
+      .map((id) => document.getElementById(id))
+      .find((el) => el && !el.hidden);
+    target?.scrollIntoView({ block: 'center', behavior: reducedMotion ? 'auto' : 'smooth' });
+  };
+  // Wait for the preloader to finish, then a beat for the page to settle.
+  const started = performance.now();
+  (function waitForIce() {
+    if (document.getElementById('ice') && performance.now() - started < 9000) {
+      setTimeout(waitForIce, 150);
+    } else {
+      setTimeout(land, 400);
+    }
+  })();
+}
+openRsvpLink();
 
 /* ---------- Reels: play each video while it's on screen ---------- */
 function loadInstagramEmbeds() {
