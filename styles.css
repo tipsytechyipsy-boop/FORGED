@@ -582,6 +582,19 @@ a { color: inherit; }
 .date > div > p + p { margin-top: 12px; }
 .date__status { font-weight: 600; }
 .date__status:empty { display: none; }
+.date__perk {
+  padding: 10px 14px;
+  border-left: 3px solid #6CF29A;
+  background: rgb(108 242 154 / .1);
+}
+.date__perk b {
+  display: block;
+  margin-bottom: 2px;
+  font: 600 .6875rem/1.3 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6CF29A;
+}
 .date__register { margin-top: 18px; }
 
 /* RSVP: a headcount for the next event */
@@ -610,6 +623,7 @@ a { color: inherit; }
 }
 @keyframes rsvp-spin { to { --spin: 360deg; } }
 .rsvp__ask { display: flex; align-items: center; gap: 10px; }
+.rsvp__note { margin-top: 6px; font: 400 .8125rem/1.4 var(--mono); color: rgb(255 244 236 / .75); }
 .megaphone { flex: none; width: 1.5em; height: auto; overflow: visible; }
 .megaphone__body { fill: #6CF29A; }
 .megaphone__wave { fill: none; stroke: #6CF29A; stroke-width: 2.6; stroke-linecap: round; animation: megaphone-wave 1.4s ease-out infinite; }
