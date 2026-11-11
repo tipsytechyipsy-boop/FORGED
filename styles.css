@@ -577,6 +577,85 @@ a { color: inherit; }
 .date > div > p + p { margin-top: 12px; }
 .date__status { font-weight: 600; }
 .date__register { margin-top: 18px; }
+
+/* RSVP: a headcount for the next event */
+.rsvp {
+  margin-top: 22px;
+  padding: 18px 18px 16px;
+  border: 2px solid rgb(255 244 236 / .35);
+  background: rgb(10 8 9 / .28);
+  max-width: 46ch;
+}
+.rsvp__ask { font: 900 clamp(1.5rem, 1.1rem + 1.4vw, 2rem)/1 var(--display); font-variation-settings: "wdth" 110; text-transform: uppercase; }
+.rsvp__fields { display: grid; gap: 10px; margin-top: 14px; }
+.rsvp__field { display: grid; gap: 4px; font: 600 .6875rem/1.2 var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+.rsvp__field small { font: inherit; text-transform: none; opacity: .7; }
+.rsvp__field input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1.5px solid rgb(255 244 236 / .4);
+  border-radius: 0;
+  background: rgb(10 8 9 / .35);
+  color: #FFF4EC;
+  font: 400 1rem/1.2 var(--body, inherit);
+}
+.rsvp__field input::placeholder { color: rgb(255 244 236 / .45); }
+.rsvp__field input:focus { outline: 2px solid #FFC53A; outline-offset: 1px; border-color: transparent; }
+.rsvp__trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.rsvp__choices { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 16px; }
+.rsvp__no {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: 600 .875rem/1 var(--mono);
+  text-decoration: underline;
+  text-underline-offset: .3em;
+  cursor: pointer;
+}
+.rsvp__no:hover { color: #FFC53A; }
+.rsvp.is-sending button { opacity: .6; pointer-events: none; }
+.rsvp__error { margin-top: 10px; font: 600 .8125rem/1.4 var(--mono); color: #FFC53A; min-height: 1em; }
+.rsvp-done { margin-top: 22px; }
+.rsvp-done__stamp {
+  display: inline-block;
+  padding: 8px 16px 9px;
+  border: 4px double #9DB4FF;
+  border-radius: 6px;
+  color: #9DB4FF;
+  font: 900 clamp(1.5rem, 1.2rem + 1.2vw, 2rem)/1 var(--display);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  transform: rotate(-6deg);
+}
+.rsvp-done.is-new .rsvp-done__stamp { animation: stamp .38s cubic-bezier(.5, 0, .7, .2) backwards; }
+.rsvp-done__line { margin-top: 14px; max-width: 44ch; }
+
+/* Poll: I'm in vs can't make it, live from the database */
+.poll { margin-top: 18px; max-width: 46ch; }
+.poll__title { font: 600 .6875rem/1.2 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: #9DB4FF; }
+.poll__title span { color: rgb(255 244 236 / .6); }
+.poll__row { margin-top: 10px; }
+.poll__label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font: 600 .875rem/1.2 var(--mono); }
+.poll__label b { font: 900 1.25rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.poll__track { display: block; height: 10px; margin-top: 6px; background: rgb(255 244 236 / .14); overflow: hidden; }
+.poll__track i {
+  display: block; height: 100%; width: 100%;
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .9s cubic-bezier(.2, .7, .2, 1);
+}
+.poll__row[data-choice="yes"] .poll__track i { background: linear-gradient(90deg, #3D6BFF, #9DB4FF); box-shadow: 0 0 12px rgb(61 107 255 / .6); }
+.poll__row[data-choice="no"] .poll__track i { background: rgb(255 244 236 / .45); }
+.poll__row.is-mine .poll__label span::after {
+  content: "You";
+  margin-left: 8px;
+  padding: 2px 6px;
+  background: #9DB4FF;
+  color: var(--ink);
+  font-size: .625rem;
+  vertical-align: 2px;
+}
+@media (prefers-reduced-motion: reduce) { .poll__track i { transition: none; } }
 .date.is-past .date__day { opacity: .35; }
 
 /* KM 2: list */

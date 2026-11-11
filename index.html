@@ -195,7 +195,36 @@
               <h3 class="date__title">Run &amp; Rave</h3>
               <p class="date__meta">Sun 22 Nov 2026 · Goa Velha Highway, Goa<br>FORGED Fitness &amp; Running Club</p>
               <p>A run and a rave in one. Hit the Goa Velha highway with the club and a DJ on wheels, with the beats going the whole way.</p>
-              <p class="date__status" data-status>Save the date. Time, route and registration coming soon.</p>
+              <p class="date__status" data-status>Save the date. Time and route coming soon.</p>
+              <!-- RSVP: hidden until main.js has the Supabase project to send it to -->
+              <form class="rsvp" id="rsvp" data-event="run-and-rave-2026-11-22" data-register hidden novalidate>
+                <p class="rsvp__ask">Are you in?</p>
+                <div class="rsvp__fields">
+                  <label class="rsvp__field"><span>Name</span><input name="name" type="text" autocomplete="name" maxlength="80" required placeholder="Your name"></label>
+                  <label class="rsvp__field"><span>Phone <small>(optional)</small></span><input name="phone" type="tel" autocomplete="tel" maxlength="20" placeholder="+91"></label>
+                  <label class="rsvp__trap" aria-hidden="true">Leave this empty<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+                </div>
+                <div class="rsvp__choices">
+                  <button class="btn btn--hot" type="submit" value="yes">I'm in</button>
+                  <button class="rsvp__no" type="submit" value="no">Can't make it</button>
+                </div>
+                <p class="rsvp__error" id="rsvp-error" role="alert"></p>
+              </form>
+              <div class="rsvp-done" id="rsvp-done" hidden>
+                <p class="rsvp-done__stamp" id="rsvp-stamp">You're in</p>
+                <p class="rsvp-done__line" id="rsvp-line"></p>
+              </div>
+              <div class="poll" id="rsvp-poll" hidden aria-live="polite">
+                <p class="poll__title">The headcount <span id="poll-total"></span></p>
+                <div class="poll__row" data-choice="yes">
+                  <p class="poll__label"><span>I'm in</span> <b id="poll-yes">0</b></p>
+                  <span class="poll__track"><i id="poll-yes-bar"></i></span>
+                </div>
+                <div class="poll__row" data-choice="no">
+                  <p class="poll__label"><span>Can't make it</span> <b id="poll-no">0</b></p>
+                  <span class="poll__track"><i id="poll-no-bar"></i></span>
+                </div>
+              </div>
             </div>
             <div class="poster">
               <img src="assets/photos/run-and-rave-880.webp" srcset="assets/photos/run-and-rave-480.webp 480w, assets/photos/run-and-rave-640.webp 640w, assets/photos/run-and-rave-880.webp 880w" sizes="(max-width: 860px) min(440px, calc(100vw - 42px)), 440px" alt="FORGED Run and Rave poster: runners on a highway at dusk behind a truck with a DJ on top, in front of a huge orange sun. Coming soon, save the date, 22 November 2026, Goa Velha Highway." width="1000" height="1484" loading="lazy">

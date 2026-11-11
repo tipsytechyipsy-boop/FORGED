@@ -1229,6 +1229,103 @@ if (upcoming.length === 0) {
   nextRun.textContent = upcoming[0].toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '') + '. Details coming soon.';
 }
 
+/* ---------- RSVP: "Are you in?" for the next event, saved in Supabase ---------- */
+// The URL and the anon key are meant to be public. The database only lets
+// visitors add an RSVP and read the headcount; see supabase/rsvp.sql.
+const SUPABASE = {
+  url: 'https://btdeacnzfytwlxgcgifb.supabase.co',
+  key: 'sb_publishable_tGyrRXbOQF8O4JAejLeTOQ_YYokYRQo',
+};
+
+function startRsvp() {
+  const form = document.getElementById('rsvp');
+  if (!form || !SUPABASE.url || !SUPABASE.key) return;
+  if (form.closest('.is-past')) return;
+  const event = form.dataset.event;
+  const done = document.getElementById('rsvp-done');
+  const poll = document.getElementById('rsvp-poll');
+  const errorEl = document.getElementById('rsvp-error');
+  const headers = {
+    apikey: SUPABASE.key,
+    'Content-Type': 'application/json',
+  };
+  const remembered = `forged-rsvp-${event}`;
+
+  // The poll: bars for "I'm in" and "Can't make it", sized against each other.
+  async function showPoll(mine) {
+    try {
+      const response = await fetch(`${SUPABASE.url}/rest/v1/rpc/rsvp_tally`, {
+        method: 'POST', headers, body: JSON.stringify({ event_id: event }),
+      });
+      if (!response.ok) return;
+      const { yes = 0, no = 0 } = await response.json();
+      const total = yes + no;
+      document.getElementById('poll-yes').textContent = yes;
+      document.getElementById('poll-no').textContent = no;
+      document.getElementById('poll-total').textContent = total ? `· ${total} ${total === 1 ? 'reply' : 'replies'}` : '· be the first';
+      poll.querySelectorAll('.poll__row').forEach((row) => row.classList.toggle('is-mine', row.dataset.choice === mine));
+      poll.hidden = false;
+      // Let the bars start from empty, then grow to their share.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.getElementById('poll-yes-bar').style.transform = `scaleX(${total ? yes / total : 0})`;
+        document.getElementById('poll-no-bar').style.transform = `scaleX(${total ? no / total : 0})`;
+      }));
+    } catch (error) { /* The poll is a nice extra; the form works without it. */ }
+  }
+
+  function showDone(attending, isNew) {
+    form.hidden = true;
+    done.hidden = false;
+    done.classList.toggle('is-new', isNew);
+    document.getElementById('rsvp-stamp').textContent = attending ? "You're in" : 'Next time';
+    document.getElementById('rsvp-line').textContent = attending
+      ? 'See you on the Goa Velha Highway on 22 Nov. Time and route land in the WhatsApp group first.'
+      : 'No worries. New dates land in the WhatsApp group first.';
+  }
+
+  let saved = null;
+  try { saved = localStorage.getItem(remembered); } catch (error) { /* private mode */ }
+  if (saved === 'yes' || saved === 'no') {
+    showDone(saved === 'yes', false);
+    showPoll(saved);
+    return;
+  }
+  form.hidden = false;
+  showPoll(null);
+
+  form.addEventListener('submit', async (submitEvent) => {
+    submitEvent.preventDefault();
+    const attending = submitEvent.submitter?.value !== 'no';
+    const data = new FormData(form);
+    const name = String(data.get('name') || '').trim();
+    const phone = String(data.get('phone') || '').trim();
+    errorEl.textContent = '';
+    if (data.get('website')) return; // a bot filled the hidden field
+    if (!name) {
+      errorEl.textContent = 'Add your name first.';
+      form.elements.name.focus();
+      return;
+    }
+    form.classList.add('is-sending');
+    try {
+      const response = await fetch(`${SUPABASE.url}/rest/v1/rsvps`, {
+        method: 'POST',
+        headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify({ event, name: name.slice(0, 80), phone: phone.slice(0, 20) || null, attending }),
+      });
+      if (!response.ok) throw new Error(String(response.status));
+      try { localStorage.setItem(remembered, attending ? 'yes' : 'no'); } catch (error) { /* private mode */ }
+      showDone(attending, true);
+      showPoll(attending ? 'yes' : 'no');
+    } catch (error) {
+      errorEl.textContent = "That didn't go through. Check your connection and try again.";
+    } finally {
+      form.classList.remove('is-sending');
+    }
+  });
+}
+startRsvp();
+
 /* ---------- Reels: play each video while it's on screen ---------- */
 function loadInstagramEmbeds() {
   if (window.instgrm) {
