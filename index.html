@@ -202,7 +202,7 @@
               <p class="date__status" data-status>Supported by Mohan Dhond and Edward's Yard.</p>
               <!-- RSVP: hidden until main.js has the Supabase project to send it to -->
               <form class="rsvp" id="rsvp" data-event="run-and-rave-2026-11-22" data-register hidden novalidate>
-                <p class="rsvp__ask">Are you in?</p>
+                <p class="rsvp__ask"><svg class="megaphone" viewBox="0 0 40 28" aria-hidden="true"><path class="megaphone__body" d="M3 10h6l12-7v22l-12-7H3z"/><path class="megaphone__wave" d="M26 9a7 7 0 0 1 0 10"/><path class="megaphone__wave" d="M30 5a12 12 0 0 1 0 18"/><path class="megaphone__wave" d="M34 1a17 17 0 0 1 0 26"/></svg>Are you in?</p>
                 <div class="rsvp__fields">
                   <label class="rsvp__field"><span>Name</span><input name="name" type="text" autocomplete="name" maxlength="80" required placeholder="Your name"></label>
                   <label class="rsvp__field"><span>Phone <small>(optional)</small></span><input name="phone" type="tel" autocomplete="tel" maxlength="20" placeholder="+91"></label>
@@ -217,17 +217,6 @@
               <div class="rsvp-done" id="rsvp-done" hidden>
                 <p class="rsvp-done__stamp" id="rsvp-stamp">You're in</p>
                 <p class="rsvp-done__line" id="rsvp-line"></p>
-              </div>
-              <div class="poll" id="rsvp-poll" hidden aria-live="polite">
-                <p class="poll__title">The headcount <span id="poll-total"></span></p>
-                <div class="poll__row" data-choice="yes">
-                  <p class="poll__label"><span>I'm in</span> <b id="poll-yes">0</b></p>
-                  <span class="poll__track"><i id="poll-yes-bar"></i></span>
-                </div>
-                <div class="poll__row" data-choice="no">
-                  <p class="poll__label"><span>Can't make it</span> <b id="poll-no">0</b></p>
-                  <span class="poll__track"><i id="poll-no-bar"></i></span>
-                </div>
               </div>
             </div>
             <div class="poster">

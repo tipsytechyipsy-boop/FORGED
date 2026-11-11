@@ -1243,7 +1243,6 @@ function startRsvp() {
   if (form.closest('.is-past')) return;
   const event = form.dataset.event;
   const done = document.getElementById('rsvp-done');
-  const poll = document.getElementById('rsvp-poll');
   const errorEl = document.getElementById('rsvp-error');
   const headers = {
     apikey: SUPABASE.key,
@@ -1251,27 +1250,36 @@ function startRsvp() {
   };
   const remembered = `forged-rsvp-${event}`;
 
-  // The poll: bars for "I'm in" and "Can't make it", sized against each other.
-  async function showPoll(mine) {
-    try {
-      const response = await fetch(`${SUPABASE.url}/rest/v1/rpc/rsvp_tally`, {
-        method: 'POST', headers, body: JSON.stringify({ event_id: event }),
-      });
-      if (!response.ok) return;
-      const { yes = 0, no = 0 } = await response.json();
-      const total = yes + no;
-      document.getElementById('poll-yes').textContent = yes;
-      document.getElementById('poll-no').textContent = no;
-      document.getElementById('poll-total').textContent = total ? `· ${total} ${total === 1 ? 'reply' : 'replies'}` : '· be the first';
-      poll.querySelectorAll('.poll__row').forEach((row) => row.classList.toggle('is-mine', row.dataset.choice === mine));
-      poll.hidden = false;
-      // Let the bars start from empty, then grow to their share.
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        document.getElementById('poll-yes-bar').style.transform = `scaleX(${total ? yes / total : 0})`;
-        document.getElementById('poll-no-bar').style.transform = `scaleX(${total ? no / total : 0})`;
-      }));
-    } catch (error) { /* The poll is a nice extra; the form works without it. */ }
+  // A burst of green and blue confetti from the button that was pressed.
+  function confetti(from) {
+    if (reducedMotion) return;
+    const colours = ['#2BD96B', '#6CF29A', '#3D6BFF', '#9DB4FF', '#FFF4EC'];
+    const x = from.left + from.width / 2;
+    const y = from.top + from.height / 2;
+    for (let i = 0; i < 70; i++) {
+      const bit = document.createElement('i');
+      bit.className = 'rsvp-confetti';
+      const w = 5 + Math.random() * 6;
+      bit.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${w * (0.4 + Math.random() * 0.8)}px;background:${colours[i % colours.length]}`;
+      document.body.append(bit);
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;
+      const power = 160 + Math.random() * 260;
+      const dx = Math.cos(angle) * power;
+      const dy = Math.sin(angle) * power;
+      const spin = (Math.random() - 0.5) * 900;
+      bit.animate([
+        { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${dx * 0.8}px), calc(-50% + ${dy * 0.8}px)) rotate(${spin * 0.5}deg)`, opacity: 1, offset: 0.35 },
+        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy + 320}px)) rotate(${spin}deg)`, opacity: 0 },
+      ], { duration: 1300 + Math.random() * 900, easing: 'cubic-bezier(.2,.6,.4,1)' }).finished.then(() => bit.remove());
+    }
   }
+
+  // The card only animates while it's on screen.
+  const liveWatcher = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => entry.target.classList.toggle('is-live', entry.isIntersecting));
+  });
+  liveWatcher.observe(form);
 
   function showDone(attending, isNew) {
     form.hidden = true;
@@ -1287,11 +1295,9 @@ function startRsvp() {
   try { saved = localStorage.getItem(remembered); } catch (error) { /* private mode */ }
   if (saved === 'yes' || saved === 'no') {
     showDone(saved === 'yes', false);
-    showPoll(saved);
     return;
   }
   form.hidden = false;
-  showPoll(null);
 
   form.addEventListener('submit', async (submitEvent) => {
     submitEvent.preventDefault();
@@ -1306,6 +1312,7 @@ function startRsvp() {
       form.elements.name.focus();
       return;
     }
+    const pressed = (submitEvent.submitter || form.querySelector('.btn--hot')).getBoundingClientRect();
     form.classList.add('is-sending');
     try {
       const response = await fetch(`${SUPABASE.url}/rest/v1/rsvps`, {
@@ -1316,7 +1323,7 @@ function startRsvp() {
       if (!response.ok) throw new Error(String(response.status));
       try { localStorage.setItem(remembered, attending ? 'yes' : 'no'); } catch (error) { /* private mode */ }
       showDone(attending, true);
-      showPoll(attending ? 'yes' : 'no');
+      if (attending) confetti(pressed);
     } catch (error) {
       errorEl.textContent = "That didn't go through. Check your connection and try again.";
     } finally {

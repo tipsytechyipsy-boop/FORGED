@@ -585,12 +585,49 @@ a { color: inherit; }
 
 /* RSVP: a headcount for the next event */
 .rsvp {
+  position: relative;
+  isolation: isolate;
   margin-top: 22px;
   padding: 18px 18px 16px;
-  border: 2px solid rgb(255 244 236 / .35);
-  background: rgb(10 8 9 / .28);
+  border: 2px solid transparent;
+  background: rgb(10 8 9 / .32);
+  box-shadow: 0 0 28px rgb(43 217 107 / .12);
   max-width: 46ch;
 }
+/* A neon edge that chases round the card, green into blue */
+@property --spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.rsvp::before {
+  content: "";
+  position: absolute; inset: -2px; z-index: -1;
+  padding: 2px;
+  background: conic-gradient(from var(--spin), #2BD96B, #3D6BFF 25%, rgb(255 244 236 / .2) 40% 60%, #3D6BFF 75%, #2BD96B);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rsvp-spin 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes rsvp-spin { to { --spin: 360deg; } }
+.rsvp__ask { display: flex; align-items: center; gap: 10px; }
+.megaphone { flex: none; width: 1.5em; height: auto; overflow: visible; }
+.megaphone__body { fill: #6CF29A; }
+.megaphone__wave { fill: none; stroke: #6CF29A; stroke-width: 2.6; stroke-linecap: round; animation: megaphone-wave 1.4s ease-out infinite; }
+.megaphone__wave:nth-of-type(3) { animation-delay: .18s; stroke: #9DB4FF; }
+.megaphone__wave:nth-of-type(4) { animation-delay: .36s; stroke: #9DB4FF; }
+@keyframes megaphone-wave { 0%, 100% { opacity: .15; } 30% { opacity: 1; } }
+.rsvp .megaphone { animation: megaphone-kick 1.4s ease-out infinite; transform-origin: 30% 60%; }
+@keyframes megaphone-kick { 0%, 100% { transform: rotate(0); } 8% { transform: rotate(-8deg) scale(1.06); } 20% { transform: rotate(0); } }
+/* The yes button breathes, asking to be pressed */
+.rsvp .btn--hot { animation: in-pulse 1.8s ease-in-out infinite; }
+@keyframes in-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgb(43 217 107 / 0); }
+  50% { transform: scale(1.05); box-shadow: 0 0 22px rgb(43 217 107 / .55); }
+}
+.rsvp .btn--hot:hover { animation-play-state: paused; }
+/* Nothing moves while the card is off screen */
+.rsvp:not(.is-live)::before,
+.rsvp:not(.is-live) * { animation-play-state: paused !important; }
+.rsvp-confetti { position: fixed; z-index: 45; pointer-events: none; border-radius: 1px; }
 .rsvp__ask { font: 900 clamp(1.5rem, 1.1rem + 1.4vw, 2rem)/1 var(--display); font-variation-settings: "wdth" 110; text-transform: uppercase; }
 .rsvp__fields { display: grid; gap: 10px; margin-top: 14px; }
 .rsvp__field { display: grid; gap: 4px; font: 600 .6875rem/1.2 var(--mono); text-transform: uppercase; letter-spacing: .04em; }
@@ -636,31 +673,9 @@ a { color: inherit; }
 .rsvp-done.is-new .rsvp-done__stamp { animation: stamp .38s cubic-bezier(.5, 0, .7, .2) backwards; }
 .rsvp-done__line { margin-top: 14px; max-width: 44ch; }
 
-/* Poll: I'm in vs can't make it, live from the database */
-.poll { margin-top: 18px; max-width: 46ch; }
-.poll__title { font: 600 .6875rem/1.2 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: #9DB4FF; }
-.poll__title span { color: rgb(255 244 236 / .6); }
-.poll__row { margin-top: 10px; }
-.poll__label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font: 600 .875rem/1.2 var(--mono); }
-.poll__label b { font: 900 1.25rem/1 var(--display); font-variant-numeric: tabular-nums; }
-.poll__track { display: block; height: 10px; margin-top: 6px; background: rgb(255 244 236 / .14); overflow: hidden; }
-.poll__track i {
-  display: block; height: 100%; width: 100%;
-  transform: scaleX(0); transform-origin: left;
-  transition: transform .9s cubic-bezier(.2, .7, .2, 1);
+@media (prefers-reduced-motion: reduce) {
+  .rsvp::before, .megaphone, .megaphone__wave, .rsvp .btn--hot { animation: none !important; }
 }
-.poll__row[data-choice="yes"] .poll__track i { background: linear-gradient(90deg, #3D6BFF, #9DB4FF); box-shadow: 0 0 12px rgb(61 107 255 / .6); }
-.poll__row[data-choice="no"] .poll__track i { background: rgb(255 244 236 / .45); }
-.poll__row.is-mine .poll__label span::after {
-  content: "You";
-  margin-left: 8px;
-  padding: 2px 6px;
-  background: #9DB4FF;
-  color: var(--ink);
-  font-size: .625rem;
-  vertical-align: 2px;
-}
-@media (prefers-reduced-motion: reduce) { .poll__track i { transition: none; } }
 .date.is-past .date__day { opacity: .35; }
 
 /* KM 2: list */

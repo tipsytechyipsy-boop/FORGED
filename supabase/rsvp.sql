@@ -56,3 +56,28 @@ $$;
 
 revoke all on function public.rsvp_tally(text) from public;
 grant execute on function public.rsvp_tally(text) to anon, authenticated;
+
+-- Private export for the FORGED RSVPs Google Sheet. Replace EXPORT_PASSWORD
+-- with a long random password, and put the same one in the sheet's script.
+-- The real password is never stored in this repo.
+create or replace function public.rsvp_export(token text)
+returns table (submitted_at timestamptz, event text, name text, phone text, attending text)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if token is distinct from 'EXPORT_PASSWORD' then
+    raise exception 'not allowed';
+  end if;
+  return query
+    select r.created_at, r.event, r.name, r.phone,
+           case when r.attending then 'Yes' else 'No' end
+    from public.rsvps r
+    order by r.created_at;
+end;
+$$;
+
+revoke all on function public.rsvp_export(text) from public;
+grant execute on function public.rsvp_export(text) to anon;
