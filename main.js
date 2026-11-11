@@ -1279,7 +1279,7 @@ function startRsvp() {
     done.classList.toggle('is-new', isNew);
     document.getElementById('rsvp-stamp').textContent = attending ? "You're in" : 'Next time';
     document.getElementById('rsvp-line').textContent = attending
-      ? 'See you on the Goa Velha Highway on 22 Nov. Time and route land in the WhatsApp group first.'
+      ? 'See you at 6:30 AM on 22 Nov at United Colors of Benetton, Goa Velha. Wear green or blue.'
       : 'No worries. New dates land in the WhatsApp group first.';
   }
 
