@@ -581,6 +581,7 @@ a { color: inherit; }
 .date > div { max-width: 46ch; }
 .date > div > p + p { margin-top: 12px; }
 .date__status { font-weight: 600; }
+.date__status:empty { display: none; }
 .date__register { margin-top: 18px; }
 
 /* RSVP: a headcount for the next event */
