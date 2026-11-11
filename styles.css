@@ -671,7 +671,91 @@ a { color: inherit; }
   letter-spacing: .04em;
   transform: rotate(-6deg);
 }
-.rsvp-done.is-new .rsvp-done__stamp { animation: stamp .38s cubic-bezier(.5, 0, .7, .2) backwards; }
+.rsvp-done.is-new .rsvp-done__stamp { animation: stamp .38s cubic-bezier(.5, 0, .7, .2) backwards, stamp-glow 2.4s ease-in-out .5s infinite; }
+@keyframes stamp-glow {
+  0%, 100% { box-shadow: 0 0 0 rgb(108 242 154 / 0); text-shadow: none; }
+  50% { box-shadow: 0 0 22px rgb(108 242 154 / .45); text-shadow: 0 0 10px rgb(157 180 255 / .8); }
+}
+.rsvp-done { position: relative; }
+.rsvp-done__line { animation: line-in .5s ease-out .35s backwards; }
+@keyframes line-in { from { opacity: 0; transform: translateY(8px); } }
+/* Shockwave rings and a green flash when someone says they're in */
+.rsvp-ring {
+  position: absolute; z-index: 0;
+  width: 80px; height: 80px;
+  margin: -40px 0 0 -40px;
+  border: 3px solid #6CF29A;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.rsvp-ring:nth-child(even) { border-color: #9DB4FF; }
+.rsvp-flash {
+  position: fixed; inset: 0; z-index: 44;
+  background: radial-gradient(circle at 50% 55%, rgb(108 242 154 / .55), rgb(61 107 255 / .25) 45%, transparent 75%);
+  pointer-events: none;
+}
+
+/* The light show behind the form: sweeping lasers, a glow and rising sparks */
+.rsvp__fx { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.rsvp__beam {
+  position: absolute; left: 50%; bottom: -10%;
+  width: 140%; height: 2px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, rgb(108 242 154 / .9), rgb(108 242 154 / .25) 40%, transparent 75%);
+  filter: drop-shadow(0 0 6px rgb(108 242 154 / .9));
+  opacity: .85;
+  animation: laser 3.4s ease-in-out infinite alternate;
+}
+.rsvp__beam:nth-child(2) { left: 15%; background: linear-gradient(90deg, rgb(157 180 255 / .9), rgb(61 107 255 / .3) 40%, transparent 75%); filter: drop-shadow(0 0 6px rgb(61 107 255 / .9)); animation-duration: 4.1s; animation-delay: -1.3s; }
+.rsvp__beam:nth-child(3) { left: 85%; animation-duration: 3.8s; animation-delay: -2.1s; animation-direction: alternate-reverse; }
+.rsvp__beam:nth-child(4) { left: 50%; background: linear-gradient(90deg, rgb(157 180 255 / .9), rgb(61 107 255 / .3) 40%, transparent 75%); filter: drop-shadow(0 0 6px rgb(61 107 255 / .9)); animation-duration: 2.9s; animation-delay: -0.7s; animation-direction: alternate-reverse; }
+@keyframes laser { from { transform: rotate(-165deg); } to { transform: rotate(-15deg); } }
+.rsvp__glow {
+  position: absolute; left: 50%; top: 50%;
+  width: 70%; aspect-ratio: 1;
+  margin: -35% 0 0 -35%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(43 217 107 / .22), rgb(61 107 255 / .12) 45%, transparent 70%);
+  animation: glow-drift 6s ease-in-out infinite alternate;
+}
+@keyframes glow-drift {
+  from { transform: translate(-30%, 10%) scale(.9); }
+  to { transform: translate(30%, -15%) scale(1.15); }
+}
+.rsvp__spark {
+  position: absolute; left: var(--x); bottom: -8px;
+  width: calc(var(--s) + 1px); height: calc(var(--s) + 1px);
+  border-radius: 50%;
+  background: #DCFFE8;
+  box-shadow: 0 0 8px #6CF29A;
+  animation: spark-rise var(--t) linear var(--d) infinite;
+}
+.rsvp__spark:nth-child(even) { background: #E3EAFF; box-shadow: 0 0 8px #3D6BFF; }
+@keyframes spark-rise {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: .9; }
+  100% { transform: translateY(-340px) translateX(14px); opacity: 0; }
+}
+/* Title: a shimmer runs across it, and an equalizer bounces beside it */
+.rsvp__title {
+  background: linear-gradient(100deg, #FFF4EC 40%, #6CF29A 48%, #DCE5FF 54%, #FFF4EC 62%) 0 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: title-shine 3.2s linear infinite;
+}
+@keyframes title-shine { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+.eq { display: inline-flex; align-items: flex-end; gap: 3px; height: .8em; margin-left: auto; }
+.eq i { width: 4px; height: 30%; background: linear-gradient(#6CF29A, #3D6BFF); border-radius: 1px; animation: eq .5s ease-in-out infinite alternate; }
+.eq i:nth-child(2) { animation-duration: .38s; animation-delay: -.2s; }
+.eq i:nth-child(3) { animation-duration: .62s; animation-delay: -.1s; }
+.eq i:nth-child(4) { animation-duration: .44s; animation-delay: -.3s; }
+.eq i:nth-child(5) { animation-duration: .55s; animation-delay: -.15s; }
+@keyframes eq { from { height: 15%; } to { height: 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .rsvp__beam, .rsvp__glow, .rsvp__spark, .rsvp__title, .eq i, .rsvp-done__stamp, .rsvp-done__line { animation: none !important; }
+  .rsvp__spark { display: none; }
+}
 .rsvp-done__line { margin-top: 14px; max-width: 44ch; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -920,6 +1004,31 @@ a { color: inherit; }
 .finish__line .wordmark { margin-top: .12em; color: #C91F18; }
 /* Follow: one tile per channel, under the main button */
 .follow { margin-top: clamp(40px, 6vw, 64px); }
+
+/* FAQ: questions people search for, answered in place */
+.faq { margin-top: clamp(40px, 6vw, 64px); max-width: 860px; }
+.faq__list { margin-top: 14px; border-top: 2px solid var(--ink); }
+.faq__item { border-bottom: 2px solid var(--ink); }
+.faq__item summary {
+  position: relative;
+  padding: 16px 44px 16px 0;
+  list-style: none;
+  cursor: pointer;
+  font: 800 clamp(1.0625rem, 1rem + .5vw, 1.375rem)/1.25 var(--display);
+}
+.faq__item summary::-webkit-details-marker { display: none; }
+.faq__item summary::after {
+  content: "+";
+  position: absolute; right: 4px; top: 50%;
+  font: 600 1.5rem/1 var(--mono);
+  color: #C91F18;
+  transform: translateY(-50%);
+  transition: transform .25s ease-out;
+}
+.faq__item[open] summary::after { transform: translateY(-50%) rotate(45deg); }
+.faq__item summary:hover { color: #C91F18; }
+.faq__item summary:focus-visible { outline: 2px solid #C91F18; outline-offset: 2px; }
+.faq__item p { max-width: 62ch; padding: 0 0 18px; }
 
 /* Work with FORGED: one dark strip with the email, for brands and press */
 .collab {

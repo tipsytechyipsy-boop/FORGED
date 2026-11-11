@@ -1275,6 +1275,42 @@ function startRsvp() {
     }
   }
 
+  // Saying yes: a green flash, shockwave rings round the stamp, and confetti
+  // from the button and both sides of the screen.
+  function celebrate(pressed) {
+    confetti(pressed);
+    // The form folds away into the stamp, so bring the stamp to the middle.
+    done.scrollIntoView({ block: 'center', behavior: reducedMotion ? 'auto' : 'smooth' });
+    if (reducedMotion) return;
+    setTimeout(() => {
+      confetti({ left: -20, top: innerHeight * 0.75, width: 0, height: 0 });
+      confetti({ left: innerWidth + 20, top: innerHeight * 0.75, width: 0, height: 0 });
+    }, 180);
+    const flash = document.createElement('div');
+    flash.className = 'rsvp-flash';
+    document.body.append(flash);
+    flash.animate([{ opacity: 0 }, { opacity: 1, offset: 0.15 }, { opacity: 0 }], { duration: 700, easing: 'ease-out' })
+      .finished.then(() => flash.remove());
+    const stamp = document.getElementById('rsvp-stamp');
+    const box = stamp.getBoundingClientRect();
+    const area = done.getBoundingClientRect();
+    for (let i = 0; i < 3; i++) {
+      const ring = document.createElement('i');
+      ring.className = 'rsvp-ring';
+      ring.style.left = `${box.left - area.left + box.width / 2}px`;
+      ring.style.top = `${box.top - area.top + box.height / 2}px`;
+      done.append(ring);
+      ring.animate(
+        [{ transform: 'scale(.3)', opacity: 0.9 }, { transform: 'scale(4.5)', opacity: 0 }],
+        { duration: 900, delay: 300 + i * 140, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards' },
+      ).finished.then(() => ring.remove());
+    }
+    document.getElementById('run-for-the-mind').animate([
+      { transform: 'translate(0, 0)' }, { transform: 'translate(-4px, 2px)' }, { transform: 'translate(4px, -2px)' },
+      { transform: 'translate(-2px, 1px)' }, { transform: 'translate(0, 0)' },
+    ], { duration: 320, delay: 300 });
+  }
+
   // The card only animates while it's on screen.
   const liveWatcher = new IntersectionObserver((entries) => {
     entries.forEach((entry) => entry.target.classList.toggle('is-live', entry.isIntersecting));
@@ -1323,7 +1359,7 @@ function startRsvp() {
       if (!response.ok) throw new Error(String(response.status));
       try { localStorage.setItem(remembered, attending ? 'yes' : 'no'); } catch (error) { /* private mode */ }
       showDone(attending, true);
-      if (attending) confetti(pressed);
+      if (attending) celebrate(pressed);
     } catch (error) {
       errorEl.textContent = "That didn't go through. Check your connection and try again.";
     } finally {
