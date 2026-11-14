@@ -244,19 +244,45 @@
             <stop offset="1" stop-color="#FFFBF0"/>
           </linearGradient>
           <filter id="route-glow" x="-5%" y="-60%" width="110%" height="220%"><feGaussianBlur stdDeviation="8"/></filter>
+          <!-- Heat shimmer: the air above the hot trail ripples -->
+          <filter id="route-shimmer" x="-5%" y="-80%" width="110%" height="260%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="soft"/>
+            <feTurbulence id="route-turbulence" type="fractalNoise" baseFrequency="0.012 0.08" numOctaves="2" seed="2" result="noise"/>
+            <feDisplacementMap in="soft" in2="noise" scale="16" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <!-- The road past the next run fades into the dark -->
+          <linearGradient id="route-fade-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#fff"/>
+            <stop offset="1" stop-color="#fff" stop-opacity=".22"/>
+          </linearGradient>
+          <mask id="route-fade" maskUnits="userSpaceOnUse"><rect id="route-fade-area" fill="url(#route-fade-grad)"/></mask>
         </defs>
-        <path class="route__edge"></path>
-        <path class="route__asphalt"></path>
-        <path class="route__dash"></path>
+        <g mask="url(#route-fade)">
+          <path class="route__edge"></path>
+          <path class="route__asphalt"></path>
+          <path class="route__dash"></path>
+        </g>
+        <path class="route__haze" pathLength="1"></path>
         <path class="route__glow" pathLength="1"></path>
         <path class="route__molten" pathLength="1"></path>
         <g class="route__embers" id="route-embers"></g>
+        <!-- The runner: a fireball that pours the trail, then waits at the next run -->
+        <g class="route__runner" id="route-runner">
+          <circle class="route__runner-tail" r="6"/>
+          <circle class="route__runner-tail" r="4.5"/>
+          <g class="route__runner-ball">
+            <circle class="route__runner-glow" r="20"/>
+            <circle class="route__runner-core" r="10"/>
+            <circle class="route__runner-hot" r="5.5"/>
+          </g>
+        </g>
       </svg>
       <ol class="route__stops">
-        <li class="route__stop" data-date="2026-10-25"><a href="#log"><b>25 Oct</b> <span>5K Social Run</span></a></li>
-        <li class="route__stop" data-date="2026-10-31"><a href="#log"><b>31 Oct</b> <span>Run for Treats</span></a></li>
-        <li class="route__stop" data-date="2026-11-14" data-ends="2026-11-14T19:00:00+05:30"><a href="#log"><b>14 Nov</b> <span>Chase the Sun</span></a></li>
-        <li class="route__stop" data-date="2026-11-22" data-ends="2026-11-22T10:00:00+05:30"><a href="#next"><b>22 Nov</b> <span>Run for the Mind</span></a></li>
+        <li class="route__stop" data-date="2026-10-25"><a class="route__label" href="#log"><b>25 Oct</b> <span>5K Social Run</span></a><a class="route__pop" href="#log" tabindex="-1" aria-hidden="true"><img data-src="assets/photos/first-social-run-480.webp" alt="" width="480" height="713" decoding="async"><b>5K Social Run</b><small>Calangute · a sunrise 5K</small></a></li>
+        <li class="route__stop" data-date="2026-10-31"><a class="route__label" href="#log"><b>31 Oct</b> <span>Run for Treats</span></a><a class="route__pop" href="#log" tabindex="-1" aria-hidden="true"><img data-src="assets/photos/run-for-treats-480.webp" alt="" width="480" height="590" decoding="async"><b>Run for Treats</b><small>FORGED × Ninety7 · Halloween 5K</small></a></li>
+        <li class="route__stop" data-date="2026-11-14" data-ends="2026-11-14T19:00:00+05:30"><a class="route__label" href="#log"><b>14 Nov</b> <span>Chase the Sun</span></a><a class="route__pop" href="#log" tabindex="-1" aria-hidden="true"><img data-src="assets/photos/chase-the-sun-480.webp" alt="" width="480" height="594" decoding="async"><b>Chase the Sun</b><small>Anjuna · a sunset beach 3K</small></a></li>
+        <li class="route__stop" data-date="2026-11-22" data-ends="2026-11-22T10:00:00+05:30"><a class="route__label" href="#next"><b>22 Nov</b> <span>Run for the Mind</span></a><a class="route__pop" href="#run-for-the-mind" tabindex="-1" aria-hidden="true"><img data-src="assets/photos/run-for-the-mind-480.webp" alt="" width="480" height="644" decoding="async"><b>Run for the Mind</b><small>Goa Velha · 6:30 AM · free</small></a></li>
+        <li class="route__soon" id="route-soon"><a class="route__label" href="https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t" target="_blank" rel="noopener" aria-label="Next run drops soon. Hear it first in the WhatsApp group."><i aria-hidden="true">?</i><b>Soon</b></a><a class="route__pop route__pop--soon" href="https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><b>Next run drops soon</b><small>Hear it first in the WhatsApp group</small></a></li>
       </ol>
     </section>
 

@@ -639,6 +639,11 @@ function setupRoute() {
   const heat = document.getElementById('route-heat');
   const embers = document.getElementById('route-embers');
   const stops = [...route.querySelectorAll('.route__stop')];
+  const soon = document.getElementById('route-soon');
+  const runner = document.getElementById('route-runner');
+  const [tailNear, tailFar] = runner.querySelectorAll('.route__runner-tail');
+  const fadeGrad = document.getElementById('route-fade-grad');
+  const fadeArea = document.getElementById('route-fade-area');
 
   // A stop is done once its run is over (data-ends, or the end of its day);
   // the first one left is next.
@@ -667,6 +672,26 @@ function setupRoute() {
   }
 
   let reached = 1; // share of the road's length covered by the trail
+  let roadLength = 0; // in pixels
+  let stopLengths = []; // how far along the road each stop sits, in pixels
+  let head = [0, 0];
+  let runnerAt = null; // pixels along the road while running; null once it's waiting
+  let runnerScale = 1;
+  // The runner waits just short of the next coin, so the hot coin stays in view.
+  const waitAt = () => Math.max(0, stopLengths[stops.indexOf(next)] - (parseFloat(getComputedStyle(route).getPropertyValue('--coin')) || 24) * 1.7);
+
+  // The fireball sits on the road at a distance, with two embers trailing it.
+  const pointAt = (length) => lines[0].getPointAtLength(Math.max(0, Math.min(roadLength, length)));
+  function placeRunner(length) {
+    const p = pointAt(length);
+    runner.setAttribute('transform', `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) scale(${runnerScale})`);
+    [[tailNear, 12], [tailFar, 22]].forEach(([tail, back]) => {
+      const q = pointAt(length - back * runnerScale);
+      tail.setAttribute('cx', ((q.x - p.x) / runnerScale).toFixed(1));
+      tail.setAttribute('cy', ((q.y - p.y) / runnerScale).toFixed(1));
+    });
+  }
+
   function layout() {
     const w = route.clientWidth;
     const h = route.clientHeight;
@@ -681,9 +706,10 @@ function setupRoute() {
 
     // Peak, valley, peak... with flat tangents, so the road sweeps between stops.
     const first = 0.13;
-    const gap = (0.89 - first) / Math.max(1, stops.length - 1);
+    const gap = (0.835 - first) / Math.max(1, stops.length - 1);
     const points = stops.map((_, i) => [(first + gap * i) * w, y(i % 2 ? 1 : 0)]);
-    const all = [[0, y(0.55)], ...points, [w, y(stops.length % 2 ? 0.5 : 0.5)]];
+    // The road ends at the mystery stop, just short of the edge.
+    const all = [[0, y(0.55)], ...points, [w * 0.962, y(0.5)]];
     const sweep = (a, b) => {
       const pull = (b[0] - a[0]) / 2;
       return `C${(a[0] + pull).toFixed(1)} ${a[1].toFixed(1)} ${(b[0] - pull).toFixed(1)} ${b[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}`;
@@ -697,17 +723,133 @@ function setupRoute() {
       stop.style.left = `${points[i][0]}px`;
       stop.style.top = `${points[i][1]}px`;
     });
+    const end = all[all.length - 1];
+    soon.style.left = `${end[0]}px`;
+    soon.style.top = `${end[1]}px`;
 
     // The trail stops at the next run; the heat gradient peaks right there.
     const nextIndex = stops.indexOf(next);
-    const head = next ? points[nextIndex] : all[all.length - 1];
+    head = next ? points[nextIndex] : end;
     const measure = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    measure.setAttribute('d', next ? pathTo(nextIndex + 1) : d);
-    reached = measure.getTotalLength() / lines[0].getTotalLength();
+    roadLength = lines[0].getTotalLength();
+    stopLengths = points.map((_, i) => {
+      measure.setAttribute('d', pathTo(i + 1));
+      return measure.getTotalLength();
+    });
+    reached = next ? stopLengths[nextIndex] / roadLength : 1;
     trails.forEach((trail) => { trail.style.strokeDasharray = `${reached} 1`; });
     heat.setAttribute('x2', head[0]);
     embers.setAttribute('transform', `translate(${head[0]} ${head[1]})`);
+
+    // Past the next run, the road fades into the dark.
+    fadeGrad.setAttribute('x1', head[0]);
+    fadeGrad.setAttribute('x2', Math.max(head[0] + 1, end[0] + width));
+    fadeArea.setAttribute('x', -60);
+    fadeArea.setAttribute('y', -60);
+    fadeArea.setAttribute('width', w + 120);
+    fadeArea.setAttribute('height', h + 120);
+
+    runnerScale = width / 26;
+    if (next) placeRunner(runnerAt ?? waitAt());
+    else runner.classList.remove('is-on');
+    if (openStop) positionPop(openStop);
     route.classList.add('is-ready');
+  }
+
+  /* Photo pop-ups: hover with a mouse, tap on a phone, or focus with the keyboard */
+  // Fingers and mice are told apart per tap, so touchscreen laptops work too.
+  let lastPointer = matchMedia('(hover: hover) and (pointer: fine)').matches ? 'mouse' : 'touch';
+  addEventListener('pointerdown', (event) => { lastPointer = event.pointerType || 'mouse'; }, { capture: true, passive: true });
+  const items = [...stops, soon];
+  let openStop = null;
+  let closeTimer = 0;
+  function positionPop(item) {
+    const pop = item.querySelector('.route__pop');
+    const label = item.querySelector('.route__label');
+    const at = item.getBoundingClientRect();
+    const labelBox = label.getBoundingClientRect();
+    const coin = parseFloat(getComputedStyle(route).getPropertyValue('--coin')) || 24;
+    // Below whichever is lower, the coin or its label.
+    const top = Math.max(labelBox.bottom - at.top, coin / 2) + 12;
+    // Centred on the stop, but kept on screen.
+    const width = pop.offsetWidth;
+    const left = Math.min(Math.max(-width / 2, 10 - at.left), innerWidth - 10 - width - at.left);
+    pop.style.top = `${top.toFixed(1)}px`;
+    pop.style.left = `${left.toFixed(1)}px`;
+  }
+  // The photos load only when someone's likely to look: on first open, or once the page has settled.
+  const loadPhotos = () => route.querySelectorAll('.route__pop img[data-src]').forEach((img) => {
+    img.src = img.dataset.src;
+    img.removeAttribute('data-src');
+  });
+  addEventListener('load', () => setTimeout(loadPhotos, 6000), { once: true });
+  function openPop(item) {
+    loadPhotos();
+    clearTimeout(closeTimer);
+    if (openStop && openStop !== item) openStop.classList.remove('is-open');
+    openStop = item;
+    positionPop(item);
+    item.classList.add('is-open');
+  }
+  function closePop(now) {
+    clearTimeout(closeTimer);
+    const shut = () => {
+      if (openStop) openStop.classList.remove('is-open');
+      openStop = null;
+    };
+    if (now) shut();
+    else closeTimer = setTimeout(shut, 220);
+  }
+  items.forEach((item) => {
+    const label = item.querySelector('.route__label');
+    item.addEventListener('pointerenter', (event) => { if (event.pointerType === 'mouse') openPop(item); });
+    item.addEventListener('pointerleave', (event) => { if (event.pointerType === 'mouse') closePop(false); });
+    // Keyboard focus shows the photo; a tap's focus is left to the click below.
+    label.addEventListener('focus', () => { if (label.matches(':focus-visible')) openPop(item); });
+    item.addEventListener('focusout', (event) => {
+      if (!item.contains(event.relatedTarget)) closePop(true);
+    });
+    // On a phone the first tap shows the photo; the second tap goes to the run.
+    label.addEventListener('click', (event) => {
+      if (lastPointer === 'mouse' || openStop === item) return;
+      event.preventDefault();
+      openPop(item);
+    });
+    item.querySelector('.route__pop').addEventListener('click', () => closePop(true));
+  });
+  document.addEventListener('click', (event) => {
+    if (openStop && !openStop.contains(event.target)) closePop(true);
+  });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closePop(true); });
+  addEventListener('scroll', () => { if (openStop && lastPointer !== 'mouse') closePop(true); }, { passive: true });
+
+  /* Heat shimmer: the noise drifts a few times a second while the road is on screen */
+  const turbulence = document.getElementById('route-turbulence');
+  let shimmerOn = false;
+  let shimmerLast = 0;
+  function shimmer(now) {
+    if (!shimmerOn) return;
+    if (now - shimmerLast > 70) {
+      shimmerLast = now;
+      turbulence.setAttribute('seed', Math.floor(now / 70) % 60);
+      turbulence.setAttribute('baseFrequency', `0.012 ${(0.08 + Math.sin(now / 900) * 0.02).toFixed(3)}`);
+    }
+    requestAnimationFrame(shimmer);
+  }
+  if (!reducedMotion && next) {
+    new IntersectionObserver(([entry]) => {
+      const on = entry.isIntersecting;
+      if (on && !shimmerOn) {
+        shimmerOn = true;
+        requestAnimationFrame(shimmer);
+      }
+      shimmerOn = on;
+    }).observe(route);
+  }
+
+  // Without the run-in animation, the runner simply waits at the next run.
+  if (next) {
+    runner.classList.add('is-on', 'is-waiting');
   }
   layout();
   // Redraw whenever the space changes, including when web fonts arrive and
@@ -726,24 +868,61 @@ function setupRoute() {
   watcher.observe(route.parentElement.querySelector('.hero__body'));
   if (document.fonts) document.fonts.ready.then(redraw);
 
-  // Burn the trail up to the next stop, lighting each stop as it passes.
+  // The runner pours the trail up to the next stop, and each coin flips as it arrives.
   return function runRoute() {
     const start = 500;
-    const burn = 1600;
-    trails.forEach((trail) => {
-      trail.animate(
-        [{ strokeDashoffset: reached }, { strokeDashoffset: 0 }],
-        { duration: burn, delay: start, easing: 'cubic-bezier(.45,0,.3,1)', fill: 'backwards' },
-      );
-    });
-    stops.forEach((stop, i) => {
-      const share = next ? (i + 1) / (stops.indexOf(next) + 1) : (i + 1) / stops.length;
+    const burn = 2300;
+    const nextIndex = stops.indexOf(next);
+    const showStop = (stop) => {
+      stop.style.opacity = '';
       stop.animate(
         [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }],
-        { duration: 320, delay: start + burn * Math.min(1, share) * 0.92, easing: 'ease-out', fill: 'backwards' },
+        { duration: 320, easing: 'ease-out' },
       );
-    });
-    embers.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: start + burn, fill: 'backwards' });
+    };
+    if (!next) {
+      // Every run is done: just reveal the stops.
+      [...stops, soon].forEach((stop, i) => setTimeout(() => showStop(stop), start + i * 150));
+      return;
+    }
+    const waiting = stops.slice(0, nextIndex + 1);
+    waiting.forEach((stop) => { stop.style.opacity = '0'; });
+    stops.slice(nextIndex + 1).concat(soon).forEach((stop) => { stop.style.opacity = '0'; });
+    embers.style.opacity = '0';
+    runner.classList.remove('is-waiting');
+    runnerAt = 0;
+    trails.forEach((trail) => { trail.style.strokeDashoffset = reached; });
+    placeRunner(0);
+    const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+    const begin = performance.now() + start;
+    const hit = new Set();
+    function frame(now) {
+      const t = Math.min(1, Math.max(0, (now - begin) / burn));
+      const share = ease(t);
+      runnerAt = share * waitAt();
+      // The trail's hot end stays right behind the runner.
+      trails.forEach((trail) => { trail.style.strokeDashoffset = (reached - runnerAt / roadLength).toFixed(4); });
+      placeRunner(runnerAt);
+      waiting.forEach((stop, i) => {
+        if (!hit.has(i) && (runnerAt >= stopLengths[i] - 2 || (i === nextIndex && t >= 1))) {
+          hit.add(i);
+          showStop(stop);
+          stop.classList.add('is-hit');
+          setTimeout(() => stop.classList.remove('is-hit'), 900);
+        }
+      });
+      if (t < 1) {
+        requestAnimationFrame(frame);
+        return;
+      }
+      runnerAt = null;
+      trails.forEach((trail) => { trail.style.strokeDashoffset = ''; });
+      runner.classList.add('is-waiting');
+      embers.style.opacity = '';
+      embers.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400 });
+      stops.slice(nextIndex + 1).concat(soon).forEach((stop, i) => setTimeout(() => showStop(stop), 200 + i * 150));
+    }
+    requestAnimationFrame(frame);
   };
 }
 const runRoute = setupRoute();

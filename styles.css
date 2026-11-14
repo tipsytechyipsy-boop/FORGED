@@ -263,14 +263,16 @@ a { color: inherit; }
 /* The route: an asphalt road with a molten trail, and the club's real runs as stops */
 .route {
   --road: 26px;
+  --coin: 30px;
   position: relative;
+  z-index: 4; /* pop-ups sit above the headline and the wordmark */
   flex: 1 0 auto;
   min-height: 150px; /* never squeezed out: the hero grows and scrolls instead */
   margin-top: clamp(12px, 2vh, 24px);
   visibility: hidden;
 }
 @media (max-width: 599.98px) {
-  .route { min-height: 205px; }
+  .route { min-height: 205px; --coin: 20px; }
 }
 .route.is-ready { visibility: visible; }
 .route__title { position: absolute; left: 39%; top: 0; transform: translateX(-50%); white-space: nowrap; color: #9C9690; }
@@ -281,6 +283,19 @@ a { color: inherit; }
 .route__road .route__dash { stroke: #8C8680; stroke-width: 2; stroke-linecap: butt; stroke-dasharray: 12 14; }
 .route__molten { stroke: url(#route-heat); stroke-width: calc(var(--road) * .42); }
 .route__glow { stroke: url(#route-heat); stroke-width: calc(var(--road) * .9); opacity: .75; filter: url(#route-glow); }
+.route__haze { stroke: url(#route-heat); stroke-width: calc(var(--road) * 1.3); opacity: .4; filter: url(#route-shimmer); transform: translateY(calc(var(--road) * -.45)); }
+
+/* The runner */
+.route__runner { visibility: hidden; pointer-events: none; }
+.route__runner.is-on { visibility: visible; }
+.route__runner-glow { fill: #F77A1E; opacity: .65; filter: url(#route-glow); }
+.route__runner-core { fill: #FFC53A; }
+.route__runner-hot { fill: #FFFBF0; }
+.route__runner-tail { fill: #F2571B; opacity: .5; transition: opacity .3s; }
+.route__runner-tail + .route__runner-tail { fill: #C91F18; opacity: .35; }
+.route__runner.is-waiting .route__runner-tail { opacity: 0; }
+.route__runner.is-waiting .route__runner-ball { animation: route-bounce .7s cubic-bezier(.3, 0, .5, 1) infinite alternate; }
+@keyframes route-bounce { to { transform: translateY(-7px); } }
 .route__ember {
   fill: #FFC53A;
   opacity: 0;
@@ -294,15 +309,17 @@ a { color: inherit; }
 
 .route__stops { margin: 0; padding: 0; list-style: none; }
 .route__stop { position: absolute; width: 0; height: 0; }
+/* Each stop is a coin: unlit iron ahead, steel once run, white-hot for the next one */
 .route__stop::before {
   content: "";
-  position: absolute; left: -8px; top: -8px;
-  width: 16px; height: 16px;
+  position: absolute;
+  left: calc(var(--coin) / -2); top: calc(var(--coin) / -2);
+  width: var(--coin); height: var(--coin);
   border-radius: 50%;
-  border: 3px solid #8C8680;
-  background: #1C1818;
+  background: radial-gradient(circle at 35% 30%, #4a4240, #1C1818 70%);
+  box-shadow: inset 0 0 0 2px #8C8680, 0 2px 6px rgb(0 0 0 / .6);
 }
-.route__stop a {
+.route__label {
   position: absolute; left: 0;
   transform: translateX(-50%);
   width: max-content;
@@ -311,26 +328,42 @@ a { color: inherit; }
   font: 400 .6875rem/1.4 var(--mono);
   color: #9C9690;
 }
-.route__stop.is-peak a { top: calc(var(--road) / 2 + 8px); }
-.route__stop.is-valley a { bottom: calc(var(--road) / 2 + 8px); }
-.route__stop a:hover span { color: var(--white-heat); text-decoration: underline; text-underline-offset: .25em; }
-.route__stop b {
+.route__stop.is-peak .route__label { top: calc(max(var(--road), var(--coin)) / 2 + 8px); }
+.route__stop.is-valley .route__label { bottom: calc(max(var(--road), var(--coin)) / 2 + 8px); }
+.route__label:hover span { color: var(--white-heat); text-decoration: underline; text-underline-offset: .25em; }
+.route__label b {
   display: block;
+  text-shadow: 0 1px 2px var(--black-heat), 0 0 10px rgb(10 8 9 / .9);
   font: 900 clamp(1.125rem, .9rem + .9vw, 1.75rem)/1.05 var(--display);
   font-variation-settings: "wdth" 105;
   text-transform: uppercase;
   color: var(--steel);
 }
-.route__stop.is-done::before { background: #FFF1D6; border-color: #C91F18; }
-.route__stop.is-next::before {
-  border-color: #FFC53A;
-  background: var(--white-heat);
-  box-shadow: 0 0 0 0 rgb(255 197 58 / .8), 0 0 18px 4px rgb(255 197 58 / .8);
-  animation: route-pulse 1.6s ease-out infinite;
+.route__stop.is-done::before {
+  background: radial-gradient(circle at 35% 30%, #fff 0, #d9d4cd 20%, #8d8580 58%, #3e3633 100%);
+  box-shadow: inset 0 0 0 2px #cfc8c0, inset 0 0 0 calc(var(--coin) * .16) #6d625b, 0 3px 8px rgb(0 0 0 / .6);
 }
-.route__stop.is-next b { color: var(--orange-to); }
-.route__stop.is-next span { color: var(--steel); }
-.route__stop.is-next a::before {
+.route__stop.is-next::before {
+  background: radial-gradient(circle at 35% 30%, #FFFBF0 0, #FFC53A 28%, #F2571B 62%, #8E1217 100%);
+  box-shadow: inset 0 0 0 2px #FFD98A, 0 0 0 0 rgb(255 197 58 / .8), 0 0 18px 4px rgb(255 197 58 / .8);
+  animation: route-pulse 1.6s ease-out infinite, route-heart 1.2s ease-in-out infinite;
+}
+/* A coin flips over as the runner reaches it */
+.route__stop.is-hit::before { animation: route-flip .8s cubic-bezier(.3, .7, .3, 1); }
+.route__stop.is-next.is-hit::before { animation: route-flip .8s cubic-bezier(.3, .7, .3, 1), route-pulse 1.6s ease-out .8s infinite, route-heart 1.2s ease-in-out .8s infinite; }
+@keyframes route-flip {
+  from { transform: perspective(160px) rotateY(0) scale(1.4); }
+  to { transform: perspective(160px) rotateY(360deg) scale(1); }
+}
+@keyframes route-heart {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.18); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.1); }
+}
+.route__stop.is-next .route__label b { color: var(--orange-to); }
+.route__stop.is-next .route__label span { color: var(--steel); }
+.route__stop.is-next .route__label::before {
   content: "Next up";
   display: table;
   margin: 0 auto 5px;
@@ -342,11 +375,64 @@ a { color: inherit; }
   text-transform: uppercase;
 }
 @keyframes route-pulse {
-  to { box-shadow: 0 0 0 20px rgb(255 197 58 / 0), 0 0 18px 4px rgb(255 197 58 / .8); }
+  to { box-shadow: inset 0 0 0 2px #FFD98A, 0 0 0 20px rgb(255 197 58 / 0), 0 0 18px 4px rgb(255 197 58 / .8); }
 }
 .route.is-compact .route__title { display: none; }
-.route.is-compact .is-peak a { top: auto; bottom: calc(var(--road) / 2 + 7px); }
-.route.is-compact .is-valley a { bottom: auto; top: calc(var(--road) / 2 + 7px); }
+.route.is-compact .is-peak .route__label { top: auto; bottom: calc(max(var(--road), var(--coin)) / 2 + 7px); }
+.route.is-compact .is-valley .route__label { bottom: auto; top: calc(max(var(--road), var(--coin)) / 2 + 7px); }
+
+/* Photo pop-ups: a taped polaroid of each run */
+.route__pop {
+  position: absolute; left: 0; top: 0;
+  z-index: 2;
+  width: clamp(132px, 15vw, 190px);
+  padding: 7px 7px 10px;
+  background: #FDFAF4;
+  color: #1B1210;
+  text-decoration: none;
+  text-align: left;
+  box-shadow: 0 14px 30px rgb(0 0 0 / .55);
+  opacity: 0;
+  visibility: hidden;
+  transform: rotate(-3deg) scale(.6);
+  transform-origin: 50% 0;
+  transition: opacity .18s ease-out, transform .32s cubic-bezier(.3, 1.5, .5, 1), visibility 0s linear .32s;
+}
+.route__pop::before {
+  content: "";
+  position: absolute; top: -9px; left: 50%;
+  width: 54px; height: 18px;
+  transform: translateX(-50%) rotate(3deg);
+  background: rgb(255 197 58 / .8);
+}
+.route__pop img { display: block; width: 100%; aspect-ratio: 4 / 5; height: auto; object-fit: cover; object-position: top; background: #2a2020; }
+.route__pop b { display: block; margin-top: 7px; font: 900 .9375rem/1.1 var(--display); text-transform: uppercase; }
+.route__pop small { display: block; margin-top: 2px; font: 400 .6875rem/1.35 var(--mono); color: #5d5450; }
+.route__pop--soon { width: clamp(150px, 16vw, 200px); padding-top: 14px; }
+.route__pop--soon b { margin-top: 0; }
+.is-open > .route__pop {
+  opacity: 1;
+  visibility: visible;
+  transform: rotate(-2deg) scale(1);
+  transition: opacity .18s ease-out, transform .32s cubic-bezier(.3, 1.5, .5, 1), visibility 0s;
+}
+
+/* The mystery stop at the end of the road */
+.route__soon { position: absolute; width: 0; height: 0; }
+.route__soon .route__label { top: auto; bottom: auto; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 4px; }
+.route__soon i {
+  display: grid; place-items: center;
+  width: calc(var(--coin) + 6px); height: calc(var(--coin) + 6px);
+  border: 2px dashed #6d625b; border-radius: 50%;
+  background: var(--black-heat);
+  font: 900 calc(var(--coin) * .62)/1 var(--display); font-style: normal;
+  color: #FFC53A;
+  animation: route-flicker 3.2s infinite;
+}
+.route__soon .route__label b { position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); font-size: .75rem; color: #6d625b; }
+@keyframes route-flicker {
+  0%, 100% { opacity: 1; } 8% { opacity: .2; } 10% { opacity: 1; } 47% { opacity: .9; } 49% { opacity: .15; } 52% { opacity: 1; } 80% { opacity: .5; } 82% { opacity: 1; }
+}
 
 .hero__body {
   margin-top: auto;
@@ -1498,7 +1584,8 @@ a { color: inherit; }
 /* Tablet and phone */
 @media (max-width: 860px) {
   .nav__links { display: none; }
-  .route__stop span { display: none; }
+  .route__label span { display: none; }
+  .route__soon .route__label b { display: none; }
   .hero__body { grid-template-columns: 1fr; align-items: end; }
   .dates, .founder, .log__row { grid-template-columns: minmax(0, 1fr); }
   .date--lead .date__day, .date--next .date__day { font-size: clamp(9rem, 44vw, 20rem); }
@@ -1514,7 +1601,11 @@ a { color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .route__stop.is-next::before { animation: none; }
+  .route__stop.is-next::before, .route__stop.is-hit::before { animation: none; }
+  .route__soon i { animation: none; }
+  .route__haze { display: none; }
+  .route__runner.is-waiting .route__runner-ball { animation: none; }
+  .route__pop, .is-open > .route__pop { transition: none; }
   .btn::after, .watch__join::after { display: none; }
   .watch__done { transition: none; }
   .watch__bpm i { animation: none; }
