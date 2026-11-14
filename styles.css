@@ -536,7 +536,7 @@ a { color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) { .date--rave .date__day { animation: none; } }
 .poster img { width: 100%; height: auto; box-shadow: 10px 10px 0 #FFC53A; }
-.date--lead .date__title {
+.date--lead .date__title, .date--next .date__title {
   margin-bottom: 12px;
   font-size: clamp(1.75rem, 1rem + 2.2vw, 3rem);
   font-weight: 900;
@@ -548,7 +548,7 @@ a { color: inherit; }
   font-variation-settings: "wdth" 120;
   letter-spacing: -.02em;
 }
-.date--lead .date__day { font-size: clamp(9rem, 26vw, 23rem); }
+.date--lead .date__day, .date--next .date__day { font-size: clamp(9rem, 26vw, 23rem); }
 /* Chase the Sun: the 14 is a window onto a sunset. main.js sets --sun from
    0 (high) to 1 (gone) as the numeral travels up the screen. */
 .date--lead .date__day {
@@ -1301,7 +1301,7 @@ a { color: inherit; }
   .route__stop span { display: none; }
   .hero__body { grid-template-columns: 1fr; align-items: end; }
   .dates, .founder, .log__row { grid-template-columns: minmax(0, 1fr); }
-  .date--lead .date__day { font-size: clamp(9rem, 44vw, 20rem); }
+  .date--lead .date__day, .date--next .date__day { font-size: clamp(9rem, 44vw, 20rem); }
   .date--lead, .date--split { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
   .date--lead > .poster, .date--split > .poster { grid-column: auto; grid-row: auto; max-width: 440px; margin: 16px 10px 0 0; }
   .plate { max-width: 420px; margin-right: 10px; }

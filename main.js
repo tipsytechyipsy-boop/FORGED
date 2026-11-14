@@ -1028,8 +1028,10 @@ function startScrollEffects() {
       numeral.style.fontVariationSettings = `"wdth" ${60 + 60 * smooth(arrival(numeral))}`;
     });
     // The sun in the 14 sets as it rises up the screen.
-    const sunAt = sunNumeral.getBoundingClientRect();
-    sunNumeral.style.setProperty('--sun', clamp((innerHeight * 0.85 - sunAt.top) / (innerHeight * 0.75)).toFixed(3));
+    if (sunNumeral) {
+      const sunAt = sunNumeral.getBoundingClientRect();
+      sunNumeral.style.setProperty('--sun', clamp((innerHeight * 0.85 - sunAt.top) / (innerHeight * 0.75)).toFixed(3));
+    }
     const landed = arrival(finishMark);
     finishMark.style.transform = `scaleX(${0.34 + 0.66 * smooth(landed)})`;
     // The wordmark's last blow throws off embers, once, if anyone's there to see it.
