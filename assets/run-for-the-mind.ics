@@ -1,0 +1,21 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//FORGED Run Club Goa//theforged.in//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:run-for-the-mind-2026-11-22@theforged.in
+DTSTAMP:20261114T000000Z
+DTSTART:20261122T010000Z
+DTEND:20261122T043000Z
+SUMMARY:Run for the Mind · FORGED
+LOCATION:United Colors of Benetton\, Goa Velha\, Goa
+DESCRIPTION:A free 3K run and rave for men's mental health awareness\, by FORGED Run Club Goa. Wear a shade of green or blue. Breakfast buffet at Edward's Yard after the run. Details: https://theforged.in/#rsvp
+URL:https://theforged.in/#rsvp
+BEGIN:VALARM
+TRIGGER:-PT12H
+ACTION:DISPLAY
+DESCRIPTION:Run for the Mind is tomorrow at 6:30 AM
+END:VALARM
+END:VEVENT
+END:VCALENDAR

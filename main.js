@@ -1232,6 +1232,52 @@ if (upcoming.length === 0) {
   nextRun.textContent = upcoming[0].toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '') + '. Details coming soon.';
 }
 
+/* ---------- Countdown: the clock to the next run, in the card and the hero ---------- */
+function startCountdowns() {
+  const clocks = [...document.querySelectorAll('[data-countdown]')];
+  if (!clocks.length || document.getElementById('run-for-the-mind')?.classList.contains('is-past')) return;
+  const start = new Date(clocks[0].dataset.countdown).getTime();
+  const end = new Date(clocks[0].dataset.ends).getTime();
+  const pad = (n) => String(n).padStart(2, '0');
+  let timer;
+  function tick() {
+    const now = Date.now();
+    if (now >= end) {
+      clocks.forEach((clock) => { clock.hidden = true; });
+      clearInterval(timer);
+      return;
+    }
+    const left = Math.max(0, Math.floor((start - now) / 1000));
+    const values = { d: Math.floor(left / 86400), h: Math.floor(left / 3600) % 24, m: Math.floor(left / 60) % 60, s: left % 60 };
+    clocks.forEach((clock) => {
+      clock.hidden = false;
+      clock.classList.toggle('is-live', now >= start);
+      clock.querySelector('[data-countdown-label]').textContent = now >= start ? 'Happening now' : 'Starts in';
+      clock.querySelectorAll('[data-unit]').forEach((digit) => {
+        const text = pad(values[digit.dataset.unit]);
+        if (digit.textContent === text) return;
+        digit.textContent = text;
+        if (!reducedMotion) digit.animate(
+          [{ transform: 'translateY(-.35em)', opacity: 0, filter: 'blur(2px)' }, { transform: 'none', opacity: 1, filter: 'none' }],
+          { duration: 280, easing: 'cubic-bezier(.2, .8, .3, 1)' });
+      });
+    });
+  }
+  tick();
+  timer = setInterval(tick, 1000);
+}
+startCountdowns();
+
+/* ---------- Add to calendar: Apple devices get the calendar file ---------- */
+const addCalendar = document.getElementById('add-calendar');
+if (addCalendar) {
+  if (addCalendar.closest('.is-past')) addCalendar.closest('[data-share]').remove();
+  else if (/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)) {
+    addCalendar.href = 'assets/run-for-the-mind.ics';
+    addCalendar.removeAttribute('target');
+  }
+}
+
 /* ---------- RSVP: "Are you in?" for the next event, saved in Supabase ---------- */
 // The URL and the anon key are meant to be public. The database only lets
 // visitors add an RSVP and read the headcount; see supabase/rsvp.sql.
