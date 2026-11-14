@@ -39,6 +39,33 @@ img { display: block; max-width: 100%; }
 a { color: inherit; }
 :focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 
+/* Highlighted text glows molten orange; on the orange, lemon and white bands,
+   where orange would vanish, it turns to dark metal with a hot yellow edge. */
+::selection { background: var(--orange-from); color: var(--white-heat); text-shadow: none; }
+.band--orange ::selection, .band--lemon ::selection, .band--white ::selection {
+  background: var(--ink);
+  color: var(--lemon-to);
+}
+
+/* The scrollbar is a bar of hot metal: white heat at the top, cooling to blood red */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--black-heat); }
+::-webkit-scrollbar-thumb {
+  border: 3px solid var(--black-heat);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--white-from), var(--lemon-to) 18%, var(--orange-from) 55%, var(--cherry-to) 85%, var(--blood-to));
+}
+::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+  background: linear-gradient(180deg, var(--white-heat), var(--white-from) 15%, var(--lemon-to) 40%, var(--orange-to) 75%, var(--cherry-to));
+  box-shadow: 0 0 10px rgb(247 122 30 / .8);
+}
+::-webkit-scrollbar-corner { background: var(--black-heat); }
+/* Firefox has no gradient scrollbars, so it gets plain molten orange */
+@supports (-moz-appearance: none) {
+  html { scrollbar-color: var(--orange-from) var(--black-heat); }
+}
+
 .skip {
   position: absolute; left: -999px; top: 8px; z-index: 20;
   background: var(--white-heat); color: var(--ink); padding: 10px 14px;
