@@ -640,12 +640,13 @@ function setupRoute() {
   const embers = document.getElementById('route-embers');
   const stops = [...route.querySelectorAll('.route__stop')];
 
-  // Stops that have passed are done; the first one left is next.
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const next = stops.find((stop) => new Date(`${stop.dataset.date}T00:00:00`) >= startOfToday);
+  // A stop is done once its run is over (data-ends, or the end of its day);
+  // the first one left is next.
+  const now = new Date();
+  const isDone = (stop) => new Date(stop.dataset.ends || `${stop.dataset.date}T23:59:59`) < now;
+  const next = stops.find((stop) => !isDone(stop));
   stops.forEach((stop, i) => {
-    stop.classList.toggle('is-done', new Date(`${stop.dataset.date}T00:00:00`) < startOfToday);
+    stop.classList.toggle('is-done', isDone(stop));
     stop.classList.toggle('is-next', stop === next);
     // Stops sit on alternate peaks and valleys, with labels inside each bend.
     stop.classList.add(i % 2 ? 'is-valley' : 'is-peak');
