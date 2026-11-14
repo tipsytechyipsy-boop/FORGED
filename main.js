@@ -1179,16 +1179,47 @@ function startMotion() {
   }, { passive: true });
   drift();
 
-  // With a mouse: the poster and photo tilt toward the pointer, buttons pull toward it.
-  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  // On phones the posters tilt and catch the light as they scroll past.
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    const posters = [...document.querySelectorAll('.poster')];
+    let tiltQueued = false;
+    const tiltAll = () => {
+      tiltQueued = false;
+      posters.forEach((card) => {
+        const box = card.getBoundingClientRect();
+        if (box.bottom < 0 || box.top > innerHeight) return;
+        const t = Math.min(1, Math.max(0, (innerHeight - box.top) / (innerHeight + box.height))); // 0 entering, 1 leaving
+        card.style.transform = `perspective(900px) rotateX(${((0.5 - t) * 14).toFixed(2)}deg) rotateY(${((t - 0.5) * -6).toFixed(2)}deg)`;
+        card.style.setProperty('--my', `${(t * 120 - 10).toFixed(1)}%`);
+        card.style.setProperty('--mx', `${(70 - t * 40).toFixed(1)}%`);
+        card.style.setProperty('--lit', (1 - Math.abs(t - 0.5) * 2).toFixed(2));
+      });
+    };
+    addEventListener('scroll', () => {
+      if (!tiltQueued) {
+        tiltQueued = true;
+        requestAnimationFrame(tiltAll);
+      }
+    }, { passive: true });
+    tiltAll();
+    return;
+  }
+
+  // With a mouse: the poster and photo tilt toward the pointer and catch the light, buttons pull toward it.
   document.querySelectorAll('.poster, .plate').forEach((card) => {
     card.addEventListener('pointermove', (event) => {
       const box = card.getBoundingClientRect();
       const x = (event.clientX - box.left) / box.width - 0.5;
       const y = (event.clientY - box.top) / box.height - 0.5;
       card.style.transform = `perspective(900px) rotateX(${(-y * 9).toFixed(2)}deg) rotateY(${(x * 11).toFixed(2)}deg)`;
+      card.style.setProperty('--mx', `${((x + 0.5) * 100).toFixed(1)}%`);
+      card.style.setProperty('--my', `${((y + 0.5) * 100).toFixed(1)}%`);
+      card.style.setProperty('--lit', '1');
     });
-    card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+    card.addEventListener('pointerleave', () => {
+      card.style.transform = '';
+      card.style.setProperty('--lit', '0');
+    });
   });
   document.querySelectorAll('.btn, .watch__join').forEach((button) => {
     button.addEventListener('pointermove', (event) => {
@@ -1439,6 +1470,22 @@ function openRsvpLink() {
   })();
 }
 openRsvpLink();
+
+/* ---------- The medal: a 3D FORGED medal in the finish, loaded only when it's near ---------- */
+(function loadMedal() {
+  const figure = document.getElementById('medal');
+  const anchor = document.querySelector('.finish__actions');
+  if (!figure || !anchor || !('IntersectionObserver' in window)) return;
+  const near = new IntersectionObserver((entries) => {
+    if (!entries[0].isIntersecting) return;
+    near.disconnect();
+    import('./medal.js').then(({ startMedal }) => {
+      figure.hidden = false;
+      if (!startMedal(figure, { reducedMotion })) figure.hidden = true;
+    }).catch(() => { figure.hidden = true; });
+  }, { rootMargin: '900px 0px' });
+  near.observe(anchor);
+})();
 
 /* ---------- Reels: play each video while it's on screen ---------- */
 function loadInstagramEmbeds() {
