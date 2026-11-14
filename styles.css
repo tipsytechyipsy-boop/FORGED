@@ -737,6 +737,48 @@ a { color: inherit; }
 .rsvp__no:hover { color: #FFC53A; }
 .rsvp.is-sending button { opacity: .6; pointer-events: none; }
 .rsvp__error { margin-top: 10px; font: 600 .8125rem/1.4 var(--mono); color: #FFC53A; min-height: 1em; }
+/* Privacy: a promise in one line, the details a tap away */
+.rsvp__privacy {
+  position: relative;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgb(108 242 154 / .3);
+  background: rgb(43 217 107 / .08);
+  font: 400 .75rem/1.5 var(--mono);
+  color: rgb(255 244 236 / .85);
+}
+.rsvp__privacy summary {
+  display: flex; align-items: center; gap: 8px;
+  padding-right: 22px;
+  list-style: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #FFF4EC;
+}
+.rsvp__privacy summary::-webkit-details-marker { display: none; }
+.rsvp__privacy summary::after {
+  content: "+";
+  position: absolute; right: 12px; top: 9px;
+  font: 600 1rem/1 var(--mono);
+  color: #6CF29A;
+  transition: transform .2s ease-out;
+}
+.rsvp__privacy[open] summary::after { transform: rotate(45deg); }
+.rsvp__privacy summary:focus-visible { outline: 2px solid #6CF29A; outline-offset: 4px; }
+.rsvp__privacy svg {
+  flex: none; width: 16px; height: 16px;
+  fill: none; stroke: #6CF29A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.rsvp__privacy ul { display: grid; gap: 6px; margin: 10px 0 2px; padding: 0; list-style: none; }
+.rsvp__privacy li { position: relative; padding-left: 24px; }
+.rsvp__privacy li::before {
+  content: "";
+  position: absolute; left: 5px; top: .55em;
+  width: 6px; height: 6px;
+  background: #6CF29A;
+  transform: rotate(45deg);
+}
+.rsvp__privacy a { color: #6CF29A; font-weight: 600; }
 .rsvp-done { margin-top: 22px; }
 .rsvp-done__stamp {
   display: inline-block;
