@@ -1,4 +1,6 @@
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Christmas mode is switched on in the page's head, by date or ?xmas.
+const xmas = document.documentElement.classList.contains('is-xmas');
 
 /* ---------- The wordmark: hammer it out to full width ---------- */
 function hammerOut() {
@@ -66,6 +68,21 @@ function runPreloader(onReveal) {
   const tempEl = document.getElementById('ice-temp');
   const msgEl = document.getElementById('ice-msg');
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  // Christmas: the ice block sits inside a snow globe that shakes with each blow.
+  const globeParts = [];
+  if (xmas) {
+    const globe = document.createElement('div');
+    globe.className = 'ice__globe';
+    stage.prepend(globe);
+    const glass = document.createElement('div');
+    glass.className = 'ice__glass';
+    const base = document.createElement('div');
+    base.className = 'ice__base';
+    stage.append(glass, base);
+    globeParts.push(globe, glass, base);
+    msgEl.textContent = 'Shaking the snow globe';
+  }
   const between = (min, max) => min + Math.random() * (max - min);
 
   // Each crack is a dark fracture with a bright edge, so it shows on pale ice.
@@ -178,6 +195,13 @@ function runPreloader(onReveal) {
       ], { duration: 1000, fill: 'forwards' });
     });
     throwChips(size);
+    // Christmas: the glass bursts and the base drops away.
+    globeParts.forEach((part, i) => part.animate(
+      i === 2
+        ? [{ transform: 'none', opacity: 1 }, { transform: 'translateY(40%) scale(.9)', opacity: 0 }]
+        : [{ transform: 'none', opacity: 1 }, { transform: 'scale(1.3)', opacity: 0, filter: 'blur(4px)' }],
+      { duration: 520, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' },
+    ));
     // Ice to forge: the cold light flares into heat and the frost turns to embers.
     ice.classList.add('is-hot');
     hot.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1.1)', offset: 0.35 }, { opacity: 0.75, transform: 'none' }], { duration: 900, easing: 'ease-out', fill: 'forwards' });
@@ -197,6 +221,7 @@ function runPreloader(onReveal) {
     finished = true;
     onReveal();
     // A skip can land before the break, so make sure the logo is what's showing.
+    globeParts.forEach((part) => { part.style.display = 'none'; });
     block.style.visibility = 'hidden';
     crackBox.style.visibility = 'hidden';
     logo.style.visibility = 'visible';
@@ -634,7 +659,8 @@ const molten = reducedMotion ? null : startMolten();
 function setupRoute() {
   const route = document.getElementById('route');
   const road = document.getElementById('route-road');
-  const lines = [...road.querySelectorAll('path')];
+  // Every road layer follows the route's curve; the runner's own shapes (Santa's hat) don't.
+  const lines = [...road.querySelectorAll('path')].filter((line) => !line.closest('.route__runner'));
   const trails = lines.filter((line) => line.hasAttribute('pathLength'));
   const heat = document.getElementById('route-heat');
   const embers = document.getElementById('route-embers');
@@ -678,7 +704,8 @@ function setupRoute() {
   let runnerAt = null; // pixels along the road while running; null once it's waiting
   let runnerScale = 1;
   // The runner waits just short of the next coin, so the hot coin stays in view.
-  const waitAt = () => Math.max(0, stopLengths[stops.indexOf(next)] - (parseFloat(getComputedStyle(route).getPropertyValue('--coin')) || 24) * 1.7);
+  // At Christmas, Santa waits right on the coin, under its lifted label.
+  const waitAt = () => Math.max(0, stopLengths[stops.indexOf(next)] - (xmas ? 0 : (parseFloat(getComputedStyle(route).getPropertyValue('--coin')) || 24) * 1.7));
 
   // The fireball sits on the road at a distance, with two embers trailing it.
   const pointAt = (length) => lines[0].getPointAtLength(Math.max(0, Math.min(roadLength, length)));
@@ -1650,6 +1677,155 @@ function openRsvpLink() {
 }
 openRsvpLink();
 
+/* ---------- Christmas: snow, fairy lights and frost glints ---------- */
+function startChristmas() {
+  const hero = document.getElementById('hero');
+  const NS = 'http://www.w3.org/2000/svg';
+
+  // Glints of light twinkling on the frosted wordmark.
+  const mark = document.querySelector('.ingot .wordmark');
+  [[6, 26], [15, 62], [22, 20], [31, 46], [40, 16], [47, 70], [55, 30], [63, 22], [72, 54], [80, 18], [88, 42], [95, 26]].forEach(([x, y], i) => {
+    const glint = document.createElement('i');
+    glint.className = 'xmas-glint';
+    glint.style.cssText = `left:${x}%;top:${y}%;--t:${2.2 + (i % 4) * 0.7}s;--d:${(i * 0.45).toFixed(2)}s`;
+    mark.append(glint);
+  });
+
+  // Fairy lights: a sagging string along the top edge of the hero and each band.
+  const COLORS = ['#FF4D4D', '#F5C452', '#4ADE80', '#FFF7E0', '#60A5FA'];
+  // Strings off screen stop twinkling.
+  const lightsWatcher = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => entry.target.classList.toggle('is-off', !entry.isIntersecting));
+  });
+  const hosts = [hero, ...document.querySelectorAll('.band')];
+  function stringLights() {
+    const slant = innerWidth * 0.035;
+    hosts.forEach((host) => {
+      host.querySelector(':scope > .xmas-lights')?.remove();
+      const w = host.clientWidth;
+      // Bands are cut on a slant, high on the right; the hero is flat.
+      const fall = host === hero ? 0 : slant;
+      let left = fall; // how far down the string starts at the left edge
+      // Where a ticker tape lies across the band's top edge, the lights hang just below it.
+      const tape = host.previousElementSibling;
+      if (tape && tape.classList.contains('tape')) {
+        const belt = (tape.querySelector('.tape__belt') || tape).getBoundingClientRect();
+        left = Math.max(left, belt.bottom - host.getBoundingClientRect().top + 2);
+      }
+      const top = left;
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('class', 'xmas-lights');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('height', String(Math.ceil(top + 40)));
+      svg.setAttribute('viewBox', `0 0 ${w} ${Math.ceil(top + 40)}`);
+      const yAt = (x) => left - fall * (x / w) + 3;
+      const span = Math.max(110, Math.min(170, w / 8));
+      let d = `M0 ${yAt(0).toFixed(1)}`;
+      for (let x = 0; x < w; x += span) {
+        const x2 = Math.min(w, x + span);
+        d += ` Q${((x + x2) / 2).toFixed(1)} ${((yAt(x) + yAt(x2)) / 2 + 22).toFixed(1)} ${x2.toFixed(1)} ${yAt(x2).toFixed(1)}`;
+      }
+      const rope = document.createElementNS(NS, 'path');
+      rope.setAttribute('class', 'rope');
+      rope.setAttribute('d', d);
+      svg.append(rope);
+      host.prepend(svg);
+      // Bulbs twinkle in four groups rather than one by one, and their glow is a soft
+      // halo shape rather than a live blur, so scrolling stays smooth.
+      const groups = [0, 1, 2, 3].map((i) => {
+        const g = document.createElementNS(NS, 'g');
+        g.setAttribute('class', `bulbs bulbs--${i}`);
+        svg.append(g);
+        return g;
+      });
+      const length = rope.getTotalLength();
+      const count = Math.round(length / 34);
+      for (let i = 0; i < count; i++) {
+        const p = rope.getPointAtLength(((i + 0.5) / count) * length);
+        const color = COLORS[i % COLORS.length];
+        const group = groups[(i * 7) % 4];
+        const halo = document.createElementNS(NS, 'circle');
+        halo.setAttribute('cx', p.x.toFixed(1));
+        halo.setAttribute('cy', (p.y + 6).toFixed(1));
+        halo.setAttribute('r', '9');
+        halo.setAttribute('fill', color);
+        halo.setAttribute('opacity', '.22');
+        const bulb = document.createElementNS(NS, 'ellipse');
+        bulb.setAttribute('cx', p.x.toFixed(1));
+        bulb.setAttribute('cy', (p.y + 6).toFixed(1));
+        bulb.setAttribute('rx', '3.6');
+        bulb.setAttribute('ry', '5.4');
+        bulb.setAttribute('fill', color);
+        group.append(halo, bulb);
+      }
+      lightsWatcher.observe(svg);
+    });
+  }
+  stringLights();
+  let lightsQueued = 0;
+  addEventListener('resize', () => {
+    clearTimeout(lightsQueued);
+    lightsQueued = setTimeout(stringLights, 200);
+  });
+
+  // Once you scroll past the top, the wordmark's shine and glints rest: they'd
+  // otherwise be redrawn every frame while the camera flies into the letters.
+  let moving = false;
+  addEventListener('scroll', () => {
+    const now = scrollY > 30;
+    if (now !== moving) {
+      moving = now;
+      document.documentElement.classList.toggle('xmas-moving', moving);
+    }
+  }, { passive: true });
+
+  // Soft snow falling over the hero, only while it's on screen.
+  if (reducedMotion) return;
+  const canvas = document.createElement('canvas');
+  canvas.className = 'xmas-snow';
+  canvas.setAttribute('aria-hidden', 'true');
+  hero.append(canvas);
+  const ctx = canvas.getContext('2d');
+  let flakes = [];
+  let scale = 1;
+  function fit() {
+    scale = 1; // soft round flakes look the same at 1x, and cost far less to draw
+    canvas.width = Math.round(hero.clientWidth * scale);
+    canvas.height = Math.round(hero.clientHeight * scale);
+    const count = Math.round(Math.min(160, (hero.clientWidth * hero.clientHeight) / 9000));
+    flakes = Array.from({ length: count }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: (0.7 + Math.random() * 2) * scale,
+      fall: 0.25 + Math.random() * 0.8,
+      sway: Math.random() * Math.PI * 2,
+    }));
+  }
+  fit();
+  new ResizeObserver(fit).observe(hero);
+  let showing = false;
+  function snow(now) {
+    if (!showing) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    flakes.forEach((f) => {
+      f.y += f.fall * scale;
+      f.x += Math.sin(now / 1100 + f.sway) * 0.35 * scale;
+      if (f.y > canvas.height + 4) { f.y = -4; f.x = Math.random() * canvas.width; }
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    requestAnimationFrame(snow);
+  }
+  new IntersectionObserver(([entry]) => {
+    const was = showing;
+    showing = entry.isIntersecting;
+    if (showing && !was) requestAnimationFrame(snow);
+  }).observe(hero);
+}
+if (xmas) startChristmas();
+
 /* ---------- The medal: a 3D FORGED medal in the finish, loaded only when it's near ---------- */
 (function loadMedal() {
   const figure = document.getElementById('medal');
@@ -1660,7 +1836,11 @@ openRsvpLink();
     near.disconnect();
     import('./medal.js').then(({ startMedal }) => {
       figure.hidden = false;
-      if (!startMedal(figure, { reducedMotion })) figure.hidden = true;
+      if (xmas) {
+        figure.querySelector('canvas').setAttribute('aria-label', 'A 3D FORGED Christmas bauble. Drag it sideways to spin it.');
+        figure.querySelector('.medal__hint span').textContent = 'Spin the bauble.';
+      }
+      if (!startMedal(figure, { reducedMotion, festive: xmas })) figure.hidden = true;
     }).catch(() => { figure.hidden = true; });
   }, { rootMargin: '900px 0px' });
   near.observe(anchor);

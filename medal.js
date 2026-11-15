@@ -3,7 +3,7 @@
    Loaded by main.js only when the finish section is close to the screen. */
 import * as THREE from './assets/vendor/three.module.min.js';
 
-export function startMedal(figure, { reducedMotion = false } = {}) {
+export function startMedal(figure, { reducedMotion = false, festive = false } = {}) {
   const canvas = figure.querySelector('canvas');
   let renderer;
   try {
@@ -53,7 +53,45 @@ export function startMedal(figure, { reducedMotion = false } = {}) {
     color: 0xd8d2ca, metalness: 1, roughness: 0.24, emissive: 0xff5a10, emissiveIntensity: 0,
   });
   const medal = new THREE.Group();
-  medal.add(new THREE.Mesh(bodyGeometry, steel));
+  if (!festive) medal.add(new THREE.Mesh(bodyGeometry, steel));
+
+  // Christmas: the medal becomes a bauble, red with a gold FORGED band, a cap and a loop.
+  const baubleMaterials = [];
+  if (festive) {
+    const c = document.createElement('canvas');
+    c.width = 2048;
+    c.height = 1024;
+    const g = c.getContext('2d');
+    g.fillStyle = '#B3141C';
+    g.fillRect(0, 0, 2048, 1024);
+    g.fillStyle = '#E9B949';
+    g.fillRect(0, 432, 2048, 160);
+    g.fillStyle = '#7A0F14';
+    g.font = '900 104px Anybody, "Arial Black", sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    ['FORGED', '★', 'GOA', '★', 'FORGED', '★', 'GOA', '★'].forEach((word, i) => g.fillText(word, (i + 0.5) * 256, 514));
+    g.fillStyle = '#E9B949';
+    for (let i = 0; i < 16; i++) {
+      g.beginPath(); g.arc((i + 0.5) * 128, 300, 10, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.arc((i + 0.5) * 128 + 64, 728, 10, 0, Math.PI * 2); g.fill();
+    }
+    const map = new THREE.CanvasTexture(c);
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    const shell = new THREE.MeshStandardMaterial({ map, metalness: 0.85, roughness: 0.22, emissive: 0xff5a10, emissiveIntensity: 0 });
+    const gold = new THREE.MeshStandardMaterial({ color: 0xe9b949, metalness: 1, roughness: 0.3, emissive: 0xff7a1e, emissiveIntensity: 0 });
+    baubleMaterials.push(shell, gold);
+    const bauble = new THREE.Group();
+    bauble.position.y = -0.14;
+    bauble.add(new THREE.Mesh(new THREE.SphereGeometry(0.9, 96, 64), shell));
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.24, 32), gold);
+    cap.position.y = 0.95;
+    const loop = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.032, 16, 40), gold);
+    loop.position.y = 1.18;
+    bauble.add(cap, loop);
+    medal.add(bauble);
+  }
 
   // Each face is drawn on a canvas: polished raised letters on dark, worked iron.
   const art = new Image();
@@ -194,6 +232,7 @@ export function startMedal(figure, { reducedMotion = false } = {}) {
   let front;
   let back;
   function buildFaces() {
+    if (festive) return; // the bauble has no flat faces
     [front, back].forEach((mesh) => { if (mesh) { medal.remove(mesh); mesh.material.dispose(); } });
     front = new THREE.Mesh(faceGeometry, face('FORGED RUN CLUB  ·  GOA  ·  EST 2026  ·  ', drawF));
     front.position.z = 0.0565 * R;
@@ -298,9 +337,13 @@ export function startMedal(figure, { reducedMotion = false } = {}) {
     const speed = Math.abs(spin);
     heat = Math.min(1.15, Math.max(0, heat + (speed > 5 ? (speed - 5) * 0.05 * dt * 6 : 0) - dt * 0.28));
     const glow = Math.min(1, heat);
-    steel.emissiveIntensity = glow * glow * 0.55;
-    steel.color.setRGB(0.85 + 0.15 * glow, 0.82 - 0.2 * glow, 0.79 - 0.4 * glow);
-    [front, back].forEach((mesh) => { mesh.material.emissiveIntensity = glow * 2.4; });
+    if (festive) {
+      baubleMaterials.forEach((material) => { material.emissiveIntensity = glow * glow * 0.6; });
+    } else {
+      steel.emissiveIntensity = glow * glow * 0.55;
+      steel.color.setRGB(0.85 + 0.15 * glow, 0.82 - 0.2 * glow, 0.79 - 0.4 * glow);
+      [front, back].forEach((mesh) => { mesh.material.emissiveIntensity = glow * 2.4; });
+    }
     figure.style.setProperty('--heat', glow.toFixed(3));
 
     if (!reducedMotion && heat > 0.35 && Math.random() < heat * 0.9) throwSpark();

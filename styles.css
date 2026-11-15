@@ -1612,3 +1612,130 @@ a { color: inherit; }
   .route__embers { display: none; }
   .btn { transition: none; }
 }
+
+
+/* ======================================================================
+   Christmas mode: html.is-xmas, from 23 Nov to 1 Jan (or ?xmas to preview)
+   ====================================================================== */
+.route__stripe, .route__cane-mask, .route__runner-hat { display: none; }
+.is-xmas .route__stripe { display: inline; fill: none; stroke: #FFFFFF; stroke-width: calc(var(--road) * .42); stroke-linecap: butt; stroke-dasharray: 7 9; opacity: .9; animation: cane-slide 1.2s linear infinite; }
+.is-xmas .route__cane-mask { display: inline; fill: none; stroke: #fff; stroke-width: calc(var(--road) * .6); stroke-linecap: round; }
+@keyframes cane-slide { to { stroke-dashoffset: -16; } }
+.is-xmas .route__runner-hat { display: inline; }
+.route__road .route__runner-hat path { fill: #E3262F; stroke-linecap: butt; }
+/* Room under the next run's label for Santa's hat */
+.is-xmas .route:not(.is-compact) .route__stop.is-next.is-valley .route__label { bottom: calc(max(var(--road), var(--coin)) / 2 + 36px); }
+/* Candy-cane trail: deep red to bright red, then gold at the hot end */
+.is-xmas #route-heat stop:nth-child(1) { stop-color: #4A0A0E; }
+.is-xmas #route-heat stop:nth-child(2) { stop-color: #B3141C; }
+.is-xmas #route-heat stop:nth-child(3) { stop-color: #E3262F; }
+.is-xmas #route-heat stop:nth-child(4) { stop-color: #F5C452; }
+.is-xmas #route-heat stop:nth-child(5) { stop-color: #FFF6D8; }
+/* Gold sparkles instead of embers */
+.is-xmas .route__ember { animation-name: route-sparkle; }
+@keyframes route-sparkle {
+  0% { transform: translate(0, 0) scale(1.2); opacity: 0; fill: #FFFFFF; }
+  12% { opacity: 1; }
+  50% { fill: #F5C452; }
+  100% { transform: translate(var(--drift), var(--rise)) scale(.2); opacity: 0; fill: #F5C452; }
+}
+.is-xmas .route__runner-glow { fill: #F5C452; opacity: .4; }
+
+/* Snow over the hero (the hero needs a box to fill; when it pins it's already sticky) */
+.is-xmas:not(.has-flight) .hero { position: relative; }
+.xmas-snow { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
+.hero.is-flying .xmas-snow { display: none; }
+
+/* Fairy lights along the top of each section */
+.xmas-lights { position: absolute; top: 0; left: 0; z-index: 2; width: 100%; overflow: visible; pointer-events: none; }
+.band > .xmas-lights { position: absolute; z-index: 2; }
+.xmas-lights .rope { fill: none; stroke: #2C2424; stroke-width: 2; }
+.xmas-lights .bulbs { animation: xmas-twinkle 1.1s ease-in-out infinite alternate; }
+.xmas-lights .bulbs--1 { animation-duration: 1.5s; animation-delay: -.4s; }
+.xmas-lights .bulbs--2 { animation-duration: .9s; animation-delay: -.7s; }
+.xmas-lights .bulbs--3 { animation-duration: 1.8s; animation-delay: -1.1s; }
+.xmas-lights.is-off .bulbs, .xmas-moving .hero > .xmas-lights .bulbs { animation-play-state: paused; }
+@keyframes xmas-twinkle { from { opacity: 1; } to { opacity: .3; } }
+/* Resting while you scroll past the top: the frost texture, shine, glints and icy
+   glow would otherwise be redrawn every frame as the camera flies into the letters.
+   The letters keep their icy colours, so it still reads as frosted. */
+.is-xmas .ingot .wordmark::after, .is-xmas .ingot .wordmark::before { transition: opacity .3s ease-out; }
+.xmas-moving .ingot .wordmark::after, .xmas-moving .ingot .wordmark::before { opacity: 0; animation-play-state: paused; }
+.xmas-moving .xmas-glint { visibility: hidden; animation-play-state: paused; }
+.is-xmas.xmas-moving .ingot { filter: none; }
+.xmas-moving .route__stripe { animation-play-state: paused; }
+.hero > .xmas-lights { z-index: 1; }
+
+/* Frosted wordmark: ice over the hot metal */
+.is-xmas .ingot .wordmark {
+  background: linear-gradient(180deg, #F7FCFF 0, #E3F1FB 18%, #BCD8EE 40%, #A9C6DE 52%, #F5C452 70%, #D6232B 86%, #7A0F14 100%);
+}
+.is-xmas .ingot { filter: drop-shadow(0 0 1px rgb(240 250 255 / .9)) drop-shadow(0 0 10px rgb(150 205 255 / .4)); }
+.is-xmas .ingot .wordmark::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #FFFFFF 0 4%, rgb(255 255 255 / .55) 7%, transparent 12%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.2 -1.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 160px 160px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='turbulence' baseFrequency='.035 .09' numOctaves='4' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .92 0 0 0 0 .97 0 0 0 0 1 0 0 0 1.8 -.75'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") 0 0 / 340px 340px;
+  -webkit-mask: linear-gradient(180deg, #000 0 30%, rgb(0 0 0 / .5) 52%, transparent 78%);
+  mask: linear-gradient(180deg, #000 0 30%, rgb(0 0 0 / .5) 52%, transparent 78%);
+  opacity: .9;
+}
+.is-xmas .ingot .wordmark::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / .55) 45%, transparent 55%) -150% 0 / 60% 100% no-repeat;
+  animation: xmas-sheen 6s ease-in-out infinite;
+}
+@keyframes xmas-sheen { 0%, 45% { background-position: -150% 0; } 85%, 100% { background-position: 250% 0; } }
+.xmas-glint {
+  position: absolute; z-index: 1;
+  width: clamp(8px, 1.3vw, 16px); aspect-ratio: 1;
+  translate: -50% -50%;
+  background: #FFFFFF;
+  clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
+  opacity: 0;
+  pointer-events: none;
+  animation: xmas-glint var(--t) ease-in-out var(--d) infinite;
+}
+@keyframes xmas-glint { 0%, 100% { opacity: 0; transform: scale(.2) rotate(0); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+
+/* Snow globe intro */
+.ice__globe, .ice__glass, .ice__base { display: none; }
+.is-xmas .ice { background: radial-gradient(circle at 50% 45%, #13202B, var(--black-heat) 70%); }
+.is-xmas .ice__globe, .is-xmas .ice__glass, .is-xmas .ice__base { display: block; position: absolute; pointer-events: none; }
+.is-xmas .ice__globe {
+  inset: -24%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 58%, rgb(36 64 88 / .65), rgb(8 16 24 / .9) 72%);
+  box-shadow: 0 0 60px rgb(140 190 255 / .18);
+}
+.is-xmas .ice__glass {
+  inset: -24%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 24%, rgb(255 255 255 / .42), transparent 26%), radial-gradient(circle at 70% 80%, rgb(255 255 255 / .1), transparent 30%);
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / .3), inset 0 -26px 46px rgb(0 0 0 / .45);
+}
+.is-xmas .ice__base {
+  left: 4%; right: 4%; top: 116%;
+  height: 20%;
+  border-radius: 8px 8px 22px 22px;
+  background: linear-gradient(180deg, #8E1217, #3E070A);
+  box-shadow: inset 0 4px 0 #F5C452, 0 10px 24px rgb(0 0 0 / .5);
+}
+.is-xmas .ice__read { top: calc(50% + min(23vmin, 150px) * 1.75 + 28px); }
+/* Snow falls in the globe's world instead of frost rising */
+.is-xmas .ice__frost i { top: -10px; bottom: auto; background: #FFFFFF; animation-name: snow-fall; }
+@keyframes snow-fall {
+  10% { opacity: .85; }
+  to { transform: translate(var(--drift), 105vh); opacity: .2; }
+}
+.is-xmas .ice.is-hot .ice__frost i { background: #F5C452; }
+
+@media (prefers-reduced-motion: reduce) {
+  .is-xmas .route__stripe, .xmas-lights .bulbs, .xmas-glint, .is-xmas .ingot .wordmark::before { animation: none; }
+  .xmas-glint { display: none; }
+}
