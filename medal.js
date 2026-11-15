@@ -62,21 +62,43 @@ export function startMedal(figure, { reducedMotion = false, festive = false } = 
     c.width = 2048;
     c.height = 1024;
     const g = c.getContext('2d');
-    g.fillStyle = '#B3141C';
-    g.fillRect(0, 0, 2048, 1024);
-    g.fillStyle = '#E9B949';
-    g.fillRect(0, 432, 2048, 160);
-    g.fillStyle = '#7A0F14';
-    g.font = '900 104px Anybody, "Arial Black", sans-serif';
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    ['FORGED', '★', 'GOA', '★', 'FORGED', '★', 'GOA', '★'].forEach((word, i) => g.fillText(word, (i + 0.5) * 256, 514));
-    g.fillStyle = '#E9B949';
-    for (let i = 0; i < 16; i++) {
-      g.beginPath(); g.arc((i + 0.5) * 128, 300, 10, 0, Math.PI * 2); g.fill();
-      g.beginPath(); g.arc((i + 0.5) * 128 + 64, 728, 10, 0, Math.PI * 2); g.fill();
-    }
+    // The band wraps right round the ball, so the words are measured and spaced
+    // evenly: none of them may cross the seam where the picture's two ends meet.
+    const paintBand = () => {
+      g.fillStyle = '#B3141C';
+      g.fillRect(0, 0, 2048, 1024);
+      g.fillStyle = '#E9B949';
+      g.fillRect(0, 432, 2048, 160);
+      const words = ['FORGED', '★', 'GOA', '★', 'FORGED', '★', 'GOA', '★'];
+      let size = 104;
+      g.font = `900 ${size}px Anybody, "Arial Black", sans-serif`;
+      let widths = words.map((word) => g.measureText(word).width);
+      let total = widths.reduce((sum, w) => sum + w, 0);
+      if (total > 2048 * 0.8) {
+        size = Math.floor(size * (2048 * 0.8) / total);
+        g.font = `900 ${size}px Anybody, "Arial Black", sans-serif`;
+        widths = words.map((word) => g.measureText(word).width);
+        total = widths.reduce((sum, w) => sum + w, 0);
+      }
+      const gap = (2048 - total) / words.length;
+      g.fillStyle = '#7A0F14';
+      g.textAlign = 'left';
+      g.textBaseline = 'middle';
+      let x = gap / 2;
+      words.forEach((word, i) => {
+        g.fillText(word, x, 514);
+        x += widths[i] + gap;
+      });
+      g.fillStyle = '#E9B949';
+      for (let i = 0; i < 16; i++) {
+        g.beginPath(); g.arc((i + 0.5) * 128, 300, 10, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.arc((i + 0.5) * 128 + 64, 728, 10, 0, Math.PI * 2); g.fill();
+      }
+    };
+    paintBand();
     const map = new THREE.CanvasTexture(c);
+    // Repaint once the brand font has arrived, so the letters are FORGED's own.
+    if (document.fonts) document.fonts.ready.then(() => { paintBand(); map.needsUpdate = true; });
     map.colorSpace = THREE.SRGBColorSpace;
     map.anisotropy = renderer.capabilities.getMaxAnisotropy();
     const shell = new THREE.MeshStandardMaterial({ map, metalness: 0.85, roughness: 0.22, emissive: 0xff5a10, emissiveIntensity: 0 });
