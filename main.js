@@ -206,7 +206,7 @@ function runPreloader(onReveal) {
     if (xmas) {
       logo.style.transform = 'none';
       logo.animate(
-        [{ transform: 'translate(-9.3%, 9.2%) scale(.7)' }, { transform: 'scale(1.06) rotate(2deg)', offset: 0.6 }, { transform: 'none' }],
+        [{ transform: 'translate(-8.82%, 6.42%) scale(.659)' }, { transform: 'scale(1.06) rotate(2deg)', offset: 0.6 }, { transform: 'none' }],
         { duration: 650, easing: 'cubic-bezier(.3,1.4,.5,1)' },
       );
     }

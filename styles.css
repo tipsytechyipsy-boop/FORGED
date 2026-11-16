@@ -1732,8 +1732,9 @@ a { color: inherit; }
   inset: auto;
   left: -10.86%; top: -69.53%;
   width: 148.73%; height: 187.17%;
-  /* Inside the globe it's shrunk to fit under the glass, hat and all */
-  transform: translate(-9.3%, 9.2%) scale(.7);
+  max-width: none; /* it's wider than its box on purpose, so keep its true shape */
+  /* Inside the globe it's shrunk and centred under the glass, hat to holly */
+  transform: translate(-8.82%, 6.42%) scale(.659);
   filter: drop-shadow(0 0 18px rgb(255 214 140 / .25));
 }
 /* No ice at Christmas: the logo is in the globe, and the glass is what breaks */
