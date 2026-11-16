@@ -225,6 +225,14 @@ a { color: inherit; }
   height: calc(var(--h) * 1.096);
   max-width: none;
 }
+/* Christmas: the nav's F wears the Santa hat. The image is bigger than the F
+   (the hat and holly stick out), so it's placed so its F sits where the ice F does. */
+.nav__f img.nav__f--xmas {
+  left: calc(var(--h) * -.1532);
+  top: calc(var(--h) * -.8117);
+  width: calc(var(--h) * 1.6301);
+  height: calc(var(--h) * 2.0514);
+}
 .nav__orged {
   flex: none;
   width: calc(var(--h) * 3206 / 622);

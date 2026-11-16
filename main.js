@@ -242,7 +242,13 @@ function runPreloader(onReveal) {
     logo.style.visibility = 'visible';
     const navF = document.querySelector('.nav__f img');
     const orged = document.querySelector('.nav__orged');
-    const target = navF.getBoundingClientRect();
+    let target = navF.getBoundingClientRect();
+    if (xmas) {
+      // The hatted image is bigger than the F, so aim for the F's own square.
+      const box = navF.parentElement.getBoundingClientRect();
+      const h = box.height;
+      target = { left: box.left - 0.0342 * h, top: box.top - 0.0497 * h, width: 1.096 * h, height: 1.096 * h, bottom: box.bottom };
+    }
     // At Christmas the logo image is bigger than the F (the hat and holly stick out),
     // so the flight is measured from the F's own square, which is the stage.
     const from = (xmas ? stage : logo).getBoundingClientRect();
@@ -1698,6 +1704,13 @@ openRsvpLink();
 function startChristmas() {
   const hero = document.getElementById('hero');
   const NS = 'http://www.w3.org/2000/svg';
+
+  // The nav's F wears the Santa hat too.
+  const navMark = document.querySelector('.nav__f img');
+  navMark.src = 'assets/xmas-logo-178.webp';
+  navMark.width = 178;
+  navMark.height = 224;
+  navMark.classList.add('nav__f--xmas');
 
   // Glints of light twinkling on the frosted wordmark.
   const mark = document.querySelector('.ingot .wordmark');
