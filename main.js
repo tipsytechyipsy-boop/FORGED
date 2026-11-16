@@ -82,6 +82,13 @@ function runPreloader(onReveal) {
     stage.append(glass, base);
     globeParts.push(globe, glass, base);
     msgEl.textContent = 'Shaking the snow globe';
+    // The logo inside is the Christmas one: the F in a Santa hat, fairy lights and holly.
+    logo.removeAttribute('srcset');
+    logo.removeAttribute('sizes');
+    logo.srcset = 'assets/xmas-logo-480.webp 445w, assets/xmas-logo.webp 890w';
+    logo.sizes = 'min(68vmin, 446px)';
+    logo.src = 'assets/xmas-logo.webp';
+    logo.classList.add('ice__logo--xmas');
   }
   const between = (min, max) => min + Math.random() * (max - min);
 
@@ -195,7 +202,14 @@ function runPreloader(onReveal) {
       ], { duration: 1000, fill: 'forwards' });
     });
     throwChips(size);
-    // Christmas: the glass bursts and the base drops away.
+    // Christmas: the logo in its Santa hat pops out as the glass bursts and the base drops away.
+    if (xmas) {
+      logo.style.opacity = '1';
+      logo.animate(
+        [{ opacity: 0, transform: 'scale(.7) rotate(-6deg)' }, { opacity: 1, transform: 'scale(1.06) rotate(2deg)', offset: 0.6 }, { opacity: 1, transform: 'none' }],
+        { duration: 650, easing: 'cubic-bezier(.3,1.4,.5,1)' },
+      );
+    }
     globeParts.forEach((part, i) => part.animate(
       i === 2
         ? [{ transform: 'none', opacity: 1 }, { transform: 'translateY(40%) scale(.9)', opacity: 0 }]
@@ -222,13 +236,16 @@ function runPreloader(onReveal) {
     onReveal();
     // A skip can land before the break, so make sure the logo is what's showing.
     globeParts.forEach((part) => { part.style.display = 'none'; });
+    if (xmas) logo.style.opacity = '1';
     block.style.visibility = 'hidden';
     crackBox.style.visibility = 'hidden';
     logo.style.visibility = 'visible';
     const navF = document.querySelector('.nav__f img');
     const orged = document.querySelector('.nav__orged');
     const target = navF.getBoundingClientRect();
-    const from = logo.getBoundingClientRect();
+    // At Christmas the logo image is bigger than the F (the hat and holly stick out),
+    // so the flight is measured from the F's own square, which is the stage.
+    const from = (xmas ? stage : logo).getBoundingClientRect();
     // The logo flies up and becomes the F of the name, if the nav is on screen.
     if (target.bottom > 0) {
       const scale = target.width / from.width;

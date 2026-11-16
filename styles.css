@@ -1726,6 +1726,15 @@ a { color: inherit; }
   background: linear-gradient(180deg, #8E1217, #3E070A);
   box-shadow: inset 0 4px 0 #F5C452, 0 10px 24px rgb(0 0 0 / .5);
 }
+/* The Christmas logo: its F card sits exactly where the ice logo's F does, with the
+   hat, lights and holly reaching out around it. Hidden until the glass bursts. */
+.is-xmas .ice__stage img.ice__logo--xmas {
+  inset: auto;
+  left: -10.86%; top: -69.53%;
+  width: 148.73%; height: 187.17%;
+  opacity: 0;
+  filter: drop-shadow(0 0 18px rgb(255 214 140 / .25));
+}
 .is-xmas .ice__read { top: calc(50% + min(23vmin, 150px) * 1.75 + 28px); }
 /* Snow falls in the globe's world instead of frost rising */
 .is-xmas .ice__frost i { top: -10px; bottom: auto; background: #FFFFFF; animation-name: snow-fall; }
