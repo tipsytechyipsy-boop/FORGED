@@ -204,9 +204,9 @@ function runPreloader(onReveal) {
     throwChips(size);
     // Christmas: the logo in its Santa hat pops out as the glass bursts and the base drops away.
     if (xmas) {
-      logo.style.opacity = '1';
+      logo.style.transform = 'none';
       logo.animate(
-        [{ opacity: 0, transform: 'scale(.7) rotate(-6deg)' }, { opacity: 1, transform: 'scale(1.06) rotate(2deg)', offset: 0.6 }, { opacity: 1, transform: 'none' }],
+        [{ transform: 'translate(-9.3%, 9.2%) scale(.7)' }, { transform: 'scale(1.06) rotate(2deg)', offset: 0.6 }, { transform: 'none' }],
         { duration: 650, easing: 'cubic-bezier(.3,1.4,.5,1)' },
       );
     }
@@ -236,7 +236,7 @@ function runPreloader(onReveal) {
     onReveal();
     // A skip can land before the break, so make sure the logo is what's showing.
     globeParts.forEach((part) => { part.style.display = 'none'; });
-    if (xmas) logo.style.opacity = '1';
+    if (xmas) logo.style.transform = 'none';
     block.style.visibility = 'hidden';
     crackBox.style.visibility = 'hidden';
     logo.style.visibility = 'visible';
