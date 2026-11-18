@@ -2100,14 +2100,13 @@ document.querySelectorAll('.reel').forEach(startReel);
     },
     '2026-10-31': {
       day: '31', month: 'Oct', title: 'Run for Treats',
-      intro: 'A Halloween social run with Ninety7: costumes, coffee, an ice bath and a spooky little treat.',
-      empty: ["Photos aren't up yet", 'The photos from this run are on their way. Watch the reel in the meantime.'],
-      link: ['Watch the reel', 'https://www.instagram.com/reel/DfJi7iSOjgl/'],
+      intro: 'A Halloween social run with Ninety7: costumes, cupcakes, a ghost on a swing and a spooky little treat.',
+      photos: true, stamp: "31 10 '26", file: 'run-for-treats',
     },
     '2026-11-14': {
       day: '14', month: 'Nov', title: 'Chase the Sun',
       intro: 'Wristbands, watermelon and a lot of happy runners at Paloma, Anjuna, on 14\u00A0November.',
-      photos: true,
+      photos: true, chapters: true, stamp: "14 11 '26", file: 'chase-the-sun',
     },
     '2026-11-22': {
       day: '22', month: 'Nov', title: 'Run for the Mind',
@@ -2140,7 +2139,10 @@ document.querySelectorAll('.reel').forEach(startReel);
     titleEl.textContent = data.title;
     introEl.textContent = data.intro;
     const has = Boolean(data.photos);
-    filtersEl.hidden = !has;
+    filter = 'all';
+    expanded = false;
+    filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === 'all')));
+    filtersEl.hidden = !data.chapters;
     hintEl.hidden = !has;
     gridEl.hidden = !has;
     emptyEl.hidden = has;
@@ -2182,8 +2184,9 @@ document.querySelectorAll('.reel').forEach(startReel);
   function apply(animate) {
     const before = new Map();
     if (animate && !reducedMotion) items.forEach((item) => { if (!item.hidden) before.set(item, item.getBoundingClientRect()); });
-    items.forEach((item) => { item.hidden = !(filter === 'all' || item.dataset.chapter === filter); });
-    const collapsed = filter === 'all' && !expanded && Boolean(RUNS[run].photos);
+    items.forEach((item) => { item.hidden = item.dataset.run !== run || !(filter === 'all' || item.dataset.chapter === filter); });
+    const showing = items.filter((item) => !item.hidden).length;
+    const collapsed = filter === 'all' && !expanded && Boolean(RUNS[run].photos) && showing > 12;
     wall.classList.toggle('is-collapsed', collapsed);
     more.hidden = !collapsed;
     if (!before.size) return;
@@ -2278,7 +2281,7 @@ document.querySelectorAll('.reel').forEach(startReel);
     box.style.setProperty('--glow', color);
     count.textContent = `${at + 1} / ${pool.length}`;
     caption.textContent = tile.dataset.caption || tile.dataset.chapterName;
-    img.alt = tile.dataset.caption || `${tile.dataset.chapterName} at Chase the Sun`;
+    img.alt = tile.dataset.caption || `${tile.dataset.chapterName} at ${RUNS[run].title}`;
     fit();
     [...strip.children].forEach((thumb, k) => thumb.classList.toggle('is-on', k === at));
     strip.children[at]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reducedMotion ? 'auto' : 'smooth' });
@@ -2298,7 +2301,7 @@ document.querySelectorAll('.reel').forEach(startReel);
   }
 
   function open(tile, fromTile) {
-    pool = filter === 'all' ? tiles : tiles.filter((t) => t.closest('.gallery__item').dataset.chapter === filter);
+    pool = tiles.filter((t) => !t.closest('.gallery__item').hidden);
     opener = tile;
     buildStrip();
     box.showModal();
@@ -2416,7 +2419,7 @@ document.querySelectorAll('.reel').forEach(startReel);
         g.shadowColor = 'rgba(255, 110, 30, .9)';
         g.shadowBlur = size * 0.6;
         g.fillStyle = '#FF9A3C';
-        g.fillText("14 11 '26", c.width - size * 1.2, c.height - size * 1.1);
+        g.fillText(RUNS[run].stamp, c.width - size * 1.2, c.height - size * 1.1);
         // and where to find more
         g.textAlign = 'left';
         g.shadowColor = 'rgba(0, 0, 0, .55)';
@@ -2425,7 +2428,7 @@ document.querySelectorAll('.reel').forEach(startReel);
         g.font = `800 ${size}px Anybody, "Arial Black", sans-serif`;
         g.fillText('FORGED  theforged.in', size * 1.2, c.height - size * 1.1);
         c.toBlob((blob) => (blob
-          ? resolve(new File([blob], `forged-chase-the-sun-${tile.dataset.slug}.jpg`, { type: 'image/jpeg' }))
+          ? resolve(new File([blob], `forged-${RUNS[run].file}-${tile.dataset.slug}.jpg`, { type: 'image/jpeg' }))
           : reject(new Error('no blob'))), 'image/jpeg', 0.9);
       };
       full.onerror = reject;
@@ -2462,11 +2465,11 @@ document.querySelectorAll('.reel').forEach(startReel);
     try {
       const file = await photoFile(tile);
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Chase the Sun with FORGED', text: 'Chase the Sun with FORGED Run Club Goa. theforged.in' });
+        await navigator.share({ files: [file], title: `${RUNS[run].title} with FORGED`, text: `${RUNS[run].title} with FORGED Run Club Goa. theforged.in` });
         return;
       }
       if (navigator.share) {
-        await navigator.share({ title: 'Chase the Sun with FORGED', url });
+        await navigator.share({ title: `${RUNS[run].title} with FORGED`, url });
         return;
       }
       await navigator.clipboard.writeText(url);
@@ -2486,7 +2489,7 @@ document.querySelectorAll('.reel').forEach(startReel);
   const wanted = (location.hash.match(/^#photo-([a-z0-9-]+)$/) || [])[1];
   const target = wanted && tiles.find((tile) => tile.dataset.slug === wanted);
   if (target) {
-    selectRun('2026-11-14');
+    selectRun(target.closest('.gallery__item').dataset.run);
     (function waitForIntro() {
       if (document.getElementById('ice')) setTimeout(waitForIntro, 250);
       else open(target, false);

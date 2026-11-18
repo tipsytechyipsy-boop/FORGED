@@ -1920,6 +1920,7 @@ a { color: inherit; }
 .gallery__item[hidden] { display: none; }
 .gallery__item.is-wide { grid-column: span 2; }
 .gallery__item.is-feature { grid-column: span 2; grid-row: span 4; }
+.gallery__item.is-hero { grid-column: 1 / -1; grid-row: span 4; }
 .gallery__open {
   position: relative;
   display: block; width: 100%; height: 100%;
@@ -1998,6 +1999,7 @@ a { color: inherit; }
 @media (max-width: 599.98px) {
   .gallery { box-shadow: 6px 6px 0 var(--ink); }
   .gallery__grid { --cols: 2; --gap: 6px; --rows-shown: 10; }
+  .gallery__item.is-hero { grid-row: span 2; }
   /* the title goes under the 14 so it never runs off the edge */
   .gallery__side { grid-template-columns: minmax(0, 1fr); grid-template-areas: "date" "title" "intro" "filters" "hint"; }
   .gallery__title { margin: 12px 0 0; }
