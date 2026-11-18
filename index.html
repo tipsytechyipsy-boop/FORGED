@@ -500,17 +500,23 @@
         </div>
         <!-- Chase the Sun gallery: a demo, shown only with ?gallery until it's approved -->
         <section class="gallery" id="gallery-chase" aria-labelledby="gallery-title">
+          <div class="gallery__runs" role="tablist" aria-label="Choose a run">
+            <button class="gallery__run" type="button" role="tab" data-run="2026-10-25" aria-selected="false"><b>25</b><span>5K Social Run</span><small>Oct, Reel</small></button>
+            <button class="gallery__run" type="button" role="tab" data-run="2026-10-31" aria-selected="false"><b>31</b><span>Run for Treats</span><small>Oct, Reel</small></button>
+            <button class="gallery__run" type="button" role="tab" data-run="2026-11-14" aria-selected="true"><b>14</b><span>Chase the Sun</span><small>Nov, 35 photos</small></button>
+            <button class="gallery__run" type="button" role="tab" data-run="2026-11-22" aria-selected="false"><b>22</b><span>Run for the Mind</span><small>Nov, Coming up</small></button>
+          </div>
           <div class="gallery__side">
-            <p class="gallery__date" aria-hidden="true"><span class="gallery__sun" id="gallery-sun">14</span><span class="gallery__month">Nov</span></p>
+            <p class="gallery__date" aria-hidden="true"><span class="gallery__sun" id="gallery-sun">14</span><span class="gallery__month" id="gallery-month">Nov</span></p>
             <h3 class="gallery__title" id="gallery-title">Chase the Sun</h3>
-            <p class="gallery__intro">Wristbands, watermelon and a lot of happy runners at Paloma, Anjuna, on 14&nbsp;November.</p>
-            <div class="gallery__filters" role="group" aria-label="Show photos">
+            <p class="gallery__intro" id="gallery-intro">Wristbands, watermelon and a lot of happy runners at Paloma, Anjuna, on 14&nbsp;November.</p>
+            <div class="gallery__filters" id="gallery-filters" role="group" aria-label="Show photos">
               <button class="gallery__filter" type="button" data-filter="all" aria-pressed="true">Everything <span>35</span></button>
               <button class="gallery__filter" type="button" data-filter="ready" aria-pressed="false">Getting ready <span>6</span></button>
               <button class="gallery__filter" type="button" data-filter="spread" aria-pressed="false">The spread <span>6</span></button>
               <button class="gallery__filter" type="button" data-filter="crowd" aria-pressed="false">The crowd <span>23</span></button>
             </div>
-            <p class="gallery__hint">Spotted yourself? Open the photo, then save it or share it.</p>
+            <p class="gallery__hint" id="gallery-hint">Spotted yourself? Open the photo, then save it or share it.</p>
           </div>
           <div class="gallery__wall" id="gallery-wall">
             <ul class="gallery__grid" id="gallery-grid">
@@ -550,6 +556,11 @@
               <li class="gallery__item is-tall" data-chapter="crowd"><button class="gallery__open" type="button" style="--tile:#955A2E" data-slug="al-43" data-w="1600" data-h="2131" data-full="assets/gallery/chase-the-sun/al-43-1400.webp" data-caption="" data-chapter-name="The crowd" aria-label="Open photo 34 of 35, the crowd"><img src="assets/gallery/chase-the-sun/al-43-480.webp" alt="" width="480" height="639" loading="lazy" decoding="async"><span class="gallery__tag" aria-hidden="true">AL-43</span></button></li>
               <li class="gallery__item is-tall" data-chapter="crowd"><button class="gallery__open" type="button" style="--tile:#A47442" data-slug="x-2" data-w="1600" data-h="2131" data-full="assets/gallery/chase-the-sun/x-2-1400.webp" data-caption="" data-chapter-name="The crowd" aria-label="Open photo 35 of 35, the crowd"><img src="assets/gallery/chase-the-sun/x-2-480.webp" alt="" width="480" height="639" loading="lazy" decoding="async"><span class="gallery__tag" aria-hidden="true">X-2</span></button></li>
             </ul>
+            <div class="gallery__empty" id="gallery-empty" hidden>
+              <p class="gallery__empty-title" id="gallery-empty-title"></p>
+              <p class="gallery__empty-text" id="gallery-empty-text"></p>
+              <a class="gallery__more" id="gallery-empty-link" href="#"></a>
+            </div>
             <button class="gallery__more" type="button" id="gallery-more">Show all 35 photos</button>
           </div>
         </section>

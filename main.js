@@ -2090,6 +2090,92 @@ document.querySelectorAll('.reel').forEach(startReel);
     }
   }, { passive: true });
 
+  /* Pick a run by its date. Only runs with photos show the wall; the rest say what's coming. */
+  const RUNS = {
+    '2026-10-25': {
+      day: '25', month: 'Oct', title: '5K Social Run',
+      intro: "Calangute's first-ever 5K community run, with MC Sammy on the mic at sunrise.",
+      empty: ["Photos aren't up yet", 'The photos from this run are on their way. Watch the reel in the meantime.'],
+      link: ['Watch the reel', 'https://www.instagram.com/reel/De7T_1iu7zw/'],
+    },
+    '2026-10-31': {
+      day: '31', month: 'Oct', title: 'Run for Treats',
+      intro: 'A Halloween social run with Ninety7: costumes, coffee, an ice bath and a spooky little treat.',
+      empty: ["Photos aren't up yet", 'The photos from this run are on their way. Watch the reel in the meantime.'],
+      link: ['Watch the reel', 'https://www.instagram.com/reel/DfJi7iSOjgl/'],
+    },
+    '2026-11-14': {
+      day: '14', month: 'Nov', title: 'Chase the Sun',
+      intro: 'Wristbands, watermelon and a lot of happy runners at Paloma, Anjuna, on 14\u00A0November.',
+      photos: true,
+    },
+    '2026-11-22': {
+      day: '22', month: 'Nov', title: 'Run for the Mind',
+      intro: "A free 3K run and rave for men's mental health on the Goa Velha Highway.",
+      empty: ["This run hasn't happened yet", 'Photos go up after the run on 22 November. Come and be in them.'],
+      link: ["RSVP: I'm in", '#run-for-the-mind'],
+      after: ['Photos are coming soon', 'The photos from Run for the Mind are being picked. Check back soon.'],
+    },
+  };
+  const runTabs = [...gallery.querySelectorAll('.gallery__run')];
+  const monthEl = document.getElementById('gallery-month');
+  const titleEl = document.getElementById('gallery-title');
+  const introEl = document.getElementById('gallery-intro');
+  const filtersEl = document.getElementById('gallery-filters');
+  const hintEl = document.getElementById('gallery-hint');
+  const gridEl = document.getElementById('gallery-grid');
+  const emptyEl = document.getElementById('gallery-empty');
+  let run = '2026-11-14';
+  function selectRun(key, focusTab) {
+    run = key;
+    const data = RUNS[key];
+    runTabs.forEach((tab) => {
+      const on = tab.dataset.run === key;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      if (on && focusTab) tab.focus();
+    });
+    sun.textContent = data.day;
+    monthEl.textContent = data.month;
+    titleEl.textContent = data.title;
+    introEl.textContent = data.intro;
+    const has = Boolean(data.photos);
+    filtersEl.hidden = !has;
+    hintEl.hidden = !has;
+    gridEl.hidden = !has;
+    emptyEl.hidden = has;
+    if (has) {
+      apply(false);
+    } else {
+      wall.classList.remove('is-collapsed');
+      more.hidden = true;
+      const over = data.after && Date.now() > new Date(`${key}T10:00:00+05:30`).getTime();
+      const [heading, text] = over ? data.after : data.empty;
+      document.getElementById('gallery-empty-title').textContent = heading;
+      document.getElementById('gallery-empty-text').textContent = text;
+      const link = document.getElementById('gallery-empty-link');
+      link.hidden = over || !data.link;
+      if (data.link) {
+        link.textContent = data.link[0];
+        link.href = data.link[1];
+        const away = data.link[1].startsWith('http');
+        link.target = away ? '_blank' : '';
+        link.rel = away ? 'noopener' : '';
+      }
+    }
+    setSun();
+  }
+  runTabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selectRun(tab.dataset.run));
+    // Arrow keys move between the dates, like any set of tabs.
+    tab.addEventListener('keydown', (event) => {
+      const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      event.preventDefault();
+      selectRun(runTabs[(i + step + runTabs.length) % runTabs.length].dataset.run, true);
+    });
+  });
+
   /* Chapters and "show all", with the photos sliding to their new places. */
   let filter = 'all';
   let expanded = false;
@@ -2097,7 +2183,7 @@ document.querySelectorAll('.reel').forEach(startReel);
     const before = new Map();
     if (animate && !reducedMotion) items.forEach((item) => { if (!item.hidden) before.set(item, item.getBoundingClientRect()); });
     items.forEach((item) => { item.hidden = !(filter === 'all' || item.dataset.chapter === filter); });
-    const collapsed = filter === 'all' && !expanded;
+    const collapsed = filter === 'all' && !expanded && Boolean(RUNS[run].photos);
     wall.classList.toggle('is-collapsed', collapsed);
     more.hidden = !collapsed;
     if (!before.size) return;
@@ -2123,7 +2209,7 @@ document.querySelectorAll('.reel').forEach(startReel);
     expanded = true;
     apply(true);
   });
-  apply(false);
+  selectRun(run);
 
   /* ---------- The viewer ---------- */
   const box = document.getElementById('lightbox');
@@ -2400,6 +2486,7 @@ document.querySelectorAll('.reel').forEach(startReel);
   const wanted = (location.hash.match(/^#photo-([a-z0-9-]+)$/) || [])[1];
   const target = wanted && tiles.find((tile) => tile.dataset.slug === wanted);
   if (target) {
+    selectRun('2026-11-14');
     (function waitForIntro() {
       if (document.getElementById('ice')) setTimeout(waitForIntro, 250);
       else open(target, false);

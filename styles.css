@@ -1807,6 +1807,49 @@ a { color: inherit; }
   align-items: start;
 }
 .gallery__side { position: sticky; top: 24px; }
+/* Pick a run by its date */
+.gallery__runs {
+  grid-column: 1 / -1;
+  display: flex; gap: 8px;
+  overflow-x: auto;
+  margin: -4px -4px 4px; padding: 4px;
+  scrollbar-width: none;
+}
+.gallery__runs::-webkit-scrollbar { display: none; }
+.gallery__run {
+  flex: 1 0 auto;
+  display: grid; grid-template-columns: auto auto; justify-content: start;
+  column-gap: 10px; row-gap: 3px; align-items: center;
+  min-width: 150px;
+  padding: 10px 14px;
+  border: 0; border-bottom: 3px solid transparent;
+  background: rgb(255 244 236 / .06);
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .2s, color .2s;
+}
+.gallery__run b { grid-row: span 2; font: 900 2.25rem/.85 var(--display); font-variation-settings: "wdth" 115; }
+.gallery__run span { font: 700 .9375rem/1.1 var(--display); }
+.gallery__run small { font: 400 .6875rem/1.2 var(--mono); color: rgb(255 244 236 / .6); }
+.gallery__run:hover { background: rgb(255 244 236 / .12); }
+.gallery__run[aria-selected="true"] { background: var(--gold); color: var(--ink); border-bottom-color: var(--orange-from); }
+.gallery__run[aria-selected="true"] small { color: rgb(20 10 8 / .65); }
+.gallery__run:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.gallery__filters[hidden], .gallery__hint[hidden], .gallery__grid[hidden] { display: none; }
+/* A run without photos yet: an empty frame with somewhere to go instead */
+.gallery__empty {
+  display: grid; place-items: center; align-content: center; gap: 12px;
+  min-height: min(70vh, 520px);
+  padding: 32px 24px;
+  border: 2px dashed rgb(255 244 236 / .25);
+  text-align: center;
+}
+.gallery__empty[hidden] { display: none; }
+.gallery__empty-title { margin: 0; font: 900 clamp(1.5rem, 1rem + 1.6vw, 2.25rem)/1 var(--display); text-transform: uppercase; }
+.gallery__empty-text { max-width: 38ch; margin: 0; color: rgb(255 244 236 / .78); }
+.gallery__empty .gallery__more { margin-top: 8px; text-decoration: none; }
+.gallery__empty .gallery__more:hover { color: var(--ink); }
 .gallery__date { display: flex; align-items: flex-end; gap: 10px; margin: 0; }
 /* The sunset numeral: sky and sea painted inside the digits; JS sets --sun from 0 to 1 */
 .gallery__sun {
