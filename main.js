@@ -2040,3 +2040,75 @@ function startReel(reel) {
   }, { threshold: 0.5 }).observe(video);
 }
 document.querySelectorAll('.reel').forEach(startReel);
+
+
+/* ---------- Gallery: a masonry wall of photos and a full-screen lightbox ---------- */
+(function startGallery() {
+  const gallery = document.getElementById('gallery-chase');
+  if (!gallery || !document.documentElement.classList.contains('show-gallery')) return;
+  const buttons = [...gallery.querySelectorAll('.gallery__open')];
+  const more = document.getElementById('gallery-more');
+  more.addEventListener('click', () => {
+    gallery.classList.add('is-all');
+    reveal();
+  });
+
+  // Photos rise in, a beat apart, as they come into view.
+  const watcher = new IntersectionObserver((entries) => {
+    entries.filter((e) => e.isIntersecting).forEach((entry, i) => {
+      watcher.unobserve(entry.target);
+      entry.target.style.setProperty('--d', `${(i % 6) * 70}ms`);
+      entry.target.classList.add('is-in');
+    });
+  }, { rootMargin: '0px 0px -6% 0px' });
+  function reveal() {
+    gallery.querySelectorAll('.gallery__item:not(.is-in)').forEach((item) => {
+      if (getComputedStyle(item).display !== 'none') watcher.observe(item);
+    });
+  }
+  reveal();
+
+  // Lightbox
+  const box = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  const count = document.getElementById('lightbox-count');
+  let at = 0;
+  const warm = new Set();
+  function preload(i) {
+    const src = buttons[(i + buttons.length) % buttons.length].dataset.full;
+    if (warm.has(src)) return;
+    warm.add(src);
+    new Image().src = src;
+  }
+  function show(i) {
+    at = (i + buttons.length) % buttons.length;
+    img.src = buttons[at].dataset.full;
+    img.classList.remove('is-in');
+    void img.offsetWidth;
+    img.classList.add('is-in');
+    count.textContent = `${at + 1} / ${buttons.length}`;
+    preload(at + 1);
+    preload(at - 1);
+  }
+  buttons.forEach((button, i) => button.addEventListener('click', () => {
+    show(i);
+    box.showModal();
+  }));
+  document.getElementById('lightbox-prev').addEventListener('click', () => show(at - 1));
+  document.getElementById('lightbox-next').addEventListener('click', () => show(at + 1));
+  document.getElementById('lightbox-close').addEventListener('click', () => box.close());
+  box.addEventListener('click', (event) => { if (event.target === box || event.target.classList.contains('lightbox__stage')) box.close(); });
+  box.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowRight') show(at + 1);
+    if (event.key === 'ArrowLeft') show(at - 1);
+  });
+  // Swipe on phones
+  let startX = null;
+  box.addEventListener('touchstart', (event) => { startX = event.touches[0].clientX; }, { passive: true });
+  box.addEventListener('touchend', (event) => {
+    if (startX === null) return;
+    const dx = event.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 45) show(at + (dx < 0 ? 1 : -1));
+    startX = null;
+  });
+})();
