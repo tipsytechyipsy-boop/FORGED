@@ -1952,7 +1952,9 @@ function startChristmas() {
   }).observe(hero);
 }
 if (xmas) startChristmas();
-if (xmas) startXmasEggs();
+const admin = document.documentElement.classList.contains('is-admin');
+if (xmas && !admin) startXmasEggs();
+if (admin) startAdmin();
 
 /* ---------- The medal: a 3D FORGED medal in the finish, loaded only when it's near ---------- */
 (function loadMedal() {
@@ -2850,4 +2852,152 @@ function startXmasEggs() {
       fly();
     }
   });
+}
+
+/* ---------- ?admin: the team's screen for checking stash codes at Sleigh the Run ---------- */
+// Everything is checked by Supabase with the team password; the website itself knows
+// nothing about who won. See supabase/stash.sql (stash_admin).
+function startAdmin() {
+  const PASS_KEY = 'forged-stash-admin';
+  const root = document.createElement('div');
+  root.className = 'admin';
+  root.innerHTML = `<div class="admin__in">
+      <header class="admin__head">
+        <img src="assets/xmas-logo-178.webp" alt="" width="178" height="224">
+        <div><h1 class="admin__title">Santa&rsquo;s stash check</h1><p class="admin__sub">For the FORGED team at Sleigh the Run.</p></div>
+      </header>
+      <form class="admin__card" id="admin-lock">
+        <label class="admin__label" for="admin-pass">Team password</label>
+        <div class="admin__row">
+          <input class="admin__input" id="admin-pass" type="password" autocomplete="current-password" required>
+          <button class="admin__btn" type="submit">Unlock</button>
+        </div>
+        <p class="admin__error" id="admin-lock-error" role="alert" hidden></p>
+      </form>
+      <div id="admin-main" hidden>
+        <form class="admin__card" id="admin-check">
+          <label class="admin__label" for="admin-code">Code on their phone</label>
+          <div class="admin__row">
+            <span class="admin__prefix" aria-hidden="true">STASH-</span>
+            <input class="admin__input admin__input--code" id="admin-code" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="14" placeholder="K7QM2X" required>
+            <button class="admin__btn" type="submit">Check</button>
+          </div>
+        </form>
+        <div class="admin__result" id="admin-result" role="status" hidden></div>
+        <section class="admin__card">
+          <div class="admin__list-head"><h2 class="admin__h2">The first 5</h2><button class="admin__link" id="admin-refresh" type="button">Refresh</button></div>
+          <ol class="admin__list" id="admin-list"></ol>
+        </section>
+        <button class="admin__link" id="admin-out" type="button">Lock this screen</button>
+      </div>
+    </div>`;
+  document.body.append(root);
+  document.title = "Santa's stash check | FORGED";
+
+  const $ = (id) => document.getElementById(id);
+  let pass = '';
+  try { pass = sessionStorage.getItem(PASS_KEY) || ''; } catch (e) { /* nothing remembered */ }
+  const call = async (action, code) => {
+    const response = await fetch(`${SUPABASE.url}/rest/v1/rpc/stash_admin`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE.key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: pass, action, stash_code: code || null }),
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error((data && data.message) || `Error ${response.status}`);
+    return data;
+  };
+  const when = (iso) => {
+    const d = new Date(iso);
+    return `${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, ${d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}`;
+  };
+  const esc = (text) => String(text).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  async function showList() {
+    const list = $('admin-list');
+    try {
+      const rows = await call('list');
+      list.innerHTML = rows.length
+        ? rows.map((row) => `<li class="${row.collected_at ? 'is-given' : ''}"><b>#${row.place}</b><code>${esc(row.code)}</code><span>Found ${when(row.found_at)}</span><em>${row.collected_at ? `Prize given ${when(row.collected_at)}` : 'Not collected yet'}</em></li>`).join('')
+        : '<li class="admin__empty">No one has found the stash yet.</li>';
+    } catch (error) {
+      list.innerHTML = `<li class="admin__empty">Couldn't load the list: ${esc(error.message)}</li>`;
+    }
+  }
+
+  async function unlock(entered) {
+    pass = entered;
+    const error = $('admin-lock-error');
+    error.hidden = true;
+    try {
+      await call('list');
+      try { sessionStorage.setItem(PASS_KEY, pass); } catch (e) { /* fine */ }
+      $('admin-lock').hidden = true;
+      $('admin-main').hidden = false;
+      showList();
+      $('admin-code').focus();
+    } catch (e) {
+      error.textContent = e.message === 'not allowed' ? "That password isn't right." : `Couldn't reach Supabase: ${e.message}`;
+      error.hidden = false;
+      try { sessionStorage.removeItem(PASS_KEY); } catch (err) { /* fine */ }
+    }
+  }
+
+  function render(result) {
+    const box = $('admin-result');
+    box.hidden = false;
+    box.className = 'admin__result';
+    if (!result.found) {
+      box.classList.add('is-bad');
+      box.innerHTML = `<p class="admin__verdict">Code not found</p><p><code>${esc(result.code)}</code> isn't on the list. Check the letters against their screen: codes never use I, L, O, 0 or 1.</p>`;
+    } else if (!result.winner) {
+      box.classList.add('is-no');
+      box.innerHTML = `<p class="admin__verdict">Not a winner</p><p>They were #${result.place} to find the stash, on ${when(result.found_at)}. All 5 prizes went to quicker hunters, but they did find it!</p>`;
+    } else if (result.collected_at) {
+      box.classList.add('is-given');
+      box.innerHTML = `<p class="admin__verdict">Already collected</p><p>Winner #${result.place}. The prize was given ${when(result.collected_at)}.</p>`;
+    } else {
+      box.classList.add('is-win');
+      box.innerHTML = `<p class="admin__verdict">Winner #${result.place}</p><p>Found the stash ${when(result.found_at)}. Give them their prize!</p><button class="admin__btn admin__btn--give" type="button" id="admin-give">Mark prize as given</button>`;
+      $('admin-give').addEventListener('click', async (event) => {
+        event.currentTarget.disabled = true;
+        try {
+          render(await call('collect', result.code));
+          showList();
+        } catch (e) {
+          event.currentTarget.disabled = false;
+          box.insertAdjacentHTML('beforeend', `<p class="admin__error">Couldn't save that: ${esc(e.message)}</p>`);
+        }
+      });
+    }
+  }
+
+  $('admin-lock').addEventListener('submit', (event) => {
+    event.preventDefault();
+    unlock($('admin-pass').value.trim());
+  });
+  $('admin-check').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const input = $('admin-code');
+    const code = input.value.toUpperCase().replace(/\s/g, '').replace(/^STASH-?/, '');
+    if (!code) return;
+    const button = event.currentTarget.querySelector('button');
+    button.disabled = true;
+    try {
+      render(await call('check', `STASH-${code}`));
+    } catch (e) {
+      render({ found: false, code: `STASH-${code}` });
+      $('admin-result').insertAdjacentHTML('beforeend', `<p class="admin__error">${esc(e.message)}</p>`);
+    }
+    button.disabled = false;
+    input.select();
+  });
+  $('admin-code').addEventListener('input', (event) => { event.target.value = event.target.value.toUpperCase(); });
+  $('admin-refresh').addEventListener('click', showList);
+  $('admin-out').addEventListener('click', () => {
+    try { sessionStorage.removeItem(PASS_KEY); } catch (e) { /* fine */ }
+    location.reload();
+  });
+  if (pass) unlock(pass);
+  else $('admin-pass').focus();
 }

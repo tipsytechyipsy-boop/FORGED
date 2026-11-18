@@ -202,6 +202,8 @@
       var ask = location.search.match(/[?&]xmas(?:=([01]))?(?:&|$)/);
       if (ask ? ask[1] !== '0' : season) document.documentElement.classList.add('is-xmas');
       document.documentElement.classList.add('show-gallery');
+      // The team's stash check screen, for Sleigh the Run.
+      if (/[?&]admin(?:=1)?(?:&|$)/.test(location.search)) document.documentElement.classList.add('is-admin');
     })();
   </script>
   <noscript><style>.ice { display: none; }</style></noscript>

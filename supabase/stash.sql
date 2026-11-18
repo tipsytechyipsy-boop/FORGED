@@ -63,3 +63,58 @@ grant execute on function public.stash_left() to anon, authenticated;
 -- the code on someone's screen against this list:
 -- select row_number() over (order by id) as place, code, found_at
 -- from public.stash_finds order by id limit 5;
+
+-- ---------------------------------------------------------------------------
+-- The team's check screen at theforged.in/?admin. Replace ADMIN_PASSWORD with
+-- the team password before running; the real password never goes in this repo.
+-- Actions: 'list' (the first 5), 'check' (one code), 'collect' (mark the prize given).
+alter table public.stash_finds add column if not exists collected_at timestamptz;
+
+create or replace function public.stash_admin(token text, action text, stash_code text default null)
+returns json
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+  wanted text;
+  row_id bigint;
+  row_code text;
+  row_found timestamptz;
+  row_collected timestamptz;
+  my_place integer;
+begin
+  if token is distinct from 'ADMIN_PASSWORD' then
+    raise exception 'not allowed';
+  end if;
+  if action = 'list' then
+    return coalesce((
+      select json_agg(w order by w.place)
+      from (
+        select row_number() over (order by id) as place, code, found_at, collected_at
+        from public.stash_finds order by id limit 5
+      ) w
+    ), '[]'::json);
+  end if;
+  wanted := upper(regexp_replace(coalesce(stash_code, ''), '\s', '', 'g'));
+  if wanted !~ '^STASH-' then
+    wanted := 'STASH-' || wanted;
+  end if;
+  select id, code, found_at, collected_at into row_id, row_code, row_found, row_collected
+    from public.stash_finds where code = wanted;
+  if row_id is null then
+    return json_build_object('found', false, 'code', wanted);
+  end if;
+  select count(*)::int into my_place from public.stash_finds where id <= row_id;
+  if action = 'collect' and my_place <= 5 and row_collected is null then
+    update public.stash_finds set collected_at = now() where id = row_id
+      returning collected_at into row_collected;
+  end if;
+  return json_build_object('found', true, 'code', row_code, 'place', my_place,
+    'winner', my_place <= 5, 'found_at', row_found, 'collected_at', row_collected);
+end;
+$$;
+
+revoke all on function public.stash_admin(text, text, text) from public;
+grant execute on function public.stash_admin(text, text, text) to anon, authenticated;

@@ -2247,3 +2247,64 @@ html.has-lightbox { overflow: hidden; }
 /* The first five to find the stash: a gold winner's badge */
 .stash.is-winner .stash__count { display: inline-block; padding: 5px 9px; background: #F5C452; color: var(--ink); font-weight: 800; }
 .stash.is-winner .stash__code { border-color: #F5C452; background: rgb(245 196 82 / .1); }
+
+/* ======================================================================
+   ?admin: the team's stash check screen
+   ====================================================================== */
+.is-admin .ice, .is-admin .watch, .is-admin .skip { display: none !important; }
+.admin {
+  position: fixed; inset: 0; z-index: 200;
+  overflow-y: auto;
+  background: radial-gradient(circle at 50% 0%, #1B2D3B, #0B1219 60%);
+  color: #FFF4EC;
+  font-family: var(--body);
+}
+.admin__in { width: min(100% - 32px, 560px); margin: 0 auto; padding: 28px 0 48px; }
+.admin__head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.admin__head img { width: 64px; height: auto; max-width: none; }
+.admin__title { margin: 0; font: 900 clamp(1.5rem, 1.1rem + 2vw, 2.1rem)/1 var(--display); text-transform: uppercase; }
+.admin__sub { margin: 6px 0 0; color: rgb(255 244 236 / .7); font-size: .9375rem; }
+.admin__card { margin: 0 0 14px; padding: 18px; background: rgb(255 244 236 / .06); box-shadow: 0 0 0 1px rgb(255 244 236 / .14); }
+.admin__label { display: block; margin-bottom: 8px; font: 600 .8125rem/1.2 var(--mono); color: rgb(255 244 236 / .75); }
+.admin__row { display: flex; gap: 8px; align-items: stretch; }
+.admin__input {
+  flex: 1; min-width: 0; min-height: 52px; padding: 0 14px;
+  border: 0; background: #FFF4EC; color: var(--ink);
+  font: 600 1.125rem/1 var(--mono);
+}
+.admin__input--code { letter-spacing: .12em; text-transform: uppercase; }
+.admin__prefix { display: grid; place-items: center; padding: 0 10px; background: rgb(255 244 236 / .14); font: 700 1rem/1 var(--mono); color: #F5C452; }
+.admin__btn {
+  min-height: 52px; padding: 0 18px; border: 0;
+  background: #F5C452; color: var(--ink);
+  font: 800 .9375rem/1 var(--display); text-transform: uppercase; cursor: pointer;
+}
+.admin__btn:disabled { opacity: .55; cursor: progress; }
+.admin__input:focus-visible, .admin__btn:focus-visible, .admin__link:focus-visible { outline: 3px solid #F5C452; outline-offset: 2px; }
+.admin__error { margin: 10px 0 0; color: #FF8A8A; font-size: .875rem; }
+.admin__error[hidden] { display: none; }
+#admin-main[hidden], .admin__card[hidden], .admin__result[hidden] { display: none; }
+.admin__result { margin: 0 0 14px; padding: 18px; box-shadow: 0 0 0 1px rgb(255 244 236 / .14); }
+.admin__result p { margin: 0 0 6px; }
+.admin__result code { font-family: var(--mono); }
+.admin__verdict { font: 900 clamp(1.6rem, 1.2rem + 2vw, 2.25rem)/1 var(--display); text-transform: uppercase; }
+.admin__result.is-win { background: #1E8A4C; }
+.admin__result.is-given { background: #8A5A12; }
+.admin__result.is-no { background: rgb(255 244 236 / .1); }
+.admin__result.is-bad { background: #8E1217; }
+.admin__btn--give { width: 100%; margin-top: 10px; background: #FFF4EC; }
+.admin__list-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.admin__h2 { margin: 0; font: 800 1.125rem/1 var(--display); text-transform: uppercase; }
+.admin__list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.admin__list li { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; padding: 10px 12px; background: rgb(255 244 236 / .05); font-size: .8125rem; }
+.admin__list li b { grid-row: span 3; font: 900 1.5rem/1 var(--display); color: #F5C452; align-self: center; }
+.admin__list li code { font: 700 .9375rem/1.2 var(--mono); }
+.admin__list li span { color: rgb(255 244 236 / .65); }
+.admin__list li em { font-style: normal; color: #F5C452; }
+.admin__list li.is-given em { color: #6CF29A; }
+.admin__list .admin__empty { display: block; color: rgb(255 244 236 / .65); }
+.admin__link { padding: 6px 0; border: 0; background: none; color: rgb(255 244 236 / .7); font: 400 .8125rem/1 var(--mono); text-decoration: underline; cursor: pointer; }
+@media (max-width: 420px) {
+  .admin__prefix { display: none; }
+  .admin__btn { padding: 0 14px; }
+}
