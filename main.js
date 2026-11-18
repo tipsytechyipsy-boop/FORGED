@@ -2105,7 +2105,7 @@ document.querySelectorAll('.reel').forEach(startReel);
     },
     '2026-11-14': {
       day: '14', month: 'Nov', title: 'Chase the Sun',
-      intro: 'Wristbands, watermelon and a lot of happy runners at Paloma, Anjuna, on 14\u00A0November.',
+      intro: 'Warm-up at Paloma, a sunset run along Anjuna beach and a party after dark, on 14\u00A0November.',
       photos: true, chapters: true, stamp: "14 11 '26", file: 'chase-the-sun',
     },
     '2026-11-22': {
