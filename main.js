@@ -2095,8 +2095,7 @@ document.querySelectorAll('.reel').forEach(startReel);
     '2026-10-25': {
       day: '25', month: 'Oct', title: '5K Social Run',
       intro: "Calangute's first-ever 5K community run, with MC Sammy on the mic at sunrise.",
-      empty: ["Photos aren't up yet", 'The photos from this run are on their way. Watch the reel in the meantime.'],
-      link: ['Watch the reel', 'https://www.instagram.com/reel/De7T_1iu7zw/'],
+      photos: true, stamp: "25 10 '26", file: '5k-social-run',
     },
     '2026-10-31': {
       day: '31', month: 'Oct', title: 'Run for Treats',
@@ -2186,6 +2185,7 @@ document.querySelectorAll('.reel').forEach(startReel);
     if (animate && !reducedMotion) items.forEach((item) => { if (!item.hidden) before.set(item, item.getBoundingClientRect()); });
     items.forEach((item) => { item.hidden = item.dataset.run !== run || !(filter === 'all' || item.dataset.chapter === filter); });
     const showing = items.filter((item) => !item.hidden).length;
+    more.textContent = `Show all ${showing} photos`;
     const collapsed = filter === 'all' && !expanded && Boolean(RUNS[run].photos) && showing > 12;
     wall.classList.toggle('is-collapsed', collapsed);
     more.hidden = !collapsed;
