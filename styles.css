@@ -2128,3 +2128,115 @@ html.has-lightbox { overflow: hidden; }
   .gallery__open img { transition: none; }
   .lightbox.is-playing .lightbox__img.is-kb { animation: none; }
 }
+
+/* ======================================================================
+   Christmas easter eggs: Santa's present hunt and the HO HO HO sleigh
+   ====================================================================== */
+.gift {
+  position: absolute; z-index: 3;
+  width: 38px; height: 38px; padding: 0;
+  border: 0; background: none; cursor: pointer;
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / .35));
+  animation: gift-wiggle 5s ease-in-out var(--d, 0s) infinite;
+  -webkit-tap-highlight-color: transparent;
+}
+.gift svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.gift:hover { animation-play-state: paused; transform: translateY(-3px) scale(1.1); }
+.gift:focus-visible { outline: 2px solid #F5C452; outline-offset: 4px; }
+.gift.is-open { animation: none; pointer-events: none; }
+@keyframes gift-wiggle {
+  0%, 84%, 100% { transform: none; }
+  87% { transform: rotate(-12deg) translateY(-2px); }
+  90% { transform: rotate(10deg) translateY(-3px); }
+  93% { transform: rotate(-6deg); }
+  96% { transform: rotate(3deg); }
+}
+/* Where each present is hidden */
+.gift--hero { left: 61%; top: -26px; width: 34px; height: 34px; transform-origin: 50% 100%; }
+.gift--route { left: 14px; top: -4px; width: 28px; height: 28px; }
+.gift--founder { left: 12px; top: 12px; width: 40px; height: 40px; }
+.gift--gallery, .gift--finish { position: relative; width: 34px; height: 34px; flex: none; }
+.gift--gallery { align-self: flex-start; margin-left: 6px; }
+@media (max-width: 599.98px) {
+  .gift--hero { left: auto; right: 6px; top: -30px; }
+}
+/* Confetti from an opened present */
+.gift-bit { position: fixed; z-index: 60; width: 7px; height: 7px; pointer-events: none; border-radius: 1px; }
+
+/* The tally, bottom left, across from the watch */
+.gifts {
+  position: fixed; z-index: 10;
+  left: clamp(12px, 2vw, 28px); bottom: clamp(12px, 2vw, 28px);
+  display: flex; align-items: center; gap: 7px;
+  min-height: 44px; padding: 0 12px;
+  border: 0; background: var(--black-heat); color: var(--white-heat);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / .22);
+  font: 600 .8125rem/1 var(--mono);
+  cursor: pointer;
+}
+.gifts svg { width: 20px; height: 20px; overflow: visible; }
+.gifts b { font-weight: 800; color: #F5C452; }
+.gifts:focus-visible { outline: 2px solid #F5C452; outline-offset: 3px; }
+.gifts.is-done { background: #F5C452; color: var(--ink); }
+.gifts.is-done b { color: var(--ink); }
+.gifts__hint {
+  position: fixed; z-index: 10;
+  left: clamp(12px, 2vw, 28px); bottom: calc(clamp(12px, 2vw, 28px) + 56px);
+  width: min(250px, calc(100vw - 24px));
+  margin: 0; padding: 11px 13px;
+  background: #FFF4EC; color: var(--ink);
+  font: 400 .8125rem/1.45 var(--body, inherit);
+  box-shadow: 0 10px 30px rgb(0 0 0 / .35);
+}
+.gifts__hint::after { content: ""; position: absolute; left: 22px; bottom: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: #FFF4EC; }
+.gifts__hint[hidden] { display: none; }
+.has-lightbox .gifts, .has-lightbox .gifts__hint { display: none; }
+
+/* Santa's stash: the card for finding all five */
+.stash {
+  width: min(92vw, 400px); max-width: none; margin: auto; padding: 0;
+  border: 0; background: none; color: #FFF4EC; overflow: visible;
+}
+.stash::backdrop { background: rgb(5 10 16 / .72); }
+.stash__card {
+  position: relative; margin-top: 76px;
+  padding: 84px 24px 22px; text-align: center;
+  background: radial-gradient(circle at 50% 0%, #22394A, #0D1821 70%);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / .22), 0 30px 80px rgb(0 0 0 / .55);
+}
+.stash__logo { position: absolute; left: 50%; top: -80px; width: auto; max-width: none; height: 160px; transform: translateX(-50%); filter: drop-shadow(0 10px 18px rgb(0 0 0 / .5)); }
+.stash__count { margin: 0 0 6px; font: 600 .75rem/1 var(--mono); color: #F5C452; }
+.stash__title { margin: 0; font: 900 clamp(1.6rem, 1.2rem + 2vw, 2.1rem)/1 var(--display); text-transform: uppercase; }
+.stash__text { margin: 10px 0 18px; color: rgb(255 244 236 / .85); }
+.stash__code { display: grid; gap: 6px; margin: 0 0 18px; padding: 12px; border: 2px dashed rgb(245 196 82 / .7); }
+.stash__code b { font: 800 1.35rem/1 var(--mono); letter-spacing: .08em; color: #F5C452; }
+.stash__code small { font: 400 .6875rem/1.3 var(--mono); color: rgb(255 244 236 / .7); }
+.stash__actions { display: flex; gap: 10px; justify-content: center; }
+.stash__btn { flex: 1; min-height: 46px; padding: 0 16px; border: 0; font: 800 .875rem/1 var(--display); text-transform: uppercase; cursor: pointer; }
+.stash__btn--share { background: #F5C452; color: var(--ink); }
+.stash__btn--close { background: rgb(255 244 236 / .12); color: #FFF4EC; }
+.stash__btn:focus-visible, .stash__again:focus-visible { outline: 2px solid #F5C452; outline-offset: 3px; }
+.stash__bonus { margin: 16px 0 0; font: 400 .75rem/1.45 var(--mono); color: rgb(255 244 236 / .7); }
+.stash__again { margin-top: 10px; padding: 4px; border: 0; background: none; color: rgb(255 244 236 / .55); font: 400 .6875rem/1 var(--mono); text-decoration: underline; cursor: pointer; }
+
+/* The sleigh, pulled by runners instead of reindeer */
+.sleigh { position: fixed; left: 0; top: 0; z-index: 70; width: 420px; height: 120px; pointer-events: none; transform-origin: 0 0; }
+.sleigh svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.sleigh__f { position: absolute; left: 58px; top: -8px; width: auto; max-width: none; height: 78px; }
+.sleigh__ho { position: absolute; left: 120px; top: -40px; font: 900 1.25rem/1 var(--display); color: #F5C452; white-space: nowrap; text-shadow: 0 2px 10px rgb(0 0 0 / .5); }
+.sleigh line, .sleigh .sr__body { stroke: #FFF4EC; stroke-width: 3.4; stroke-linecap: round; fill: none; }
+.sr__leg, .sr__arm { transform-box: fill-box; transform-origin: top center; animation: sr-stride .3s ease-in-out infinite alternate; }
+.sr__leg--a { --from: 40deg; --to: -40deg; }
+.sr__leg--b { --from: -40deg; --to: 40deg; }
+.sr__arm--a { --from: -35deg; --to: 35deg; }
+.sr__arm--b { --from: 35deg; --to: -35deg; }
+.sr:nth-of-type(2) line { animation-delay: -.08s; }
+.sr:nth-of-type(3) line { animation-delay: -.16s; }
+.sr:nth-of-type(4) line { animation-delay: -.24s; }
+@keyframes sr-stride { from { transform: rotate(var(--from)); } to { transform: rotate(var(--to)); } }
+.sleigh-dust { position: fixed; z-index: 69; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; }
+@media (max-width: 599.98px) { .sleigh { scale: .62; } }
+@media (prefers-reduced-motion: reduce) {
+  .gift { animation: none; }
+  .sr__leg, .sr__arm { animation: none; }
+}

@@ -1952,6 +1952,7 @@ function startChristmas() {
   }).observe(hero);
 }
 if (xmas) startChristmas();
+if (xmas) startXmasEggs();
 
 /* ---------- The medal: a 3D FORGED medal in the finish, loaded only when it's near ---------- */
 (function loadMedal() {
@@ -2500,3 +2501,265 @@ document.querySelectorAll('.reel').forEach(startReel);
     })();
   }
 })();
+
+
+/* ---------- Christmas easter eggs: Santa's present hunt, and the HO HO HO sleigh ---------- */
+function startXmasEggs() {
+  const KEY = 'forged-presents-2026';
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode: the hunt still works, it just isn't remembered */ } };
+  const state = { found: [], ...load() };
+  const COLORS = { red: ['#D62839', '#F5C452'], green: ['#1E8A4C', '#FFF4EC'], gold: ['#F5C452', '#C91F18'], blue: ['#2F6FDB', '#FFF4EC'] };
+  const giftSvg = ([box, ribbon]) => `<svg viewBox="0 0 40 40" aria-hidden="true">
+    <g class="gift__box"><rect x="6" y="19" width="28" height="18" rx="1.5" fill="${box}"/><rect x="6" y="19" width="28" height="3" fill="rgb(0 0 0 / .2)"/><rect x="18" y="19" width="4" height="18" fill="${ribbon}"/></g>
+    <g class="gift__lid"><rect x="4" y="12" width="32" height="8" rx="1.5" fill="${box}"/><rect x="18" y="12" width="4" height="8" fill="${ribbon}"/><path d="M20 12c-3-7-11-8-11-3 0 3 6 4 11 3zm0 0c3-7 11-8 11-3 0 3-6 4-11 3z" fill="${ribbon}"/></g></svg>`;
+
+  // Five presents, each tucked somewhere on the page.
+  const SPOTS = [
+    { id: 'wordmark', className: 'gift--hero', color: 'red', host: () => document.getElementById('ingot') },
+    { id: 'halloween', className: 'gift--route', color: 'gold', host: () => document.querySelector('.route__stop[data-date="2026-10-31"]') },
+    { id: 'founder', className: 'gift--founder', color: 'green', host: () => document.querySelector('.plate__frame') },
+    { id: 'gallery', className: 'gift--gallery', color: 'blue', host: () => document.querySelector('.gallery__date'), inline: true },
+    { id: 'finish', className: 'gift--finish', color: 'red', host: () => document.querySelector('.finish__actions'), inline: true },
+  ];
+  const total = SPOTS.length;
+
+  SPOTS.forEach((spot, i) => {
+    const host = spot.host();
+    if (!host || state.found.includes(spot.id)) return;
+    if (!spot.inline && getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    const gift = document.createElement('button');
+    gift.type = 'button';
+    gift.className = `gift ${spot.className}`;
+    gift.style.setProperty('--d', `${(i * 1.3).toFixed(1)}s`);
+    gift.setAttribute('aria-label', 'A wrapped present. Open it.');
+    gift.innerHTML = giftSvg(COLORS[spot.color]);
+    gift.addEventListener('click', (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      openGift(gift, spot);
+    });
+    host.append(gift);
+  });
+
+  function confetti(x, y, count, spread) {
+    if (reducedMotion) return;
+    const tones = ['#F5C452', '#D62839', '#FFF4EC', '#4ADE80', '#60A5FA'];
+    for (let i = 0; i < count; i++) {
+      const bit = document.createElement('i');
+      bit.className = 'gift-bit';
+      bit.style.cssText = `left:${x}px;top:${y}px;background:${tones[i % tones.length]}`;
+      document.body.append(bit);
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+      const reach = spread * (0.5 + Math.random() * 0.7);
+      const dx = Math.cos(angle) * reach;
+      const dy = Math.sin(angle) * reach - spread * 0.4;
+      bit.animate([
+        { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${Math.random() * 540}deg)`, opacity: 1, offset: 0.55 },
+        { transform: `translate(calc(-50% + ${dx * 1.15}px), calc(-50% + ${dy + spread * 0.9}px)) rotate(${Math.random() * 720}deg)`, opacity: 0 },
+      ], { duration: 1100 + Math.random() * 400, easing: 'cubic-bezier(.2,.7,.3,1)' }).finished.then(() => bit.remove());
+    }
+  }
+
+  function openGift(gift, spot) {
+    if (state.found.includes(spot.id)) return;
+    state.found.push(spot.id);
+    save();
+    gift.classList.add('is-open');
+    const box = gift.getBoundingClientRect();
+    confetti(box.left + box.width / 2, box.top + box.height / 2, 16, 70);
+    const lid = gift.querySelector('.gift__lid');
+    if (!reducedMotion) lid.animate([{ transform: 'none' }, { transform: 'translate(10px, -26px) rotate(40deg)', opacity: 0 }], { duration: 650, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' });
+    gift.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(.6)' }], { duration: 350, delay: reducedMotion ? 0 : 550, fill: 'forwards' }).finished.then(() => gift.remove());
+    tally(true);
+    if (state.found.length === total) {
+      if (!state.code) {
+        const letters = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+        state.code = `STASH-${Array.from({ length: 4 }, () => letters[Math.floor(Math.random() * letters.length)]).join('')}`;
+        state.at = Date.now();
+        save();
+      }
+      bubble.hidden = true;
+      setTimeout(showStash, reducedMotion ? 300 : 900);
+    } else {
+      const left = total - state.found.length;
+      hint(`${state.found.length} of ${total} found. ${left === 1 ? 'One more to go.' : 'Keep looking.'}`, 2600);
+    }
+  }
+
+  /* The tally, bottom left, appears once the intro is done. */
+  const counter = document.createElement('button');
+  counter.type = 'button';
+  counter.className = 'gifts';
+  counter.innerHTML = `${giftSvg(COLORS.red)}<span><b>0</b>/${total}</span>`;
+  const bubble = document.createElement('p');
+  bubble.className = 'gifts__hint';
+  bubble.hidden = true;
+  bubble.setAttribute('role', 'status');
+  let bubbleTimer = 0;
+  function hint(text, ms) {
+    bubble.textContent = text;
+    bubble.hidden = false;
+    clearTimeout(bubbleTimer);
+    if (ms) bubbleTimer = setTimeout(() => { bubble.hidden = true; }, ms);
+  }
+  const INTRO = `Santa dropped ${total} presents somewhere on this page. Find them all and tap to open.`;
+  function tally(bump) {
+    const n = state.found.length;
+    counter.querySelector('b').textContent = String(n);
+    counter.classList.toggle('is-done', n === total);
+    counter.setAttribute('aria-label', n === total ? "You found Santa's stash. Show it again." : `Presents found: ${n} of ${total}. What's this?`);
+    if (bump && !reducedMotion) counter.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }], { duration: 380, easing: 'ease-out' });
+  }
+  counter.addEventListener('click', () => {
+    if (state.found.length === total) showStash();
+    else if (bubble.hidden) hint(state.found.length ? `${state.found.length} of ${total} found. ${INTRO}` : INTRO, 6000);
+    else bubble.hidden = true;
+  });
+  tally(false);
+  (function waitForIntro() {
+    if (document.getElementById('ice')) { setTimeout(waitForIntro, 300); return; }
+    document.body.append(counter, bubble);
+    if (!state.hinted && state.found.length < total) {
+      state.hinted = true;
+      save();
+      setTimeout(() => hint(INTRO, 6000), 1800);
+    }
+  })();
+
+  /* Santa's stash: the card for finding all five. Screenshot it. */
+  let stash = null;
+  function showStash() {
+    if (!stash) {
+      stash = document.createElement('dialog');
+      stash.className = 'stash';
+      stash.setAttribute('aria-labelledby', 'stash-title');
+      stash.innerHTML = `<div class="stash__card">
+          <img class="stash__logo" src="assets/xmas-logo-480.webp" alt="" width="445" height="560">
+          <p class="stash__count">${total} of ${total} presents</p>
+          <h2 class="stash__title" id="stash-title">You found Santa&rsquo;s stash.</h2>
+          <p class="stash__text">Show this at Sleigh the Run.</p>
+          <p class="stash__code"><b></b><small></small></p>
+          <div class="stash__actions">
+            <button class="stash__btn stash__btn--share" type="button">Share</button>
+            <button class="stash__btn stash__btn--close" type="button">Close</button>
+          </div>
+          <p class="stash__bonus">Bonus: type HO HO HO, or tap the F in the top corner three times.</p>
+          <button class="stash__again" type="button">Hide the presents again</button>
+        </div>`;
+      document.body.append(stash);
+      stash.querySelector('.stash__btn--close').addEventListener('click', () => stash.close());
+      stash.addEventListener('click', (event) => { if (event.target === stash) stash.close(); });
+      const share = stash.querySelector('.stash__btn--share');
+      share.addEventListener('click', async () => {
+        const data = { title: "I found Santa's stash", text: "I found all 5 of Santa's presents on the FORGED site. Can you?", url: `${location.origin}/` };
+        try {
+          if (navigator.share) { await navigator.share(data); return; }
+          await navigator.clipboard.writeText(`${data.text} ${data.url}`);
+          share.textContent = 'Link copied';
+        } catch (error) {
+          if (error && error.name === 'AbortError') return;
+          share.textContent = 'Screenshot it!';
+        }
+      });
+      stash.querySelector('.stash__again').addEventListener('click', () => {
+        state.found = [];
+        delete state.code;
+        delete state.at;
+        save();
+        location.reload();
+      });
+    }
+    stash.querySelector('.stash__code b').textContent = state.code;
+    const when = new Date(state.at || Date.now());
+    stash.querySelector('.stash__code small').textContent = `Found ${when.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, ${when.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}`;
+    stash.showModal();
+    const card = stash.querySelector('.stash__card');
+    const box = card.getBoundingClientRect();
+    confetti(box.left + box.width / 2, box.top + 40, 40, 160);
+    if (!reducedMotion) card.animate([{ transform: 'scale(.85) translateY(20px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
+  }
+
+  /* HO HO HO: a sleigh pulled by runners instead of reindeer flies across the screen. */
+  const runner = (x) => `<g class="sr" transform="translate(${x} 48)">
+      <line class="sr__leg sr__leg--a" x1="-4" y1="22" x2="-4" y2="40"/><line class="sr__leg sr__leg--b" x1="-4" y1="22" x2="-4" y2="40"/>
+      <path class="sr__body" d="M0 6 L-4 22"/>
+      <line class="sr__arm sr__arm--a" x1="-1" y1="10" x2="-1" y2="22"/><line class="sr__arm sr__arm--b" x1="-1" y1="10" x2="-1" y2="22"/>
+      <circle cx="1" cy="0" r="5.5" fill="#FFF4EC"/>
+      <path d="M-5 -2 L7 -3 L-2 -14 Z" fill="#D62839"/><circle cx="-2" cy="-14" r="2.2" fill="#FFF4EC"/>
+    </g>`;
+  const SLEIGH = `<svg viewBox="0 0 420 120" aria-hidden="true">
+      <path d="M174 66 Q206 76 238 70 L384 66" fill="none" stroke="#F5C452" stroke-width="1.6"/>
+      ${[240, 288, 336, 384].map(runner).join('')}
+      <path d="M30 54 H160 Q184 54 180 76 L174 92 H42 Q22 92 24 72 Z" fill="#C91F18"/>
+      <path d="M30 54 H162" stroke="#F5C452" stroke-width="4" stroke-linecap="round"/>
+      <path d="M60 92 V104 M140 92 V104" stroke="#F5C452" stroke-width="3"/>
+      <path d="M16 104 H172 Q198 104 194 86" fill="none" stroke="#F5C452" stroke-width="4.5" stroke-linecap="round"/>
+    </svg>`;
+  let flying = false;
+  function fly() {
+    if (flying) return;
+    flying = true;
+    const sleigh = document.createElement('div');
+    sleigh.className = 'sleigh';
+    sleigh.setAttribute('aria-hidden', 'true');
+    sleigh.innerHTML = `<img class="sleigh__f" src="assets/xmas-logo-178.webp" alt="" width="178" height="224">${SLEIGH}<span class="sleigh__ho">HO HO HO!</span>`;
+    document.body.append(sleigh);
+    const { width: w, height: h } = sleigh.getBoundingClientRect();
+    const done = () => { sleigh.remove(); flying = false; };
+    if (reducedMotion) {
+      sleigh.style.transform = `translate(${(innerWidth - w) / 2}px, ${innerHeight * 0.25}px)`;
+      sleigh.animate([{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: 2600 }).finished.then(done);
+      return;
+    }
+    const frames = [];
+    const steps = 24;
+    const top = innerHeight * 0.34;
+    const rise = innerHeight * 0.2;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = -w - 40 + (innerWidth + w + 80) * t;
+      const y = top - rise * t + Math.sin(t * Math.PI * 4) * 12 - h / 2;
+      const tilt = -4 - Math.cos(t * Math.PI * 4) * 3;
+      frames.push({ transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${tilt.toFixed(1)}deg)` });
+    }
+    const flight = sleigh.animate(frames, { duration: 5200, easing: 'linear' });
+    sleigh.querySelector('.sleigh__ho').animate([{ opacity: 0, transform: 'translateY(8px) scale(.8)' }, { opacity: 1, transform: 'none', offset: 0.15 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], { duration: 5200, fill: 'forwards' });
+    // A trail of gold dust falls behind it.
+    const tones = ['#F5C452', '#FFF4EC', '#FFE29A'];
+    const dust = setInterval(() => {
+      const box = sleigh.getBoundingClientRect();
+      const bit = document.createElement('i');
+      bit.className = 'sleigh-dust';
+      bit.style.cssText = `left:${box.left + box.width * 0.05}px;top:${box.top + box.height * 0.75}px;background:${tones[Math.floor(Math.random() * 3)]}`;
+      document.body.append(bit);
+      bit.animate([{ transform: 'none', opacity: 1 }, { transform: `translate(${-20 - Math.random() * 30}px, ${30 + Math.random() * 40}px) scale(.3)`, opacity: 0 }], { duration: 900, easing: 'ease-out' }).finished.then(() => bit.remove());
+    }, 45);
+    flight.finished.then(() => { clearInterval(dust); done(); });
+  }
+  // Laptops: type it anywhere (with or without spaces), except while filling in a form.
+  let typed = '';
+  addEventListener('keydown', (event) => {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+    if (event.target.closest && event.target.closest('input, textarea, select, [contenteditable]')) return;
+    if (!/^[a-z]$/i.test(event.key)) return;
+    typed = (typed + event.key.toLowerCase()).slice(-6);
+    if (typed === 'hohoho') {
+      typed = '';
+      fly();
+    }
+  });
+  // Phones: tap the F in the top corner three times.
+  let taps = [];
+  document.querySelector('.nav__brand')?.addEventListener('click', (event) => {
+    const now = performance.now();
+    taps = taps.filter((t) => now - t < 900);
+    taps.push(now);
+    if (taps.length >= 3) {
+      taps = [];
+      event.preventDefault();
+      fly();
+    }
+  });
+}
