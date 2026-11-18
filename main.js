@@ -89,6 +89,9 @@ function runPreloader(onReveal) {
     logo.sizes = 'min(68vmin, 446px)';
     logo.src = 'assets/xmas-logo.webp';
     logo.classList.add('ice__logo--xmas');
+    const ready = () => logo.classList.add('is-ready');
+    if (logo.decode) logo.decode().then(ready, ready);
+    else logo.addEventListener('load', ready, { once: true });
   }
 
   // Christmas: it's the globe's glass that cracks, from one impact point near the top right.
@@ -168,6 +171,7 @@ function runPreloader(onReveal) {
       pieces.append(shard);
       return { shard, mid };
     });
+    ice.classList.add('is-globe'); // the globe is built: now the preloader can show
   }
   const between = (min, max) => min + Math.random() * (max - min);
 
