@@ -1782,74 +1782,299 @@ a { color: inherit; }
 
 /* ======================================================================
    Chase the Sun gallery (demo: only with ?gallery)
+   A dusk panel: the "14" from the Chase the Sun card stays beside the photos,
+   and its sun sinks into the sea as you scroll through the evening.
    ====================================================================== */
-.gallery { display: none; margin-top: clamp(48px, 7vw, 96px); }
-.show-gallery .gallery { display: block; }
-.gallery__head { max-width: 46ch; margin-bottom: 22px; }
-.gallery__title { margin: 6px 0 4px; font: 900 clamp(1.5rem, 1rem + 2vw, 2.5rem)/1.05 var(--display); text-transform: uppercase; }
-.gallery__meta { font: 400 .75rem/1.5 var(--mono); }
-/* A masonry wall: tall and wide shots stack in columns */
-.gallery__grid { columns: 3 260px; column-gap: 14px; margin: 0; padding: 0; list-style: none; }
-.gallery__item { break-inside: avoid; margin-bottom: 14px; }
-.gallery__item.is-more { display: none; }
-.gallery.is-all .gallery__item.is-more { display: block; }
-.gallery__open {
-  position: relative; display: block; width: 100%;
-  padding: 0; border: 0; background: #C9762A; /* a warm sunset tone while the photo loads */
-  cursor: zoom-in; overflow: hidden;
-  box-shadow: 6px 6px 0 var(--ink);
-  transition: transform .3s cubic-bezier(.2, .7, .2, 1), box-shadow .3s cubic-bezier(.2, .7, .2, 1);
+.gallery {
+  --dusk: #1F0B22;
+  --gold: #FFC53A;
+  --paper: #FFF4EC;
+  display: none;
+  position: relative;
+  margin-top: clamp(48px, 7vw, 96px);
+  padding: clamp(18px, 3.4vw, 44px);
+  background:
+    radial-gradient(80% 45% at 12% 104%, rgb(242 87 27 / .34), transparent 70%),
+    radial-gradient(60% 40% at 100% 0, rgb(155 27 58 / .35), transparent 70%),
+    linear-gradient(180deg, #2C0F2E, var(--dusk) 60%);
+  color: var(--paper);
+  box-shadow: 10px 10px 0 var(--ink);
 }
-.gallery__open img { display: block; width: 100%; height: auto; transition: transform .6s cubic-bezier(.2, .7, .2, 1), filter .3s; }
-.gallery__open:hover, .gallery__open:focus-visible { transform: translate(-3px, -3px); box-shadow: 9px 9px 0 var(--ink); }
-.gallery__open:hover img, .gallery__open:focus-visible img { transform: scale(1.05); filter: saturate(1.12); }
-.gallery__open:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-/* Demo: each photo shows its number, so it's easy to say which ones to drop */
-.gallery__tag {
-  position: absolute; left: 8px; top: 8px;
-  padding: 2px 6px;
-  background: rgb(20 10 8 / .78); color: #FFF4EC;
-  font: 600 .6875rem/1.4 var(--mono); letter-spacing: .06em;
+.show-gallery .gallery {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: clamp(24px, 3vw, 44px);
+  align-items: start;
 }
-.gallery__more { margin-top: 10px; }
-.gallery.is-all .gallery__more { display: none; }
-/* Photos rise in as they arrive */
-.has-motion .gallery__item { opacity: 0; transform: translateY(18px); transition: opacity .5s ease-out, transform .6s cubic-bezier(.2, .7, .2, 1); transition-delay: var(--d, 0ms); }
-.has-motion .gallery__item.is-in { opacity: 1; transform: none; }
+.gallery__side { position: sticky; top: 24px; }
+.gallery__date { display: flex; align-items: flex-end; gap: 10px; margin: 0; }
+/* The sunset numeral: sky and sea painted inside the digits; JS sets --sun from 0 to 1 */
+.gallery__sun {
+  --sun: 0;
+  display: block;
+  font: 900 clamp(7rem, 11vw, 11rem)/.8 var(--display);
+  font-variation-settings: "wdth" 120;
+  letter-spacing: -.02em;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 .016em, rgb(255 226 170 / .2) .016em .02em) 0 .47em / 100% .21em no-repeat,
+    radial-gradient(ellipse .14em .22em at 72% 0, rgb(255 220 140 / calc(.85 - var(--sun) * .6)), transparent) 0 .47em / 100% .21em no-repeat,
+    radial-gradient(circle at 72% calc(.1em + var(--sun) * .52em), #FFFBF0 0 .07em, #FFE7A3 .095em, rgb(255 170 60 / .55) .2em, transparent .42em) 0 0 / 100% .47em no-repeat,
+    linear-gradient(180deg,
+      color-mix(in srgb, #FFB347, #4A1A4A calc(var(--sun) * 100%)) 0,
+      color-mix(in srgb, #FF8A3D, #9B1B3A calc(var(--sun) * 100%)) .28em,
+      color-mix(in srgb, #FFE08A, #FF5A1F calc(var(--sun) * 100%)) .47em,
+      #A8344A .47em, #6E1838 .54em, #24071A .68em) 0 0 / 100% .68em no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 2px rgb(255 197 58 / .3);
+}
+.gallery__month { margin-bottom: .35em; font: 800 1.25rem/1 var(--display); font-variation-settings: "wdth" 110; color: var(--gold); }
+.gallery__title {
+  margin: 14px 0 10px;
+  font: 900 clamp(1.9rem, 1.2rem + 2vw, 3rem)/.95 var(--display);
+  font-variation-settings: "wdth" 125;
+  text-transform: uppercase;
+}
+.gallery__intro { max-width: 32ch; margin: 0; color: rgb(255 244 236 / .82); }
+.gallery__hint { max-width: 32ch; margin: 18px 0 0; font-size: .875rem; color: rgb(255 244 236 / .66); }
+/* Chapters: what each part of the evening looked like */
+.gallery__filters { display: grid; gap: 6px; margin: 22px 0 0; }
+.gallery__filter {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 11px 12px;
+  border: 0; border-left: 3px solid transparent;
+  background: rgb(255 244 236 / .06);
+  color: var(--paper);
+  font: 700 .9375rem/1.2 var(--display);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .2s, color .2s, border-color .2s;
+}
+.gallery__filter span { font: 400 .75rem/1 var(--mono); color: rgb(255 244 236 / .55); }
+.gallery__filter:hover { background: rgb(255 244 236 / .12); }
+.gallery__filter[aria-pressed="true"] { background: var(--gold); color: var(--ink); border-left-color: var(--orange-from); }
+.gallery__filter[aria-pressed="true"] span { color: rgb(20 10 8 / .65); }
+.gallery__filter:focus-visible, .gallery__more:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 
-/* Lightbox: one photo at a time, full screen */
-.lightbox {
-  width: 100vw; max-width: none; height: 100dvh; max-height: none;
-  margin: 0; padding: 0; border: 0;
-  background: rgb(10 8 9 / .96); color: #FFF4EC;
+/* The photo wall: tall shots are one column wide, wide shots two, and three
+   feature shots fill a big block. Row height follows the column width. */
+.gallery__wall { position: relative; min-width: 0; container-type: inline-size; }
+.gallery__grid {
+  --cols: 4;
+  --gap: 10px;
+  --row: calc((100cqi - (var(--cols) - 1) * var(--gap)) / var(--cols) * .6667);
+  --rows-shown: 8;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-rows: var(--row);
+  grid-auto-flow: dense;
+  gap: var(--gap);
+  margin: 0; padding: 0;
+  list-style: none;
+}
+.gallery__item { grid-row: span 2; min-width: 0; }
+.gallery__item[hidden] { display: none; }
+.gallery__item.is-wide { grid-column: span 2; }
+.gallery__item.is-feature { grid-column: span 2; grid-row: span 4; }
+.gallery__open {
+  position: relative;
+  display: block; width: 100%; height: 100%;
+  padding: 0; border: 0;
+  background: var(--tile, #8A5A3A); /* the photo's own colour while it loads */
+  overflow: hidden;
+  cursor: zoom-in;
+}
+.gallery__open img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity .45s ease-out, transform .7s cubic-bezier(.2, .7, .2, 1);
+}
+.gallery__open img.is-loaded { opacity: 1; }
+@media (hover: hover) { .gallery__open:hover img { transform: scale(1.045); } }
+.gallery__open:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* Demo only: each photo shows its number, so it's easy to say which to drop */
+.gallery__tag {
+  position: absolute; left: 6px; top: 6px;
+  padding: 2px 6px;
+  background: rgb(20 10 8 / .7); color: var(--paper);
+  font: 600 .625rem/1.4 var(--mono); letter-spacing: .06em;
+}
+/* Collapsed: a clean band of rows that fades out above "Show all" */
+.gallery__wall.is-collapsed .gallery__grid {
+  max-height: calc(var(--row) * var(--rows-shown) + var(--gap) * (var(--rows-shown) - 1));
   overflow: hidden;
 }
-.lightbox::backdrop { background: rgb(10 8 9 / .7); }
-.lightbox[open] { display: grid; place-items: center; }
-.lightbox__stage { margin: 0; display: grid; place-items: center; width: 100%; height: 100%; padding: 56px 64px 64px; touch-action: pan-y; }
-.lightbox__img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; box-shadow: 0 20px 60px rgb(0 0 0 / .6); }
-.lightbox__img.is-in { animation: lightbox-in .35s cubic-bezier(.2, .7, .2, 1); }
-@keyframes lightbox-in { from { opacity: 0; transform: scale(.97); } }
-.lightbox__count { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); font: 600 .75rem/1 var(--mono); letter-spacing: .1em; }
-.lightbox__btn {
-  position: absolute; display: grid; place-items: center;
-  width: 46px; height: 46px; padding: 0; border: 0; border-radius: 50%;
-  background: rgb(255 244 236 / .12); color: #FFF4EC;
-  font: 400 1.5rem/1 var(--display); cursor: pointer;
-  transition: background-color .2s;
+.gallery__wall.is-collapsed::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 64px;
+  height: 140px;
+  background: linear-gradient(rgb(31 11 34 / 0), var(--dusk));
+  pointer-events: none;
 }
-.lightbox__btn:hover, .lightbox__btn:focus-visible { background: var(--orange-from); color: var(--ink); }
-.lightbox__btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.lightbox__close { top: 12px; right: 12px; }
-.lightbox__prev { left: 12px; top: 50%; transform: translateY(-50%); }
-.lightbox__next { right: 12px; top: 50%; transform: translateY(-50%); }
-@media (max-width: 600px) {
-  .gallery__grid { columns: 2; column-gap: 10px; }
-  .gallery__item { margin-bottom: 10px; }
-  .lightbox__stage { padding: 56px 8px 64px; }
-  .lightbox__prev, .lightbox__next { top: auto; bottom: 8px; transform: none; }
+.gallery__more {
+  display: block;
+  margin: 18px auto 0;
+  padding: 13px 22px;
+  border: 2px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  font: 800 .9375rem/1 var(--display);
+  cursor: pointer;
+  transition: background-color .2s, color .2s;
+}
+.gallery__more:hover { background: var(--gold); color: var(--ink); }
+.gallery__more[hidden] { display: none; }
+
+/* Tablet and phone: the side becomes a header above the wall */
+@media (max-width: 999.98px) {
+  .show-gallery .gallery { grid-template-columns: minmax(0, 1fr); }
+  .gallery__side {
+    position: static;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "date title" "intro intro" "filters filters" "hint hint";
+    column-gap: 18px;
+    align-items: end;
+  }
+  .gallery__date { grid-area: date; }
+  .gallery__title { grid-area: title; margin: 0 0 6px; }
+  .gallery__intro { grid-area: intro; margin-top: 14px; max-width: 46ch; }
+  .gallery__hint { grid-area: hint; margin-top: 12px; max-width: 46ch; }
+  .gallery__filters {
+    grid-area: filters;
+    grid-auto-flow: column; grid-auto-columns: max-content;
+    overflow-x: auto;
+    margin: 16px -4px 0; padding: 4px;
+    scrollbar-width: none;
+  }
+  .gallery__filters::-webkit-scrollbar { display: none; }
+  .gallery__sun { font-size: clamp(5.5rem, 22vw, 8rem); }
+}
+@media (max-width: 599.98px) {
+  .gallery { box-shadow: 6px 6px 0 var(--ink); }
+  .gallery__grid { --cols: 2; --gap: 6px; --rows-shown: 10; }
+  /* the title goes under the 14 so it never runs off the edge */
+  .gallery__side { grid-template-columns: minmax(0, 1fr); grid-template-areas: "date" "title" "intro" "filters" "hint"; }
+  .gallery__title { margin: 12px 0 0; }
+}
+
+/* ---------- Lightbox: one photo at a time ---------- */
+html.has-lightbox { overflow: hidden; }
+.lightbox {
+  position: fixed; inset: 0;
+  width: 100%; max-width: none; height: 100%; max-height: none;
+  margin: 0; padding: 0; border: 0;
+  background: #140814;
+  color: #FFF4EC;
+  overflow: hidden;
+}
+.lightbox::backdrop { background: rgb(10 5 10 / .6); }
+.lightbox[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; }
+/* A glow in the photo's own colour */
+.lightbox__glow {
+  position: absolute; inset: -15%;
+  background: radial-gradient(50% 42% at 50% 44%, var(--glow, #8A5A3A), transparent 75%);
+  opacity: .6;
+  pointer-events: none;
+}
+.lightbox__progress {
+  position: absolute; left: 0; top: 0; z-index: 3;
+  width: 100%; height: 3px;
+  background: #FFC53A;
+  transform: scaleX(0); transform-origin: left;
+}
+.lightbox.is-playing .lightbox__progress.is-running { animation: lb-progress var(--slide, 3.6s) linear forwards; }
+@keyframes lb-progress { to { transform: scaleX(1); } }
+.lightbox__top {
+  position: relative; z-index: 1;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 12px 12px 6px 18px;
+}
+.lightbox__info { min-width: 0; margin: 0; font-size: .9375rem; color: rgb(255 244 236 / .88); }
+.lightbox__info b { margin-right: 10px; font: 600 .75rem/1 var(--mono); letter-spacing: .08em; color: #FFC53A; }
+.lightbox__stage {
+  position: relative; z-index: 1;
+  display: grid; place-items: center;
+  min-height: 0;
+  padding: 4px 16px;
+  touch-action: pan-y;
+  -webkit-user-select: none; user-select: none;
+}
+.lightbox__img {
+  display: block; max-width: none;
+  background: var(--glow, #8A5A3A);
+  box-shadow: 0 24px 70px rgb(0 0 0 / .55);
+  -webkit-user-drag: none;
+}
+.lightbox.is-playing .lightbox__img.is-kb { animation: lb-drift var(--slide, 3.6s) ease-out forwards; }
+@keyframes lb-drift { to { transform: scale(1.06); } }
+.lightbox__bar {
+  position: relative; z-index: 1;
+  display: flex; justify-content: center; align-items: center; gap: 8px;
+  padding: 10px 12px 4px;
+}
+.lightbox__icon, .lightbox__action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 44px;
+  border: 0;
+  background: rgb(255 244 236 / .1);
+  color: #FFF4EC;
+  cursor: pointer;
+  transition: background-color .2s, color .2s;
+}
+.lightbox__icon { width: 44px; padding: 0; border-radius: 50%; }
+.lightbox__action { padding: 0 15px; border-radius: 22px; font: 700 .875rem/1 var(--display); }
+.lightbox__icon:hover, .lightbox__action:hover, .lightbox__action[aria-pressed="true"] { background: #FFC53A; color: var(--ink); }
+.lightbox__icon:focus-visible, .lightbox__action:focus-visible, .lightbox__thumb:focus-visible { outline: 2px solid #FFC53A; outline-offset: 2px; }
+.lightbox svg { width: 19px; height: 19px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.lightbox__play-on, .lightbox__play-off { display: inline-flex; align-items: center; gap: 7px; }
+.lightbox__play-off, .lightbox__action[aria-pressed="true"] .lightbox__play-on { display: none; }
+.lightbox__action[aria-pressed="true"] .lightbox__play-off { display: inline-flex; }
+.lightbox__strip {
+  position: relative; z-index: 1;
+  display: flex; gap: 6px;
+  overflow-x: auto;
+  padding: 8px 14px 14px;
+  scrollbar-width: none;
+}
+.lightbox__strip::-webkit-scrollbar { display: none; }
+.lightbox__thumb {
+  flex: none;
+  width: 44px; height: 58px;
+  padding: 0; border: 0;
+  background: var(--tile, #8A5A3A);
+  opacity: .45;
+  cursor: pointer;
+  overflow: hidden;
+  transition: opacity .2s;
+}
+.lightbox__thumb.is-wide { width: 77px; }
+.lightbox__thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.lightbox__thumb:hover { opacity: .8; }
+.lightbox__thumb.is-on { opacity: 1; outline: 2px solid #FFC53A; outline-offset: 2px; }
+.lightbox__toast {
+  position: absolute; left: 50%; bottom: 128px; z-index: 3;
+  margin: 0; padding: 10px 16px;
+  background: #FFC53A; color: var(--ink);
+  font: 700 .875rem/1 var(--display);
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  pointer-events: none;
+  transition: opacity .25s, transform .25s;
+}
+.lightbox__toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+@media (max-width: 420px) {
+  .lightbox__action { padding: 0 12px; }
+  /* Play becomes a round icon button; its word stays for screen readers */
+  #lightbox-play { width: 44px; padding: 0; border-radius: 50%; font-size: 0; }
+  #lightbox-play span { gap: 0; }
+  .lightbox__bar { gap: 6px; }
+  .lightbox__thumb { width: 38px; height: 50px; }
+  .lightbox__thumb.is-wide { width: 66px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gallery__open, .gallery__open img, .has-motion .gallery__item { transition: none; }
-  .lightbox__img.is-in { animation: none; }
+  .gallery__open img { transition: none; }
+  .lightbox.is-playing .lightbox__img.is-kb { animation: none; }
 }

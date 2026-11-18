@@ -2042,73 +2042,367 @@ function startReel(reel) {
 document.querySelectorAll('.reel').forEach(startReel);
 
 
-/* ---------- Gallery: a masonry wall of photos and a full-screen lightbox ---------- */
+/* ---------- Gallery: Chase the Sun in photos, with a full-screen viewer ---------- */
 (function startGallery() {
   const gallery = document.getElementById('gallery-chase');
   if (!gallery || !document.documentElement.classList.contains('show-gallery')) return;
-  const buttons = [...gallery.querySelectorAll('.gallery__open')];
+  const wall = document.getElementById('gallery-wall');
+  const items = [...gallery.querySelectorAll('.gallery__item')];
+  const tiles = items.map((item) => item.querySelector('.gallery__open'));
+  const filterButtons = [...gallery.querySelectorAll('.gallery__filter')];
   const more = document.getElementById('gallery-more');
-  more.addEventListener('click', () => {
-    gallery.classList.add('is-all');
-    reveal();
+  const wide = matchMedia('(min-width: 1000px)');
+  const phone = matchMedia('(max-width: 599.98px)');
+
+  // Photos fade in over their own colour once they've loaded.
+  tiles.forEach((tile) => {
+    const img = tile.querySelector('img');
+    if (img.complete && img.naturalWidth) img.classList.add('is-loaded');
+    else img.addEventListener('load', () => img.classList.add('is-loaded'), { once: true });
   });
 
-  // Photos rise in, a beat apart, as they come into view.
-  const watcher = new IntersectionObserver((entries) => {
-    entries.filter((e) => e.isIntersecting).forEach((entry, i) => {
-      watcher.unobserve(entry.target);
-      entry.target.style.setProperty('--d', `${(i % 6) * 70}ms`);
-      entry.target.classList.add('is-in');
-    });
-  }, { rootMargin: '0px 0px -6% 0px' });
-  function reveal() {
-    gallery.querySelectorAll('.gallery__item:not(.is-in)').forEach((item) => {
-      if (getComputedStyle(item).display !== 'none') watcher.observe(item);
+  /* The sun in the 14 sets as you go through the evening's photos. */
+  const sun = document.getElementById('gallery-sun');
+  let sunQueued = false;
+  let inView = false;
+  function setSun() {
+    sunQueued = false;
+    let share;
+    if (wide.matches) {
+      // beside the wall: progress through the photos
+      const box = wall.getBoundingClientRect();
+      share = (innerHeight * 0.55 - box.top) / Math.max(1, box.height - innerHeight * 0.25);
+    } else {
+      // above the wall: as the numeral rises up the screen
+      const box = sun.getBoundingClientRect();
+      share = (innerHeight * 0.85 - box.top) / (innerHeight * 0.75);
+    }
+    sun.style.setProperty('--sun', Math.min(1, Math.max(0, share)).toFixed(3));
+  }
+  new IntersectionObserver(([entry]) => {
+    inView = entry.isIntersecting;
+    if (inView) setSun();
+  }).observe(gallery);
+  addEventListener('scroll', () => {
+    if (inView && !sunQueued) {
+      sunQueued = true;
+      requestAnimationFrame(setSun);
+    }
+  }, { passive: true });
+
+  /* Chapters and "show all", with the photos sliding to their new places. */
+  let filter = 'all';
+  let expanded = false;
+  function apply(animate) {
+    const before = new Map();
+    if (animate && !reducedMotion) items.forEach((item) => { if (!item.hidden) before.set(item, item.getBoundingClientRect()); });
+    items.forEach((item) => { item.hidden = !(filter === 'all' || item.dataset.chapter === filter); });
+    const collapsed = filter === 'all' && !expanded;
+    wall.classList.toggle('is-collapsed', collapsed);
+    more.hidden = !collapsed;
+    if (!before.size) return;
+    items.forEach((item) => {
+      if (item.hidden) return;
+      const now = item.getBoundingClientRect();
+      const was = before.get(item);
+      if (was) {
+        const dx = was.left - now.left;
+        const dy = was.top - now.top;
+        if (dx || dy) item.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      } else {
+        item.animate([{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: 140, easing: 'ease-out', fill: 'backwards' });
+      }
     });
   }
-  reveal();
+  filterButtons.forEach((button) => button.addEventListener('click', () => {
+    filter = button.dataset.filter;
+    filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+    apply(true);
+  }));
+  more.addEventListener('click', () => {
+    expanded = true;
+    apply(true);
+  });
+  apply(false);
 
-  // Lightbox
+  /* ---------- The viewer ---------- */
   const box = document.getElementById('lightbox');
+  const stage = document.getElementById('lightbox-stage');
   const img = document.getElementById('lightbox-img');
+  const glow = document.getElementById('lightbox-glow');
   const count = document.getElementById('lightbox-count');
+  const caption = document.getElementById('lightbox-caption');
+  const strip = document.getElementById('lightbox-strip');
+  const progress = document.getElementById('lightbox-progress');
+  const playButton = document.getElementById('lightbox-play');
+  const toastEl = document.getElementById('lightbox-toast');
+  const SLIDE = 3600;
+  box.style.setProperty('--slide', `${SLIDE}ms`);
+  let pool = tiles; // the photos the arrows move through: the current chapter
   let at = 0;
-  const warm = new Set();
-  function preload(i) {
-    const src = buttons[(i + buttons.length) % buttons.length].dataset.full;
-    if (warm.has(src)) return;
-    warm.add(src);
+  let opener = null;
+  let playing = false;
+  let timer = 0;
+
+  function fit() {
+    const tile = pool[at];
+    const w = Number(tile.dataset.w);
+    const h = Number(tile.dataset.h);
+    const room = stage.getBoundingClientRect();
+    const scale = Math.min((room.width - 32) / w, (room.height - 8) / h);
+    img.style.width = `${Math.floor(w * scale)}px`;
+    img.style.height = `${Math.floor(h * scale)}px`;
+  }
+
+  function buildStrip() {
+    strip.textContent = '';
+    pool.forEach((tile, i) => {
+      const thumb = document.createElement('button');
+      thumb.type = 'button';
+      thumb.className = `lightbox__thumb${Number(tile.dataset.w) > Number(tile.dataset.h) ? ' is-wide' : ''}`;
+      thumb.style.setProperty('--tile', tile.style.getPropertyValue('--tile'));
+      thumb.setAttribute('aria-label', `Photo ${i + 1}`);
+      const small = document.createElement('img');
+      small.src = tile.querySelector('img').getAttribute('src');
+      small.alt = '';
+      small.loading = 'lazy';
+      thumb.append(small);
+      thumb.addEventListener('click', () => go(i - at));
+      strip.append(thumb);
+    });
+  }
+
+  const warmed = new Set();
+  function warm(i) {
+    const src = pool[(i + pool.length) % pool.length].dataset.full;
+    if (warmed.has(src)) return;
+    warmed.add(src);
     new Image().src = src;
   }
-  function show(i) {
-    at = (i + buttons.length) % buttons.length;
-    img.src = buttons[at].dataset.full;
-    img.classList.remove('is-in');
-    void img.offsetWidth;
-    img.classList.add('is-in');
-    count.textContent = `${at + 1} / ${buttons.length}`;
-    preload(at + 1);
-    preload(at - 1);
+
+  function render(i) {
+    at = (i + pool.length) % pool.length;
+    const tile = pool[at];
+    // Show the small copy at once, then swap in the sharp one when it's ready.
+    img.src = tile.querySelector('img').getAttribute('src');
+    const sharp = new Image();
+    sharp.onload = () => { if (pool[at] === tile) img.src = sharp.src; };
+    sharp.src = tile.dataset.full;
+    const color = tile.style.getPropertyValue('--tile');
+    box.style.setProperty('--glow', color);
+    count.textContent = `${at + 1} / ${pool.length}`;
+    caption.textContent = tile.dataset.caption || tile.dataset.chapterName;
+    img.alt = tile.dataset.caption || `${tile.dataset.chapterName} at Chase the Sun`;
+    fit();
+    [...strip.children].forEach((thumb, k) => thumb.classList.toggle('is-on', k === at));
+    strip.children[at]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reducedMotion ? 'auto' : 'smooth' });
+    history.replaceState(null, '', `${location.pathname}${location.search}#photo-${tile.dataset.slug}`);
+    warm(at + 1);
+    warm(at - 1);
+    glow.animate([{ opacity: 0.25 }, { opacity: 0.6 }], { duration: 500, easing: 'ease-out' });
+    schedule();
   }
-  buttons.forEach((button, i) => button.addEventListener('click', () => {
-    show(i);
+
+  function go(step, fromDx = 0) {
+    if (!step) return;
+    render(at + step);
+    if (reducedMotion) return;
+    const dir = step > 0 ? 1 : -1;
+    img.animate([{ transform: `translateX(${fromDx || dir * 70}px)`, opacity: fromDx ? 1 : 0.2 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  }
+
+  function open(tile, fromTile) {
+    pool = filter === 'all' ? tiles : tiles.filter((t) => t.closest('.gallery__item').dataset.chapter === filter);
+    opener = tile;
+    buildStrip();
     box.showModal();
-  }));
-  document.getElementById('lightbox-prev').addEventListener('click', () => show(at - 1));
-  document.getElementById('lightbox-next').addEventListener('click', () => show(at + 1));
+    document.documentElement.classList.add('has-lightbox');
+    render(pool.indexOf(tile));
+    if (reducedMotion || !fromTile) return;
+    // The photo grows out of its tile: same spot, same crop, then the whole picture.
+    const from = tile.getBoundingClientRect();
+    const to = img.getBoundingClientRect();
+    const s = Math.max(from.width / to.width, from.height / to.height);
+    const insetX = Math.max(0, (to.width * s - from.width) / 2 / s);
+    const insetY = Math.max(0, (to.height * s - from.height) / 2 / s);
+    const dx = from.left + from.width / 2 - (to.left + to.width / 2);
+    const dy = from.top + from.height / 2 - (to.top + to.height / 2);
+    img.animate([
+      { transform: `translate(${dx}px, ${dy}px) scale(${s})`, clipPath: `inset(${insetY}px ${insetX}px)` },
+      { transform: 'none', clipPath: 'inset(0px 0px)' },
+    ], { duration: 460, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    box.animate([{ backgroundColor: 'rgb(20 8 20 / 0)' }, { backgroundColor: 'rgb(20 8 20 / 1)' }], { duration: 300, easing: 'ease-out' });
+    [...box.querySelectorAll('.lightbox__top, .lightbox__bar, .lightbox__strip, .lightbox__glow')].forEach((part) => {
+      part.animate([{ opacity: 0 }, { opacity: getComputedStyle(part).opacity }], { duration: 320, delay: 160, easing: 'ease-out', fill: 'backwards' });
+    });
+  }
+
+  tiles.forEach((tile) => tile.addEventListener('click', () => open(tile, true)));
+  box.addEventListener('close', () => {
+    play(false);
+    document.documentElement.classList.remove('has-lightbox');
+    history.replaceState(null, '', `${location.pathname}${location.search}`);
+    opener?.focus({ preventScroll: true });
+  });
   document.getElementById('lightbox-close').addEventListener('click', () => box.close());
-  box.addEventListener('click', (event) => { if (event.target === box || event.target.classList.contains('lightbox__stage')) box.close(); });
+  document.getElementById('lightbox-prev').addEventListener('click', () => go(-1));
+  document.getElementById('lightbox-next').addEventListener('click', () => go(1));
   box.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowRight') show(at + 1);
-    if (event.key === 'ArrowLeft') show(at - 1);
+    if (event.key === 'ArrowRight') { event.preventDefault(); go(1); }
+    if (event.key === 'ArrowLeft') { event.preventDefault(); go(-1); }
   });
-  // Swipe on phones
-  let startX = null;
-  box.addEventListener('touchstart', (event) => { startX = event.touches[0].clientX; }, { passive: true });
-  box.addEventListener('touchend', (event) => {
-    if (startX === null) return;
-    const dx = event.changedTouches[0].clientX - startX;
-    if (Math.abs(dx) > 45) show(at + (dx < 0 ? 1 : -1));
-    startX = null;
+  // A click on the dark space around the photo closes the viewer.
+  stage.addEventListener('click', (event) => { if (event.target === stage && !dragged) box.close(); });
+  addEventListener('resize', () => { if (box.open) fit(); });
+
+  /* Swipe: the photo follows your finger, and a long enough swipe moves on. */
+  let drag = null;
+  let dragged = false;
+  stage.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    drag = { x: event.clientX, y: event.clientY, id: event.pointerId, dx: 0 };
+    dragged = false;
   });
+  stage.addEventListener('pointermove', (event) => {
+    if (!drag || event.pointerId !== drag.id) return;
+    drag.dx = event.clientX - drag.x;
+    if (!dragged && Math.abs(drag.dx) > 8 && Math.abs(drag.dx) > Math.abs(event.clientY - drag.y)) {
+      dragged = true;
+      stage.setPointerCapture(event.pointerId);
+    }
+    if (dragged) img.style.transform = `translateX(${drag.dx}px) rotate(${(drag.dx / 60).toFixed(2)}deg)`;
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    const { dx } = drag;
+    drag = null;
+    if (!dragged) return;
+    img.style.transform = '';
+    if (Math.abs(dx) > 60) go(dx < 0 ? 1 : -1, dx < 0 ? 90 : -90);
+    else img.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 220, easing: 'ease-out' });
+    setTimeout(() => { dragged = false; }, 0);
+  };
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+
+  /* Slideshow: each photo for a few seconds, drifting gently closer. */
+  function schedule() {
+    clearTimeout(timer);
+    progress.classList.remove('is-running');
+    img.classList.remove('is-kb');
+    if (!playing) return;
+    void progress.offsetWidth;
+    progress.classList.add('is-running');
+    img.classList.add('is-kb');
+    timer = setTimeout(() => go(1), SLIDE);
+  }
+  function play(on) {
+    playing = on;
+    box.classList.toggle('is-playing', on);
+    playButton.setAttribute('aria-pressed', String(on));
+    schedule();
+  }
+  playButton.addEventListener('click', () => play(!playing));
+
+  /* Save and share: the photo as a JPEG with a little film date stamp and the club's address. */
+  const files = new Map();
+  function toast(text) {
+    toastEl.textContent = text;
+    toastEl.classList.add('is-on');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => toastEl.classList.remove('is-on'), 2200);
+  }
+  function photoFile(tile) {
+    if (files.has(tile)) return files.get(tile);
+    const made = new Promise((resolve, reject) => {
+      const full = new Image();
+      full.onload = async () => {
+        if (document.fonts) await document.fonts.ready;
+        const c = document.createElement('canvas');
+        c.width = full.naturalWidth;
+        c.height = full.naturalHeight;
+        const g = c.getContext('2d');
+        g.drawImage(full, 0, 0);
+        const size = Math.round(c.width * 0.03);
+        // the orange date an old film camera prints in the corner
+        g.font = `600 ${size}px "Martian Mono", monospace`;
+        g.textAlign = 'right';
+        g.shadowColor = 'rgba(255, 110, 30, .9)';
+        g.shadowBlur = size * 0.6;
+        g.fillStyle = '#FF9A3C';
+        g.fillText("14 11 '26", c.width - size * 1.2, c.height - size * 1.1);
+        // and where to find more
+        g.textAlign = 'left';
+        g.shadowColor = 'rgba(0, 0, 0, .55)';
+        g.shadowBlur = size * 0.5;
+        g.fillStyle = 'rgba(255, 248, 240, .9)';
+        g.font = `800 ${size}px Anybody, "Arial Black", sans-serif`;
+        g.fillText('FORGED  theforged.in', size * 1.2, c.height - size * 1.1);
+        c.toBlob((blob) => (blob
+          ? resolve(new File([blob], `forged-chase-the-sun-${tile.dataset.slug}.jpg`, { type: 'image/jpeg' }))
+          : reject(new Error('no blob'))), 'image/jpeg', 0.9);
+      };
+      full.onerror = reject;
+      full.src = tile.dataset.full;
+    });
+    files.set(tile, made);
+    made.catch(() => files.delete(tile));
+    return made;
+  }
+  // Start making the file as soon as a finger or pointer reaches the button.
+  ['lightbox-save', 'lightbox-share'].forEach((id) => {
+    const button = document.getElementById(id);
+    ['pointerenter', 'pointerdown', 'focus'].forEach((type) => button.addEventListener(type, () => { photoFile(pool[at]).catch(() => {}); }));
+  });
+  document.getElementById('lightbox-save').addEventListener('click', async () => {
+    try {
+      const file = await photoFile(pool[at]);
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.name;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      toast('Photo saved');
+    } catch (error) {
+      toast("Couldn't save the photo. Try again.");
+    }
+  });
+  document.getElementById('lightbox-share').addEventListener('click', async () => {
+    const tile = pool[at];
+    const url = `${location.origin}${location.pathname}${location.search}#photo-${tile.dataset.slug}`;
+    try {
+      const file = await photoFile(tile);
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Chase the Sun with FORGED', text: 'Chase the Sun with FORGED Run Club Goa. theforged.in' });
+        return;
+      }
+      if (navigator.share) {
+        await navigator.share({ title: 'Chase the Sun with FORGED', url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast('Link copied');
+    } catch (error) {
+      if (error && error.name === 'AbortError') return; // closed the share sheet
+      try {
+        await navigator.clipboard.writeText(url);
+        toast('Link copied');
+      } catch (e) {
+        toast("Couldn't share the photo. Try Save instead.");
+      }
+    }
+  });
+
+  /* A link to one photo (theforged.in/?gallery#photo-al-24) opens it once the intro is done. */
+  const wanted = (location.hash.match(/^#photo-([a-z0-9-]+)$/) || [])[1];
+  const target = wanted && tiles.find((tile) => tile.dataset.slug === wanted);
+  if (target) {
+    (function waitForIntro() {
+      if (document.getElementById('ice')) setTimeout(waitForIntro, 250);
+      else open(target, false);
+    })();
+  }
 })();
