@@ -2240,3 +2240,10 @@ html.has-lightbox { overflow: hidden; }
   .gift { animation: none; }
   .sr__leg, .sr__arm { animation: none; }
 }
+/* Santa's first flight: the presents tumbling out of the sleigh */
+.gift-fall { position: fixed; z-index: 69; width: 44px; height: 44px; pointer-events: none; filter: drop-shadow(0 3px 4px rgb(0 0 0 / .4)); }
+.gift-fall svg { display: block; width: 100%; height: 100%; overflow: visible; }
+@media (max-width: 599.98px) { .gift-fall { width: 32px; height: 32px; } }
+/* The first five to find the stash: a gold winner's badge */
+.stash.is-winner .stash__count { display: inline-block; padding: 5px 9px; background: #F5C452; color: var(--ink); font-weight: 800; }
+.stash.is-winner .stash__code { border-color: #F5C452; background: rgb(245 196 82 / .1); }

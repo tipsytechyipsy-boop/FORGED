@@ -2576,10 +2576,11 @@ function startXmasEggs() {
     if (state.found.length === total) {
       if (!state.code) {
         const letters = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-        state.code = `STASH-${Array.from({ length: 4 }, () => letters[Math.floor(Math.random() * letters.length)]).join('')}`;
+        state.code = `STASH-${Array.from({ length: 6 }, () => letters[Math.floor(Math.random() * letters.length)]).join('')}`;
         state.at = Date.now();
         save();
       }
+      claim();
       bubble.hidden = true;
       setTimeout(showStash, reducedMotion ? 300 : 900);
     } else {
@@ -2604,7 +2605,42 @@ function startXmasEggs() {
     clearTimeout(bubbleTimer);
     if (ms) bubbleTimer = setTimeout(() => { bubble.hidden = true; }, ms);
   }
-  const INTRO = `Santa dropped ${total} presents somewhere on this page. Find them all and tap to open.`;
+  /* The first five people to find the whole stash win a prize. Supabase hands out the
+     places in order (see supabase/stash.sql); the code is the proof at Sleigh the Run. */
+  const PRIZES = 5;
+  const rpc = async (name, body) => {
+    const response = await fetch(`${SUPABASE.url}/rest/v1/rpc/${name}`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE.key, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {}),
+    });
+    if (!response.ok) throw new Error(`${name}: ${response.status}`);
+    return response.json();
+  };
+  let claiming = null;
+  function claim() {
+    if (state.place || !state.code) return Promise.resolve();
+    if (!claiming) {
+      claiming = rpc('claim_stash', { stash_code: state.code })
+        .then((data) => {
+          if (data && data.place) {
+            state.place = data.place;
+            save();
+          }
+        })
+        .catch(() => { /* offline or not set up yet: try again next time the card opens */ })
+        .finally(() => { claiming = null; });
+    }
+    return claiming;
+  }
+  let prizesLeft = null;
+  rpc('stash_left').then((n) => { if (typeof n === 'number') prizesLeft = n; }).catch(() => {});
+  const prizeLine = () => {
+    if (prizesLeft === 0) return 'All 5 prizes are claimed, but the hunt is still on.';
+    if (prizesLeft) return `The first ${PRIZES} to find them all win a prize. ${prizesLeft} left!`;
+    return `The first ${PRIZES} to find them all win a prize.`;
+  };
+  const intro = () => `Santa dropped ${total} presents somewhere on this page. Find them all and tap to open. ${prizeLine()}`;
   function tally(bump) {
     const n = state.found.length;
     counter.querySelector('b').textContent = String(n);
@@ -2614,18 +2650,25 @@ function startXmasEggs() {
   }
   counter.addEventListener('click', () => {
     if (state.found.length === total) showStash();
-    else if (bubble.hidden) hint(state.found.length ? `${state.found.length} of ${total} found. ${INTRO}` : INTRO, 6000);
+    else if (bubble.hidden) hint(state.found.length ? `${state.found.length} of ${total} found. ${intro()}` : intro(), 7000);
     else bubble.hidden = true;
   });
   tally(false);
+  // First visit: once the snow globe has burst, Santa flies over and drops the presents.
   (function waitForIntro() {
     if (document.getElementById('ice')) { setTimeout(waitForIntro, 300); return; }
     document.body.append(counter, bubble);
-    if (!state.hinted && state.found.length < total) {
-      state.hinted = true;
-      save();
-      setTimeout(() => hint(INTRO, 6000), 1800);
+    if (state.dropped || state.found.length === total) return;
+    state.dropped = true;
+    save();
+    if (reducedMotion) {
+      setTimeout(() => hint(intro(), 8000), 800);
+      return;
     }
+    setTimeout(() => fly(true).then(() => {
+      tally(true);
+      hint(intro(), 8000);
+    }), 700);
   })();
 
   /* Santa's stash: the card for finding all five. Screenshot it. */
@@ -2664,12 +2707,37 @@ function startXmasEggs() {
         }
       });
       stash.querySelector('.stash__again').addEventListener('click', () => {
+        // Play the hunt again. A place already won stays won, with the same code.
         state.found = [];
-        delete state.code;
-        delete state.at;
+        delete state.dropped;
+        if (!state.place) {
+          delete state.code;
+          delete state.at;
+        }
         save();
         location.reload();
       });
+    }
+    const count = stash.querySelector('.stash__count');
+    const text = stash.querySelector('.stash__text');
+    const place = () => {
+      const n = state.place;
+      stash.classList.toggle('is-winner', Boolean(n && n <= PRIZES));
+      if (n && n <= PRIZES) {
+        count.textContent = `Prize winner #${n}`;
+        text.textContent = `You're one of the first ${PRIZES} to find it, so you've won a prize! Show this at Sleigh the Run to collect it.`;
+      } else if (n) {
+        count.textContent = `${total} of ${total} presents`;
+        text.textContent = `You're #${n} to find it. All ${PRIZES} prizes have gone, but show this at Sleigh the Run for bragging rights.`;
+      } else {
+        count.textContent = `${total} of ${total} presents`;
+        text.textContent = 'Show this at Sleigh the Run.';
+      }
+    };
+    place();
+    if (!state.place) {
+      text.textContent = `Checking if you're one of the first ${PRIZES}…`;
+      claim().then(place);
     }
     stash.querySelector('.stash__code b').textContent = state.code;
     const when = new Date(state.at || Date.now());
@@ -2698,8 +2766,9 @@ function startXmasEggs() {
       <path d="M16 104 H172 Q198 104 194 86" fill="none" stroke="#F5C452" stroke-width="4.5" stroke-linecap="round"/>
     </svg>`;
   let flying = false;
-  function fly() {
-    if (flying) return;
+  // drop: Santa's first flight, dropping the five presents as he goes.
+  function fly(drop) {
+    if (flying) return Promise.resolve();
     flying = true;
     const sleigh = document.createElement('div');
     sleigh.className = 'sleigh';
@@ -2710,8 +2779,7 @@ function startXmasEggs() {
     const done = () => { sleigh.remove(); flying = false; };
     if (reducedMotion) {
       sleigh.style.transform = `translate(${(innerWidth - w) / 2}px, ${innerHeight * 0.25}px)`;
-      sleigh.animate([{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: 2600 }).finished.then(done);
-      return;
+      return sleigh.animate([{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: 2600 }).finished.then(done);
     }
     const frames = [];
     const steps = 24;
@@ -2736,7 +2804,27 @@ function startXmasEggs() {
       document.body.append(bit);
       bit.animate([{ transform: 'none', opacity: 1 }, { transform: `translate(${-20 - Math.random() * 30}px, ${30 + Math.random() * 40}px) scale(.3)`, opacity: 0 }], { duration: 900, easing: 'ease-out' }).finished.then(() => bit.remove());
     }, 45);
-    flight.finished.then(() => { clearInterval(dust); done(); });
+    // The presents tumble out of the sleigh one by one and fall away down the page.
+    if (drop) {
+      SPOTS.forEach((spot, i) => setTimeout(() => {
+        const box = sleigh.getBoundingClientRect();
+        const present = document.createElement('div');
+        present.className = 'gift-fall';
+        present.innerHTML = giftSvg(COLORS[spot.color]);
+        const x = box.left + box.width * 0.22;
+        const y = box.top + box.height * 0.4;
+        present.style.cssText = `left:${x}px;top:${y}px`;
+        document.body.append(present);
+        const drift = (i % 2 ? 1 : -1) * (30 + Math.random() * 70);
+        const spin = (i % 2 ? 1 : -1) * (200 + Math.random() * 300);
+        present.animate([
+          { transform: 'translate(-50%, -50%) scale(.6) rotate(0deg)', opacity: 0 },
+          { transform: `translate(calc(-50% + ${drift * 0.25}px), calc(-50% - 34px)) scale(1) rotate(${spin * 0.2}deg)`, opacity: 1, offset: 0.18, easing: 'cubic-bezier(.4,0,1,1)' },
+          { transform: `translate(calc(-50% + ${drift}px), ${innerHeight - y + 60}px) scale(1) rotate(${spin}deg)`, opacity: 1 },
+        ], { duration: 1500 + i * 60, easing: 'linear' }).finished.then(() => present.remove());
+      }, 5200 * (0.24 + i * 0.12)));
+    }
+    return flight.finished.then(() => { clearInterval(dust); done(); });
   }
   // Laptops: type it anywhere (with or without spaces), except while filling in a form.
   let typed = '';
