@@ -90,6 +90,85 @@ function runPreloader(onReveal) {
     logo.src = 'assets/xmas-logo.webp';
     logo.classList.add('ice__logo--xmas');
   }
+
+  // Christmas: it's the globe's glass that cracks, from one impact point near the top right.
+  // Coordinates are % of the globe's own square; the glass is a circle of radius 49.
+  let globeCracks = null;
+  let globeShards = [];
+  const GLOBE_HIT = [64, 30];
+  if (xmas) {
+    let seed = 7;
+    const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const inGlass = ([x, y]) => Math.hypot(x - 50, y - 50) <= 48;
+    // A jagged line from the impact point outward, stopping at the rim.
+    const ray = (angle, from, to) => {
+      const pts = [];
+      for (let r = from; r <= to; r += 3.5) {
+        const wobble = (rand() - 0.5) * 0.12;
+        const p = [GLOBE_HIT[0] + Math.cos(angle + wobble) * r, GLOBE_HIT[1] + Math.sin(angle + wobble) * r];
+        if (!inGlass(p)) break;
+        pts.push(p);
+      }
+      return pts;
+    };
+    // A broken ring around the impact point, like a spider web.
+    const ring = (radius, angles) => angles.map((a) => [GLOBE_HIT[0] + Math.cos(a) * radius * (0.85 + rand() * 0.3), GLOBE_HIT[1] + Math.sin(a) * radius * (0.85 + rand() * 0.3)]).filter(inGlass);
+    const toPath = (pts) => (pts.length > 1 ? `M${pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(' L')}` : '');
+    const angles = Array.from({ length: 9 }, (_, i) => (i / 9) * Math.PI * 2 + rand() * 0.4);
+    const blows = [
+      angles.slice(0, 6).map((a) => toPath([GLOBE_HIT, ...ray(a, 3, 12)])),
+      [...angles.map((a) => toPath(ray(a, 12, 34))), toPath(ring(11, angles.slice(0, 6)))],
+      [...angles.map((a) => toPath(ray(a, 34, 120))), toPath(ring(24, angles)), toPath(ring(40, angles.slice(2, 8)))],
+    ].map((group) => group.filter(Boolean));
+    globeCracks = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    globeCracks.setAttribute('class', 'ice__globe-cracks');
+    globeCracks.setAttribute('viewBox', '0 0 100 100');
+    stage.append(globeCracks);
+    globeParts.push(globeCracks);
+    var globeCrackGroups = blows.map((group) => group.flatMap((d) => (
+      [['rgb(20 40 55 / .55)', '0.7'], ['#FFFFFF', '0.28']].map(([stroke, width]) => {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('pathLength', '1');
+        path.setAttribute('stroke', stroke);
+        path.setAttribute('stroke-width', width);
+        globeCracks.append(path);
+        return path;
+      })
+    )));
+
+    // The glass breaks into wedges that fan out from the impact point to the rim.
+    const rimHit = (angle) => {
+      // where a ray from the impact point leaves the glass circle
+      const dx = Math.cos(angle), dy = Math.sin(angle);
+      const fx = GLOBE_HIT[0] - 50, fy = GLOBE_HIT[1] - 50;
+      const b = fx * dx + fy * dy;
+      const t = -b + Math.sqrt(b * b - (fx * fx + fy * fy - 49 * 49));
+      return [GLOBE_HIT[0] + dx * t, GLOBE_HIT[1] + dy * t];
+    };
+    const pieces = document.createElement('div');
+    pieces.className = 'ice__globe-shards';
+    stage.append(pieces);
+    globeParts.push(pieces);
+    const cuts = [...angles].sort((a, b) => a - b);
+    globeShards = cuts.map((a0, i) => {
+      const a1 = i === cuts.length - 1 ? cuts[0] + Math.PI * 2 : cuts[i + 1];
+      const pts = [GLOBE_HIT];
+      const steps = 6;
+      for (let k = 0; k <= steps; k++) {
+        // follow the rim between the two cut lines, measured round the globe's centre
+        const p0 = rimHit(a0 + ((a1 - a0) * k) / steps);
+        pts.push(p0);
+      }
+      const shard = document.createElement('i');
+      shard.className = 'ice__globe-shard';
+      shard.style.clipPath = `polygon(${pts.map(([x, y]) => `${x.toFixed(1)}% ${y.toFixed(1)}%`).join(',')})`;
+      const mid = (a0 + a1) / 2;
+      shard.style.transformOrigin = `${(GLOBE_HIT[0] + Math.cos(mid) * 20).toFixed(1)}% ${(GLOBE_HIT[1] + Math.sin(mid) * 20).toFixed(1)}%`;
+      pieces.append(shard);
+      return { shard, mid };
+    });
+  }
   const between = (min, max) => min + Math.random() * (max - min);
 
   // Each crack is a dark fracture with a bright edge, so it shows on pale ice.
@@ -202,6 +281,20 @@ function runPreloader(onReveal) {
       ], { duration: 1000, fill: 'forwards' });
     });
     throwChips(size);
+    if (globeCracks) globeCracks.style.visibility = 'hidden';
+    // Christmas: the globe's glass wedges fly out from where it was hit, then fall.
+    globeShards.forEach(({ shard, mid }) => {
+      shard.style.visibility = 'visible';
+      const reach = size * between(0.5, 1.0);
+      const x = Math.cos(mid) * reach;
+      const y = Math.sin(mid) * reach;
+      const spin = between(-120, 120);
+      shard.animate([
+        { transform: 'none', opacity: 1, easing: 'cubic-bezier(.1,.7,.5,1)' },
+        { transform: `translate(${x * 0.6}px, ${y * 0.6}px) rotate(${spin * 0.5}deg)`, opacity: 1, offset: 0.4, easing: 'cubic-bezier(.6,0,1,.7)' },
+        { transform: `translate(${x}px, ${y + size * 1.2}px) rotate(${spin}deg) scale(.85)`, opacity: 0 },
+      ], { duration: 1050, fill: 'forwards' });
+    });
     // Christmas: the logo in its Santa hat pops out as the glass bursts and the base drops away.
     if (xmas) {
       logo.style.transform = 'none';
@@ -210,7 +303,7 @@ function runPreloader(onReveal) {
         { duration: 650, easing: 'cubic-bezier(.3,1.4,.5,1)' },
       );
     }
-    globeParts.forEach((part, i) => part.animate(
+    globeParts.slice(0, 3).forEach((part, i) => part.animate(
       i === 2
         ? [{ transform: 'none', opacity: 1 }, { transform: 'translateY(40%) scale(.9)', opacity: 0 }]
         : [{ transform: 'none', opacity: 1 }, { transform: 'scale(1.3)', opacity: 0, filter: 'blur(4px)' }],
@@ -296,13 +389,13 @@ function runPreloader(onReveal) {
     stage.animate([{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'ease-out' });
     await wait(480);
     if (finished) return;
-    strike(1, crackGroups[0]);
+    strike(1, (xmas ? globeCrackGroups : crackGroups)[0]);
     await wait(420);
     if (finished) return;
-    strike(1.6, crackGroups[1]);
+    strike(1.6, (xmas ? globeCrackGroups : crackGroups)[1]);
     await Promise.all([wait(420), Promise.race([pageLoaded, wait(1500)])]);
     if (finished) return;
-    strike(2.2, crackGroups[2]);
+    strike(2.2, (xmas ? globeCrackGroups : crackGroups)[2]);
     await wait(90);
     if (finished) return;
     shatter();

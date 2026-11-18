@@ -1746,7 +1746,19 @@ a { color: inherit; }
   filter: drop-shadow(0 0 18px rgb(255 214 140 / .25));
 }
 /* No ice at Christmas: the logo is in the globe, and the glass is what breaks */
-.is-xmas .ice__block { visibility: hidden; }
+.is-xmas .ice__block, .is-xmas .ice__cracks, .is-xmas .ice__shard { visibility: hidden !important; }
+.ice__globe-cracks, .ice__globe-shards { display: none; }
+.is-xmas .ice__globe-cracks, .is-xmas .ice__globe-shards { display: block; position: absolute; inset: -24%; width: 148%; height: 148%; pointer-events: none; overflow: visible; }
+.ice__globe-cracks path { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.ice__globe-shard {
+  position: absolute; inset: 0;
+  visibility: hidden;
+  background:
+    radial-gradient(circle at 32% 24%, rgb(255 255 255 / .5), transparent 30%),
+    linear-gradient(135deg, rgb(255 255 255 / .38), rgb(170 215 255 / .14) 50%, rgb(255 255 255 / .3));
+}
+/* Impact rings land where the globe is hit */
+.is-xmas .ice__ring { left: 70.7%; top: 20.4%; }
 .is-xmas .ice__logo:not(.ice__logo--xmas) { opacity: 0; }
 .is-xmas .ice__shard {
   background: linear-gradient(135deg, rgb(255 255 255 / .7), rgb(190 225 255 / .25) 45%, rgb(255 255 255 / .55));
