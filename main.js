@@ -842,6 +842,7 @@ function setupRoute() {
   function layout() {
     const w = route.clientWidth;
     const h = route.clientHeight;
+    if (!w || !h) return; // not laid out yet; the resize watcher below draws it once it is
     const width = innerWidth < 600 ? 14 : 26;
     route.style.setProperty('--road', `${width}px`);
     // A steep road has narrow bends that can't hold a label, so labels sit outside them.
@@ -1830,6 +1831,7 @@ function startChristmas() {
     hosts.forEach((host) => {
       host.querySelector(':scope > .xmas-lights')?.remove();
       const w = host.clientWidth;
+      if (!w) return; // not laid out yet; strung again on the next resize
       // Bands are cut on a slant, high on the right; the hero is flat.
       const fall = host === hero ? 0 : slant;
       let left = fall; // how far down the string starts at the left edge
@@ -1953,7 +1955,9 @@ function startChristmas() {
 }
 if (xmas) startChristmas();
 const admin = document.documentElement.classList.contains('is-admin');
-if (xmas && !admin) startXmasEggs();
+// The present hunt and the HO HO HO sleigh are set aside for now: add ?eggs to see them.
+const eggs = /[?&]eggs(?:=1)?(?:&|$)/.test(location.search);
+if (xmas && eggs && !admin) startXmasEggs();
 if (admin) startAdmin();
 
 /* ---------- The medal: a 3D FORGED medal in the finish, loaded only when it's near ---------- */
