@@ -2028,7 +2028,7 @@ html.has-lightbox { overflow: hidden; }
   overflow: hidden;
 }
 .lightbox::backdrop { background: rgb(10 5 10 / .6); }
-.lightbox[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; }
+.lightbox[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-columns: minmax(0, 1fr); }
 /* A glow in the photo's own colour */
 .lightbox__glow {
   position: absolute; inset: -15%;
