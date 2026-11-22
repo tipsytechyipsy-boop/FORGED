@@ -1952,7 +1952,8 @@ a { color: inherit; }
 }
 /* Collapsed: a clean band of rows that fades out above "Show all" */
 .gallery__wall.is-collapsed .gallery__grid {
-  max-height: calc(var(--row) * var(--rows-shown) + var(--gap) * (var(--rows-shown) - 1));
+  --shown: calc(var(--rows-shown) + var(--rows-more, 0));
+  max-height: calc(var(--row) * var(--shown) + var(--gap) * (var(--shown) - 1));
   overflow: hidden;
 }
 .gallery__wall.is-collapsed::after {
@@ -1999,11 +2000,17 @@ a { color: inherit; }
     scrollbar-width: none;
   }
   .gallery__filters::-webkit-scrollbar { display: none; }
+  /* The date row and the chapters scroll sideways: fade the edge so it shows */
+  .gallery__runs, .gallery__filters {
+    padding-right: 40px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+  }
   .gallery__sun { font-size: clamp(5.5rem, 22vw, 8rem); }
 }
 @media (max-width: 599.98px) {
   .gallery { box-shadow: 6px 6px 0 var(--ink); }
-  .gallery__grid { --cols: 2; --gap: 6px; --rows-shown: 10; }
+  .gallery__grid { --cols: 3; --gap: 4px; --rows-shown: 12; }
   .gallery__item.is-hero { grid-row: span 2; }
   /* the title goes under the 14 so it never runs off the edge */
   .gallery__side { grid-template-columns: minmax(0, 1fr); grid-template-areas: "date" "title" "intro" "filters" "hint"; }

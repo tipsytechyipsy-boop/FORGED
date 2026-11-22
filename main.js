@@ -2152,6 +2152,7 @@ document.querySelectorAll('.reel').forEach(startReel);
     const has = Boolean(data.photos);
     filter = 'all';
     expanded = false;
+    moreRows = 0;
     filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === 'all')));
     filtersEl.hidden = !data.chapters;
     hintEl.hidden = !has;
@@ -2192,15 +2193,27 @@ document.querySelectorAll('.reel').forEach(startReel);
   /* Chapters and "show all", with the photos sliding to their new places. */
   let filter = 'all';
   let expanded = false;
+  let moreRows = 0; // rows added by "Show more", a few at a time
   function apply(animate) {
     const before = new Map();
     if (animate && !reducedMotion) items.forEach((item) => { if (!item.hidden) before.set(item, item.getBoundingClientRect()); });
     items.forEach((item) => { item.hidden = item.dataset.run !== run || !(filter === 'all' || item.dataset.chapter === filter); });
     const showing = items.filter((item) => !item.hidden).length;
-    more.textContent = `Show all ${showing} photos`;
-    const collapsed = filter === 'all' && !expanded && Boolean(RUNS[run].photos) && showing > 12;
+    const collapsed = !expanded && Boolean(RUNS[run].photos) && showing > 12;
+    gridEl.style.setProperty('--rows-more', String(moreRows));
     wall.classList.toggle('is-collapsed', collapsed);
     more.hidden = !collapsed;
+    if (collapsed) {
+      // Count the photos still below the cut; if none are, it's all on show.
+      const cut = gridEl.getBoundingClientRect().top + gridEl.clientHeight - 4;
+      const left = items.filter((item) => !item.hidden && item.getBoundingClientRect().top >= cut).length;
+      if (!left) {
+        wall.classList.remove('is-collapsed');
+        more.hidden = true;
+      } else {
+        more.textContent = `Show more photos (${left} more)`;
+      }
+    }
     if (!before.size) return;
     items.forEach((item) => {
       if (item.hidden) return;
@@ -2217,12 +2230,13 @@ document.querySelectorAll('.reel').forEach(startReel);
   }
   filterButtons.forEach((button) => button.addEventListener('click', () => {
     filter = button.dataset.filter;
+    moreRows = 0;
     filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
     apply(true);
   }));
   more.addEventListener('click', () => {
-    expanded = true;
-    apply(true);
+    moreRows += phone.matches ? 24 : 16;
+    apply(false);
   });
   selectRun(run);
 

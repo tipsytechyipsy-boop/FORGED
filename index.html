@@ -199,7 +199,7 @@
     // to see it early, or ?xmas=0 to switch it off.
     (function () {
       var d = new Date(), m = d.getMonth(), day = d.getDate();
-      var season = (m === 10 && day >= 22) || m === 11 || (m === 0 && day === 1);
+      var season = (m === 10 && day >= 22) || m === 11; // 22 Nov to 31 Dec
       var ask = location.search.match(/[?&]xmas(?:=([01]))?(?:&|$)/);
       if (ask ? ask[1] !== '0' : season) document.documentElement.classList.add('is-xmas');
       document.documentElement.classList.add('show-gallery');
