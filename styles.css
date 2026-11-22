@@ -2308,3 +2308,22 @@ html.has-lightbox { overflow: hidden; }
   .admin__prefix { display: none; }
   .admin__btn { padding: 0 14px; }
 }
+
+
+/* Jingle All The Way: the Christmas teaser card */
+.date--jingle .date__kicker { color: #FFF0B3; }
+.date--jingle .date__motto em { color: #FFF0B3; }
+.date__cta { margin-top: 18px; }
+/* A run without its reel yet: the poster, taped into the log */
+.snap { position: relative; width: 100%; max-width: 360px; margin: 0; justify-self: center; transform: rotate(1.6deg); transition: transform .3s ease-out; }
+.log__row:nth-child(2n) .snap { transform: rotate(-1.8deg); }
+.snap:hover, .log__row:nth-child(2n) .snap:hover { transform: none; }
+.snap img { display: block; width: 100%; height: auto; box-shadow: 8px 8px 0 var(--ink); }
+.snap::before {
+  content: ""; position: absolute; z-index: 2;
+  top: -14px; left: 50%; width: 96px; height: 28px;
+  background: rgb(255 251 240 / .72); box-shadow: 0 1px 2px rgb(0 0 0 / .15);
+  transform: translateX(-50%) rotate(-4deg);
+}
+.snap figcaption { margin-top: 10px; font-size: .9375rem; }
+@media (prefers-reduced-motion: reduce) { .snap { transition: none; } }

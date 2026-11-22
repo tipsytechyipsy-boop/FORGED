@@ -1579,14 +1579,15 @@ events.forEach((event) => {
 
 const nextRun = document.getElementById('next-run');
 // If the hero button points at a run's registration, it goes back to the group once that run has happened.
-if (events[0].classList.contains('is-past')) {
+if (events[0]?.classList.contains('is-past')) {
   const cta = document.getElementById('hero-cta');
   cta.href = 'https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t';
   cta.textContent = 'Join the run club on WhatsApp';
 }
-if (upcoming.length === 0) {
+// A teaser with no date yet keeps its own line.
+if (events.length && upcoming.length === 0) {
   nextRun.textContent = 'New dates land in the WhatsApp group first.';
-} else if (events[0].classList.contains('is-past')) {
+} else if (events[0]?.classList.contains('is-past')) {
   nextRun.textContent = upcoming[0].toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '') + '. Details coming soon.';
 }
 
