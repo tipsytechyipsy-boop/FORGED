@@ -2334,3 +2334,92 @@ html.has-lightbox { overflow: hidden; }
 }
 .snap figcaption { margin-top: 10px; font-size: .9375rem; }
 @media (prefers-reduced-motion: reduce) { .snap { transition: none; } }
+
+/* ======================================================================
+   Christmas extras: welcome card, days to Christmas, Santa, snow and icicles
+   ====================================================================== */
+/* Snow on each band's top edge, and icicles under it: they settle in when the band first shows */
+.xmas-lights .snow { fill: #FFFFFF; filter: none; transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(.35); transition: transform 2.4s cubic-bezier(.2,.7,.3,1); }
+.xmas-lights .icicle { fill: rgb(225 244 255 / .92); transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); transition: transform 1.6s cubic-bezier(.3,.7,.3,1) var(--d, 0s); }
+.xmas-lights.is-snowy .snow, .xmas-lights.is-snowy .icicle { transform: none; }
+/* A frosting of snow along the top of the hot buttons */
+.is-xmas .btn--hot::before {
+  content: ""; position: absolute; z-index: 1; left: 0; right: 0; top: 0; height: 8px;
+  background:
+    radial-gradient(circle at 7px 1px, #FFFFFF 5.5px, transparent 6px) 0 0 / 14px 8px repeat-x,
+    linear-gradient(#FFFFFF, #FFFFFF) 0 0 / 100% 2px no-repeat;
+  pointer-events: none;
+}
+
+/* The route: twinkling stars, and the glowing stretch to the next stop */
+.route__twinkle { fill: #FFF4D6; transform-box: fill-box; transform-origin: center; animation: route-twinkle var(--t, 2s) ease-in-out var(--d, 0s) infinite; }
+@keyframes route-twinkle { 0%, 100% { opacity: 0; scale: .3; } 50% { opacity: 1; scale: 1; } }
+.route__nextleg path { fill: none; stroke-linecap: round; }
+.route__nextleg-glow { stroke: rgb(255 197 58 / .28); stroke-width: calc(var(--road, 26px) * 1.7); }
+.route__nextleg-line { stroke: #FFD86B; stroke-width: calc(var(--road, 26px) * .22); stroke-dasharray: 2 14; animation: route-march 1.1s linear infinite; }
+@keyframes route-march { to { stroke-dashoffset: -16; } }
+
+/* Days to Christmas: a little desk-calendar page */
+.xmas-days { display: inline-flex; align-items: center; gap: 7px; margin: 0 0 12px; padding: 6px 12px 6px 9px; background: #FFF4EC; color: #8E1217; font: 700 .8125rem/1 var(--mono); box-shadow: 4px 4px 0 var(--ink); }
+.xmas-days__page { display: inline-block; perspective: 300px; }
+.xmas-days__page b { display: inline-block; min-width: 2ch; padding: 4px 5px; background: #D62839; color: #FFFFFF; font: 900 1.05rem/1 var(--display); text-align: center; transform-origin: 50% 50%; backface-visibility: hidden; }
+
+/* Welcome card */
+.welcome {
+  position: fixed; z-index: 60; left: clamp(12px, 2vw, 28px); bottom: clamp(12px, 2vw, 28px);
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  width: min(380px, calc(100vw - 24px)); padding: 14px 14px 16px;
+  background: radial-gradient(circle at 20% 0%, #8E1217, #4A0C10 75%); color: #FFF4EC;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / .18), 0 18px 40px rgb(0 0 0 / .45);
+  overflow: hidden;
+  transform: translateY(calc(100% + 40px)); opacity: 0;
+  transition: transform .55s cubic-bezier(.2,.9,.3,1.15), opacity .3s;
+}
+.welcome.is-in { transform: none; opacity: 1; }
+.welcome.is-leaving { transform: translateY(calc(100% + 40px)); opacity: 0; transition-timing-function: cubic-bezier(.5,0,.8,.3); }
+.welcome__logo { width: 48px; height: auto; max-width: none; align-self: start; }
+.welcome__title { margin: 0; font: 900 1rem/1.15 var(--display); text-transform: uppercase; }
+.welcome__text { margin: 4px 0 10px; font-size: .875rem; line-height: 1.4; color: rgb(255 244 236 / .85); }
+.welcome__btn { display: inline-block; padding: 8px 14px; background: #F5C452; color: var(--ink); font: 800 .8125rem/1 var(--display); text-transform: uppercase; text-decoration: none; }
+.welcome__close { align-self: start; width: 32px; height: 32px; padding: 6px; border: 0; background: rgb(255 244 236 / .12); color: #FFF4EC; cursor: pointer; }
+.welcome__close svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+.welcome__btn:focus-visible, .welcome__close:focus-visible { outline: 2px solid #F5C452; outline-offset: 2px; }
+.welcome__timer { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: #F5C452; transform-origin: 0 50%; }
+@media (max-width: 599.98px) { .welcome { bottom: 74px; } }
+.has-lightbox .welcome { display: none; }
+
+/* Santa peeking in from the side */
+.santa-peek {
+  position: fixed; z-index: 55; right: 0; top: 40%;
+  width: clamp(84px, 9vw, 120px); height: auto; padding: 0; border: 0; background: none; cursor: pointer;
+  transform: translateX(105%) rotate(-12deg); transform-origin: 100% 100%;
+  transition: transform .6s cubic-bezier(.3,.8,.3,1.2);
+  -webkit-tap-highlight-color: transparent;
+}
+.santa-peek svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(-4px 6px 8px rgb(0 0 0 / .35)); }
+.santa-peek.is-out { transform: translateX(38%) rotate(-12deg); }
+.santa-peek.is-left { right: auto; left: 0; transform: translateX(-105%) rotate(12deg) scaleX(-1); transform-origin: 0 100%; }
+.santa-peek.is-left.is-out { transform: translateX(-38%) rotate(12deg) scaleX(-1); }
+.santa-peek__arm { transform-box: view-box; transform-origin: 34px 112px; }
+.santa-peek.is-waving .santa-peek__arm { animation: santa-wave .42s ease-in-out 4 alternate; }
+@keyframes santa-wave { from { transform: rotate(-18deg); } to { transform: rotate(22deg); } }
+.santa-peek__ho {
+  position: absolute; top: -26px; right: 52%;
+  padding: 4px 8px; background: #FFF4EC; color: #8E1217; white-space: nowrap;
+  font: 900 .8125rem/1 var(--display); text-transform: uppercase;
+  opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .2s;
+}
+.santa-peek.is-left .santa-peek__ho { right: auto; left: 52%; transform: translateY(6px) scaleX(-1); }
+.santa-peek.is-ho .santa-peek__ho { opacity: 1; transform: none; }
+.santa-peek.is-left.is-ho .santa-peek__ho { transform: scaleX(-1); }
+.santa-gift { position: fixed; z-index: 56; width: 38px; height: 38px; pointer-events: none; }
+.santa-gift svg { display: block; width: 100%; height: 100%; }
+.xmas-bit { position: fixed; z-index: 57; width: 7px; height: 7px; border-radius: 1px; pointer-events: none; }
+.has-lightbox .santa-peek { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .xmas-lights .snow, .xmas-lights .icicle { transition: none; transform: none; }
+  .route__twinkle, .route__nextleg-line { animation: none; }
+  .route__twinkle { opacity: .8; }
+  .welcome { transition: opacity .2s; transform: none; }
+}

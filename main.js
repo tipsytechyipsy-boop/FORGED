@@ -817,6 +817,29 @@ function setupRoute() {
     }
   }
 
+  // Christmas: stars twinkle along the trail, and the stretch to the next stop glows gold.
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  let twinkles = [];
+  let nextLeg = null;
+  if (xmas) {
+    nextLeg = document.createElementNS(SVG_NS, 'g');
+    nextLeg.setAttribute('class', 'route__nextleg');
+    nextLeg.innerHTML = '<path class="route__nextleg-glow"/><path class="route__nextleg-line"/>';
+    road.insertBefore(nextLeg, runner);
+    const stars = document.createElementNS(SVG_NS, 'g');
+    stars.setAttribute('class', 'route__twinkles');
+    road.insertBefore(stars, runner);
+    twinkles = Array.from({ length: 14 }, (_, i) => {
+      const star = document.createElementNS(SVG_NS, 'path');
+      star.setAttribute('class', 'route__twinkle');
+      star.setAttribute('d', 'M0 -6 L1.4 -1.4 L6 0 L1.4 1.4 L0 6 L-1.4 1.4 L-6 0 L-1.4 -1.4 Z');
+      star.style.setProperty('--t', `${(1.6 + (i % 5) * 0.45).toFixed(2)}s`);
+      star.style.setProperty('--d', `${(-i * 0.37).toFixed(2)}s`);
+      stars.append(star);
+      return star;
+    });
+  }
+
   let reached = 1; // share of the road's length covered by the trail
   let roadLength = 0; // in pixels
   let stopLengths = []; // how far along the road each stop sits, in pixels
@@ -896,6 +919,22 @@ function setupRoute() {
     fadeArea.setAttribute('y', -60);
     fadeArea.setAttribute('width', w + 120);
     fadeArea.setAttribute('height', h + 120);
+
+    // Christmas: the stars spread along the poured trail, and the last done stop
+    // to the next one (or to the mystery stop) is the glowing "next stop" path.
+    twinkles.forEach((star, i) => {
+      const p = pointAt(roadLength * reached * ((i + 0.5) / twinkles.length));
+      const off = (i % 2 ? 1 : -1) * (width * 0.55 + (i % 3) * 3);
+      star.setAttribute('transform', `translate(${p.x.toFixed(1)} ${(p.y + off).toFixed(1)}) scale(${(width / 18).toFixed(2)})`);
+    });
+    if (nextLeg) {
+      const doneCount = stops.filter(isDone).length;
+      const from = doneCount ? all[doneCount] : all[0];
+      const to = next ? points[nextIndex] : end;
+      const leg = from === to ? '' : `M${from[0].toFixed(1)} ${from[1].toFixed(1)} ${sweep(from, to)}`;
+      nextLeg.querySelectorAll('path').forEach((path) => path.setAttribute('d', leg));
+      nextLeg.style.setProperty('--road', `${width}px`);
+    }
 
     runnerScale = width / 26;
     if (next) placeRunner(runnerAt ?? waitAt());
@@ -1824,8 +1863,16 @@ function startChristmas() {
   const COLORS = ['#FF4D4D', '#F5C452', '#4ADE80', '#FFF7E0', '#60A5FA'];
   // Strings off screen stop twinkling.
   const lightsWatcher = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => entry.target.classList.toggle('is-off', !entry.isIntersecting));
+    entries.forEach((entry) => {
+      entry.target.classList.toggle('is-off', !entry.isIntersecting);
+      // The first time a band's lights show, its snow settles and its icicles grow.
+      if (entry.isIntersecting && entry.target.querySelector('.snow')) {
+        entry.target.classList.add('is-snowy');
+        snowed.add(entry.target.parentElement);
+      }
+    });
   });
+  const snowed = new Set();
   const hosts = [hero, ...document.querySelectorAll('.band')];
   function stringLights() {
     const slant = innerWidth * 0.035;
@@ -1887,6 +1934,32 @@ function startChristmas() {
         bulb.setAttribute('ry', '5.4');
         bulb.setAttribute('fill', color);
         group.append(halo, bulb);
+      }
+      // Snow settles along each band's top edge, with icicles hanging from it.
+      if (host !== hero) {
+        const edge = (x) => yAt(x) - 3;
+        let snow = `M0 ${(edge(0) - 1).toFixed(1)} L${w} ${(edge(w) - 1).toFixed(1)}`;
+        for (let x = w; x >= 0; x -= 18) {
+          const lump = 5 + Math.abs(Math.sin(x * 0.07)) * 4 + Math.abs(Math.sin(x * 0.019)) * 3;
+          snow += ` Q${(x - 9).toFixed(1)} ${(edge(x - 9) + lump + 3).toFixed(1)} ${Math.max(0, x - 18).toFixed(1)} ${(edge(x - 18) + lump * 0.7).toFixed(1)}`;
+        }
+        const drift = document.createElementNS(NS, 'path');
+        drift.setAttribute('class', 'snow');
+        drift.setAttribute('d', `${snow} Z`);
+        svg.insertBefore(drift, rope);
+        const ice = document.createElementNS(NS, 'g');
+        ice.setAttribute('class', 'icicles');
+        for (let x = 14 + (w % 23); x < w - 8; x += 26 + ((x * 7) % 19)) {
+          const long = 7 + ((x * 13) % 17);
+          const y0 = edge(x) + 6;
+          const icicle = document.createElementNS(NS, 'path');
+          icicle.setAttribute('class', 'icicle');
+          icicle.setAttribute('d', `M${(x - 2.6).toFixed(1)} ${y0.toFixed(1)} L${x.toFixed(1)} ${(y0 + long).toFixed(1)} L${(x + 2.6).toFixed(1)} ${y0.toFixed(1)} Z`);
+          icicle.style.setProperty('--d', `${((x / w) * 0.9).toFixed(2)}s`);
+          ice.append(icicle);
+        }
+        svg.insertBefore(ice, rope);
+        if (snowed.has(host)) svg.classList.add('is-snowy');
       }
       lightsWatcher.observe(svg);
     });
@@ -1959,6 +2032,7 @@ const admin = document.documentElement.classList.contains('is-admin');
 // The present hunt and the HO HO HO sleigh are set aside for now: add ?eggs to see them.
 const eggs = /[?&]eggs(?:=1)?(?:&|$)/.test(location.search);
 if (xmas && eggs && !admin) startXmasEggs();
+if (xmas && !admin) startXmasExtras();
 if (admin) startAdmin();
 
 /* ---------- The medal: a 3D FORGED medal in the finish, loaded only when it's near ---------- */
@@ -3019,4 +3093,171 @@ function startAdmin() {
   });
   if (pass) unlock(pass);
   else $('admin-pass').focus();
+}
+
+/* ---------- Christmas extras: a welcome card, days to Christmas, and Santa peeking in ---------- */
+function startXmasExtras() {
+  const WA = 'https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ?mode=gi_t';
+  const afterIntro = (fn) => (function wait() {
+    if (document.getElementById('ice')) setTimeout(wait, 300);
+    else fn();
+  })();
+  const busy = () => document.hidden || document.documentElement.classList.contains('has-lightbox') || document.querySelector('dialog[open]');
+
+  /* A little burst of stars and snow, for Santa's present. */
+  function burst(x, y) {
+    if (reducedMotion) return;
+    const tones = ['#F5C452', '#D62839', '#FFFFFF', '#4ADE80', '#60A5FA'];
+    for (let i = 0; i < 22; i++) {
+      const bit = document.createElement('i');
+      bit.className = 'xmas-bit';
+      bit.style.cssText = `left:${x}px;top:${y}px;background:${tones[i % tones.length]}`;
+      document.body.append(bit);
+      const angle = (i / 22) * Math.PI * 2 + Math.random() * 0.4;
+      const reach = 40 + Math.random() * 70;
+      bit.animate([
+        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${Math.cos(angle) * reach}px), calc(-50% + ${Math.sin(angle) * reach + 30}px)) rotate(${Math.random() * 400}deg) scale(.6)`, opacity: 0 },
+      ], { duration: 900 + Math.random() * 500, easing: 'cubic-bezier(.2,.7,.3,1)' }).finished.then(() => bit.remove());
+    }
+  }
+
+  /* 1. Welcome card: once per visit, after the snow globe. */
+  let seen = false;
+  try { seen = sessionStorage.getItem('forged-welcome') === '1'; } catch (e) { /* show it */ }
+  if (!seen) afterIntro(() => setTimeout(() => {
+    try { sessionStorage.setItem('forged-welcome', '1'); } catch (e) { /* fine */ }
+    const card = document.createElement('aside');
+    card.className = 'welcome';
+    card.setAttribute('aria-label', 'Merry Christmas from FORGED');
+    card.innerHTML = `<img class="welcome__logo" src="assets/xmas-logo-178.webp" alt="" width="178" height="224">
+      <div class="welcome__body">
+        <p class="welcome__title">Merry Christmas from FORGED <span aria-hidden="true">🎄</span></p>
+        <p class="welcome__text">Jingle All The Way is coming in December.</p>
+        <a class="welcome__btn" href="${WA}" target="_blank" rel="noopener">Hear it first</a>
+      </div>
+      <button class="welcome__close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <i class="welcome__timer" aria-hidden="true"></i>`;
+    document.body.append(card);
+    const timer = card.querySelector('.welcome__timer');
+    const life = timer.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 9000, fill: 'forwards' });
+    let gone = false;
+    const close = () => {
+      if (gone) return;
+      gone = true;
+      card.classList.add('is-leaving');
+      setTimeout(() => card.remove(), 450);
+    };
+    life.finished.then(close);
+    // Hovering or focusing holds it open.
+    ['pointerenter', 'focusin'].forEach((type) => card.addEventListener(type, () => life.pause()));
+    ['pointerleave', 'focusout'].forEach((type) => card.addEventListener(type, () => { if (!gone) life.play(); }));
+    card.querySelector('.welcome__close').addEventListener('click', close);
+    card.querySelector('.welcome__btn').addEventListener('click', () => setTimeout(close, 300));
+    requestAnimationFrame(() => card.classList.add('is-in'));
+  }, 1100));
+
+  /* 2. Days to Christmas, on the next run's card, flipping like a desk calendar. */
+  const jingle = document.getElementById('jingle-all-the-way');
+  if (jingle) {
+    const today = new Date();
+    const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const days = Math.round((new Date(today.getFullYear(), 11, 25) - midnight) / 86400000);
+    if (days >= 0) {
+      const tag = document.createElement('p');
+      tag.className = 'xmas-days';
+      if (days === 0) {
+        tag.innerHTML = '<span aria-hidden="true">🎄</span> Merry Christmas!';
+      } else {
+        tag.innerHTML = `<span aria-hidden="true">🎄</span> <span class="xmas-days__page"><b>${days}</b></span> ${days === 1 ? 'day' : 'days'} to Christmas`;
+        tag.setAttribute('aria-label', `${days} ${days === 1 ? 'day' : 'days'} to Christmas`);
+      }
+      jingle.querySelector('.date__kicker').before(tag);
+      const page = tag.querySelector('.xmas-days__page b');
+      if (page && !reducedMotion) {
+        // Yesterday's page is showing; when the card comes into view, it flips over to today.
+        page.textContent = String(days + 1);
+        new IntersectionObserver((entries, watcher) => {
+          if (!entries[0].isIntersecting) return;
+          watcher.disconnect();
+          setTimeout(() => {
+            page.animate([{ transform: 'rotateX(0)' }, { transform: 'rotateX(-90deg)' }], { duration: 260, easing: 'ease-in' }).finished.then(() => {
+              page.textContent = String(days);
+              page.animate([{ transform: 'rotateX(90deg)' }, { transform: 'rotateX(0)' }], { duration: 320, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+            });
+          }, 500);
+        }, { threshold: 0.6 }).observe(tag);
+      }
+    }
+  }
+
+  /* 3. Santa peeks in from the side of the screen now and then. Tap him for a present. */
+  if (reducedMotion) return;
+  const santa = document.createElement('button');
+  santa.type = 'button';
+  santa.className = 'santa-peek';
+  santa.setAttribute('aria-label', 'Santa is peeking in. Tap him for a present.');
+  santa.innerHTML = `<svg viewBox="0 0 130 150" aria-hidden="true">
+      <g class="santa-peek__arm"><path d="M34 112 L12 96" stroke="#D62839" stroke-width="13" stroke-linecap="round"/><circle cx="10" cy="93" r="10" fill="#FFFFFF"/><path d="M28 112 L40 104" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/></g>
+      <path d="M30 150 Q34 118 64 114 Q96 118 100 150 Z" fill="#D62839"/>
+      <path d="M58 114 L58 150 M70 114 L70 150" stroke="#FFFFFF" stroke-width="6"/>
+      <circle cx="64" cy="80" r="30" fill="#F6C7A8"/>
+      <path d="M33 84 Q30 112 46 126 Q56 140 64 141 Q72 140 82 126 Q98 112 95 84 Q88 104 64 104 Q40 104 33 84 Z" fill="#FFFFFF"/>
+      <ellipse cx="54" cy="76" rx="3.2" ry="4" fill="#2A1A14"/><ellipse cx="74" cy="76" rx="3.2" ry="4" fill="#2A1A14"/>
+      <circle cx="44" cy="88" r="6" fill="#F29A9A" opacity=".75"/><circle cx="84" cy="88" r="6" fill="#F29A9A" opacity=".75"/>
+      <path d="M48 98 Q56 92 64 97 Q72 92 80 98 Q72 104 64 100 Q56 104 48 98 Z" fill="#F4F1EE"/>
+      <circle cx="64" cy="90" r="6" fill="#E8836F"/>
+      <path d="M30 58 Q44 6 104 14 Q86 26 98 60 Z" fill="#D62839"/>
+      <circle cx="106" cy="15" r="10" fill="#FFFFFF"/>
+      <rect x="26" y="52" width="78" height="15" rx="7.5" fill="#FFFFFF"/>
+    </svg>
+    <span class="santa-peek__ho" aria-hidden="true">Ho ho ho!</span>`;
+  document.body.append(santa);
+  let shows = 0;
+  let side = 'right';
+  let out = false;
+  let gave = false;
+  function peek() {
+    if (shows >= 8) return;
+    if (busy()) { setTimeout(peek, 8000); return; }
+    shows += 1;
+    side = side === 'right' ? 'left' : 'right';
+    gave = false;
+    santa.classList.toggle('is-left', side === 'left');
+    santa.style.top = `${Math.round(innerHeight * (0.28 + Math.random() * 0.38))}px`;
+    santa.classList.add('is-out');
+    out = true;
+    setTimeout(() => santa.classList.add('is-waving'), 650);
+    setTimeout(hide, 4600);
+  }
+  function hide() {
+    santa.classList.remove('is-out', 'is-waving', 'is-ho');
+    out = false;
+    setTimeout(peek, 30000 + Math.random() * 25000);
+  }
+  santa.addEventListener('click', () => {
+    if (!out || gave) return;
+    gave = true;
+    santa.classList.add('is-ho');
+    // He tosses a present, which bursts into confetti where it lands.
+    const box = santa.getBoundingClientRect();
+    const fromX = side === 'right' ? box.left + 10 : box.right - 10;
+    const fromY = box.top + box.height * 0.6;
+    const gift = document.createElement('i');
+    gift.className = 'santa-gift';
+    gift.style.cssText = `left:${fromX}px;top:${fromY}px`;
+    gift.innerHTML = '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="19" width="28" height="18" rx="1.5" fill="#1E8A4C"/><rect x="18" y="19" width="4" height="18" fill="#F5C452"/><rect x="4" y="12" width="32" height="8" rx="1.5" fill="#1E8A4C"/><rect x="18" y="12" width="4" height="8" fill="#F5C452"/><path d="M20 12c-3-7-11-8-11-3 0 3 6 4 11 3zm0 0c3-7 11-8 11-3 0 3-6 4-11 3z" fill="#F5C452"/></svg>';
+    document.body.append(gift);
+    const dx = (side === 'right' ? -1 : 1) * (70 + Math.random() * 60);
+    gift.animate([
+      { transform: 'translate(-50%, -50%) rotate(0deg) scale(.7)' },
+      { transform: `translate(calc(-50% + ${dx * 0.5}px), calc(-50% - 60px)) rotate(${dx * 1.5}deg) scale(1)`, offset: 0.4, easing: 'cubic-bezier(.4,0,1,1)' },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + 40px)) rotate(${dx * 3}deg) scale(1)` },
+    ], { duration: 800, easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'forwards' }).finished.then(() => {
+      const at = gift.getBoundingClientRect();
+      gift.remove();
+      burst(at.left + at.width / 2, at.top + at.height / 2);
+    });
+  });
+  afterIntro(() => setTimeout(peek, 12000));
 }
