@@ -3261,3 +3261,21 @@ function startXmasExtras() {
   });
   afterIntro(() => setTimeout(peek, 12000));
 }
+
+
+/* ---------- Save the dates: how long to go on each ticket, and a landing when they show ---------- */
+(function startTickets() {
+  const tickets = document.querySelector('.tickets');
+  if (!tickets) return;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  tickets.querySelectorAll('[data-days-to]').forEach((when) => {
+    const days = Math.round((new Date(`${when.dataset.daysTo}T00:00:00`) - today) / 86400000);
+    when.textContent = days > 1 ? `In ${days} days` : days === 1 ? 'Tomorrow!' : days === 0 ? 'Today!' : 'Done';
+  });
+  new IntersectionObserver((entries, watcher) => {
+    if (!entries[0].isIntersecting) return;
+    watcher.disconnect();
+    tickets.classList.add('is-in');
+  }, { threshold: 0.35 }).observe(tickets);
+})();

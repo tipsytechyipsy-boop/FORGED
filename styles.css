@@ -2319,10 +2319,63 @@ html.has-lightbox { overflow: hidden; }
 
 /* Save the dates: two big dates side by side */
 .date--save .date__kicker { color: #FFF0B3; }
-.save-dates { display: flex; flex-wrap: wrap; gap: 8px clamp(20px, 4vw, 56px); margin-bottom: 18px; }
-.save-dates__day { display: flex; align-items: flex-end; gap: 12px; margin: 0; }
-.save-dates__day b { font: 900 clamp(5.5rem, 13vw, 10rem)/.8 var(--display); font-variation-settings: "wdth" 115; letter-spacing: -.02em; }
-.save-dates__day span { padding-bottom: .4em; font: 800 clamp(1rem, .8rem + 1vw, 1.6rem)/1.05 var(--display); text-transform: uppercase; color: #FFF0B3; }
+/* Two event tickets, one per run */
+.tickets { position: relative; margin: 6px 0 52px; }
+.tickets__row { display: flex; align-items: center; gap: 6px; }
+.ticket {
+  --t-ink: #8E1217; --t-paper: #FFF4EC; --tilt: -2.5deg;
+  position: relative; flex: 1 1 0; min-width: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) 44px;
+  background: var(--t-paper); color: var(--t-ink);
+  transform: rotate(var(--tilt));
+  box-shadow: 6px 7px 0 rgb(20 10 8 / .55);
+  /* the notches where the stub tears off */
+  -webkit-mask: radial-gradient(circle 9px at calc(100% - 44px) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+                radial-gradient(circle 9px at calc(100% - 44px) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+          mask: radial-gradient(circle 9px at calc(100% - 44px) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+                radial-gradient(circle 9px at calc(100% - 44px) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+  transition: transform .35s cubic-bezier(.3,1.4,.5,1);
+}
+.ticket--2 { --t-ink: #FFF4EC; --t-paper: #C91F18; --tilt: 2.5deg; }
+.ticket:hover { transform: rotate(0deg) translateY(-4px); }
+.ticket__main { padding: 16px 12px 18px 18px; }
+.ticket__run { margin: 0 0 4px; font: 700 .6875rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; opacity: .75; }
+.ticket__date { display: grid; gap: 6px; margin: 0; }
+.ticket__date b { font: 900 clamp(4.5rem, 7.5vw, 6.75rem)/.8 var(--display); font-variation-settings: "wdth" 115; letter-spacing: -.03em; }
+.ticket__date span { font: 800 .8125rem/1.1 var(--display); text-transform: uppercase; letter-spacing: .04em; }
+.ticket__place { margin: 10px 0 0; font: 900 clamp(1.1rem, .8rem + 1vw, 1.6rem)/1 var(--display); text-transform: uppercase; white-space: nowrap; }
+.ticket__place::before { content: ""; display: inline-block; width: .55em; height: .55em; margin-right: .3em; border-radius: 50% 50% 50% 0; background: currentColor; vertical-align: .08em; transform: rotate(-45deg); }
+.ticket__when { margin: 10px 0 0; font: 700 .75rem/1 var(--mono); }
+.ticket__when:empty { display: none; }
+.ticket__stub {
+  display: grid; place-items: center;
+  border-left: 2px dashed currentColor;
+  opacity: .9;
+}
+.ticket__stub span { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 .6875rem/1 var(--mono); letter-spacing: .14em; white-space: nowrap; }
+.tickets__gap { flex: none; display: grid; justify-items: center; gap: 4px; margin: 0; width: 58px; text-align: center; font: 700 .625rem/1.15 var(--mono); text-transform: uppercase; color: #FFF0B3; }
+.tickets__gap i { width: 2px; height: 18px; background: repeating-linear-gradient(#FFF0B3 0 4px, transparent 4px 8px); }
+.tickets__stamp {
+  position: absolute; left: 50%; top: calc(100% - 4px); z-index: 2;
+  margin: 0; padding: 6px 14px;
+  border: 3px solid #F5C452; color: #F5C452; background: rgb(74 12 16 / .55);
+  font: 900 clamp(1rem, .8rem + 1vw, 1.5rem)/1 var(--display); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
+  transform: translateX(-50%) rotate(-5deg);
+  pointer-events: none;
+}
+/* They land when the card comes into view */
+.has-motion .tickets:not(.is-in) .ticket { opacity: 0; transform: translateY(-50px) rotate(calc(var(--tilt) * 4)); }
+.has-motion .tickets .ticket { transition: transform .7s cubic-bezier(.3,1.5,.5,1), opacity .3s; }
+.has-motion .tickets .ticket--2 { transition-delay: .15s; }
+.has-motion .tickets:not(.is-in) .tickets__gap { opacity: 0; }
+.has-motion .tickets .tickets__gap { transition: opacity .4s .5s; }
+.has-motion .tickets:not(.is-in) .tickets__stamp { opacity: 0; transform: translateX(-50%) rotate(-5deg) scale(2.4); }
+.has-motion .tickets .tickets__stamp { transition: transform .35s cubic-bezier(.5,0,.6,1.6) .85s, opacity .15s .85s; }
+@media (max-width: 599.98px) {
+  .tickets__row { flex-direction: column; align-items: stretch; gap: 4px; }
+  .tickets__gap { width: auto; grid-auto-flow: column; align-items: center; justify-content: center; gap: 8px; }
+  .tickets__gap i { width: 18px; height: 2px; background: repeating-linear-gradient(90deg, #FFF0B3 0 4px, transparent 4px 8px); }
+}
 /* The teaser reel takes the poster's place beside the dates */
 .date--split > .reel { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
 @media (max-width: 860px) { .date--split > .reel { grid-column: auto; grid-row: auto; margin-top: 16px; } }
