@@ -2327,17 +2327,48 @@ html.has-lightbox { overflow: hidden; }
   position: relative; flex: 1 1 0; min-width: 0;
   display: grid; grid-template-columns: minmax(0, 1fr) 44px;
   background: var(--t-paper); color: var(--t-ink);
-  transform: rotate(var(--tilt));
+  transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) rotate(var(--tilt));
   box-shadow: 6px 7px 0 rgb(20 10 8 / .55);
   /* the notches where the stub tears off */
-  -webkit-mask: radial-gradient(circle 9px at calc(100% - 44px) 0, #0000 98%, #000) top / 100% 51% no-repeat,
-                radial-gradient(circle 9px at calc(100% - 44px) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
-          mask: radial-gradient(circle 9px at calc(100% - 44px) 0, #0000 98%, #000) top / 100% 51% no-repeat,
-                radial-gradient(circle 9px at calc(100% - 44px) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+  -webkit-mask: radial-gradient(circle 9px at calc(100% - var(--cut, 44px)) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+                radial-gradient(circle 9px at calc(100% - var(--cut, 44px)) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+          mask: radial-gradient(circle 9px at calc(100% - var(--cut, 44px)) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+                radial-gradient(circle 9px at calc(100% - var(--cut, 44px)) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
   transition: transform .35s cubic-bezier(.3,1.4,.5,1);
 }
 .ticket--2 { --t-ink: #FFF4EC; --t-paper: #C91F18; --tilt: 2.5deg; }
-.ticket:hover { transform: rotate(0deg) translateY(-4px); }
+.ticket:hover, .ticket.is-tilting { --tilt: 0deg; }
+.ticket.is-tilting { transition: transform .08s linear; }
+/* Rainbow foil that catches the light as the ticket tilts */
+.ticket::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(115deg, transparent 25%, rgb(255 80 200 / .55) 38%, rgb(80 230 255 / .55) 48%, rgb(255 240 90 / .55) 58%, transparent 72%);
+  background-size: 260% 260%;
+  background-position: var(--fx, 100%) var(--fy, 50%);
+  mix-blend-mode: overlay;
+  opacity: var(--foil, 0);
+  transition: opacity .3s;
+}
+.ticket.is-tilting { --foil: 1; }
+/* On cream paper the foil shows best multiplied; on red it glows on top */
+.ticket--1::after { mix-blend-mode: multiply; background-image: linear-gradient(115deg, transparent 25%, rgb(255 110 210 / .5) 38%, rgb(90 220 255 / .5) 48%, rgb(255 225 70 / .5) 58%, transparent 72%); }
+.ticket--2::after { mix-blend-mode: screen; }
+@media (hover: none) {
+  .tickets.is-in .ticket::after { animation: ticket-foil 5s ease-in-out 1.6s infinite; }
+  .tickets.is-in .ticket--2::after { animation-delay: 2.4s; }
+}
+@keyframes ticket-foil { 0%, 55% { opacity: 0; background-position: 100% 50%; } 70% { opacity: .9; } 100% { opacity: 0; background-position: 0% 50%; } }
+.ticket:hover .ticket__stub { animation: stub-wiggle .5s ease-in-out; }
+@keyframes stub-wiggle { 30% { rotate: 3deg; } 60% { rotate: -2deg; } }
+/* Torn: the stub has gone, leaving a ragged edge */
+.ticket.is-torn { grid-template-columns: minmax(0, 1fr) 0; --cut: -20px; }
+.ticket.is-torn .ticket__stub { visibility: hidden; }
+.ticket.is-torn .ticket__main { -webkit-mask: linear-gradient(#000, #000) left / calc(100% - 6px) 100% no-repeat, conic-gradient(from -45deg at right, #0000 90deg, #000 0) right / 6px 10px repeat-y; mask: linear-gradient(#000, #000) left / calc(100% - 6px) 100% no-repeat, conic-gradient(from -45deg at right, #0000 90deg, #000 0) right / 6px 10px repeat-y; }
+.ticket-stub-fly { position: fixed; z-index: 70; display: grid; place-items: center; pointer-events: none; box-shadow: 4px 6px 12px rgb(0 0 0 / .35);
+  -webkit-mask: conic-gradient(from 45deg at left, #0000 90deg, #000 0) left / 6px 10px repeat-y, linear-gradient(#000, #000) right / calc(100% - 6px) 100% no-repeat;
+          mask: conic-gradient(from 45deg at left, #0000 90deg, #000 0) left / 6px 10px repeat-y, linear-gradient(#000, #000) right / calc(100% - 6px) 100% no-repeat; }
+.ticket-bit { position: fixed; z-index: 71; width: 6px; height: 4px; pointer-events: none; box-shadow: 0 0 0 1px rgb(0 0 0 / .15); }
+.ticket-stub-fly span { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 .6875rem/1 var(--mono); letter-spacing: .14em; white-space: nowrap; }
 .ticket__main { padding: 16px 12px 18px 18px; }
 .ticket__run { margin: 0 0 4px; font: 700 .6875rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; opacity: .75; }
 .ticket__date { display: grid; gap: 6px; margin: 0; }
@@ -2349,9 +2380,12 @@ html.has-lightbox { overflow: hidden; }
 .ticket__when:empty { display: none; }
 .ticket__stub {
   display: grid; place-items: center;
-  border-left: 2px dashed currentColor;
+  padding: 0; border: 0; border-left: 2px dashed currentColor;
+  background: none; color: inherit; cursor: pointer;
   opacity: .9;
 }
+.ticket__stub:hover { opacity: 1; }
+.ticket__stub:focus-visible { outline: 3px solid #F5C452; outline-offset: -3px; }
 .ticket__stub span { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 .6875rem/1 var(--mono); letter-spacing: .14em; white-space: nowrap; }
 .tickets__gap { flex: none; display: grid; justify-items: center; gap: 4px; margin: 0; width: 58px; text-align: center; font: 700 .625rem/1.15 var(--mono); text-transform: uppercase; color: #FFF0B3; }
 .tickets__gap i { width: 2px; height: 18px; background: repeating-linear-gradient(#FFF0B3 0 4px, transparent 4px 8px); }
@@ -2482,3 +2516,4 @@ html.has-lightbox { overflow: hidden; }
   .route__twinkle { opacity: .8; }
   .welcome { transition: opacity .2s; transform: none; }
 }
+

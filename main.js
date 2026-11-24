@@ -3278,4 +3278,105 @@ function startXmasExtras() {
     watcher.disconnect();
     tickets.classList.add('is-in');
   }, { threshold: 0.35 }).observe(tickets);
+
+  const cards = [...tickets.querySelectorAll('.ticket')];
+  const tilt = (card, x, y) => {
+    // x and y run 0 to 1 across the ticket.
+    card.classList.add('is-tilting');
+    card.style.setProperty('--rx', `${((0.5 - y) * 16).toFixed(1)}deg`);
+    card.style.setProperty('--ry', `${((x - 0.5) * 20).toFixed(1)}deg`);
+    card.style.setProperty('--fx', `${(x * 100).toFixed(0)}%`);
+    card.style.setProperty('--fy', `${(y * 100).toFixed(0)}%`);
+  };
+  const settle = (card) => {
+    card.classList.remove('is-tilting');
+    ['--rx', '--ry', '--fx', '--fy'].forEach((name) => card.style.removeProperty(name));
+  };
+  if (!reducedMotion) {
+    // A mouse tilts the ticket under it, like holding it up to the light.
+    cards.forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        if (event.pointerType !== 'mouse') return;
+        const box = card.getBoundingClientRect();
+        tilt(card, (event.clientX - box.left) / box.width, (event.clientY - box.top) / box.height);
+      });
+      card.addEventListener('pointerleave', () => settle(card));
+    });
+    // Phones that share their tilt without asking (Android) tilt both tickets.
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function' && matchMedia('(hover: none)').matches) {
+      let visible = false;
+      let queued = false;
+      let last = null;
+      new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+        if (!visible) cards.forEach(settle);
+      }).observe(tickets);
+      addEventListener('deviceorientation', (event) => {
+        if (!visible || event.gamma === null) return;
+        last = event;
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => {
+          queued = false;
+          const x = Math.max(0, Math.min(1, 0.5 + last.gamma / 50));
+          const y = Math.max(0, Math.min(1, 0.5 + (last.beta - 45) / 50));
+          cards.forEach((card) => tilt(card, x, y));
+        });
+      });
+    }
+  }
+
+  // Tear off the stub: it flutters away, and the date goes into your calendar.
+  const apple = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+  const tornKey = (card) => `forged-torn-${card.dataset.date}`;
+  cards.forEach((card) => {
+    const stub = card.querySelector('.ticket__stub');
+    const when = card.querySelector('.ticket__when');
+    let torn = false;
+    try { torn = localStorage.getItem(tornKey(card)) === '1'; } catch (e) { /* fine */ }
+    const mark = () => {
+      card.classList.add('is-torn');
+      if (when && !when.dataset.saved) {
+        when.dataset.saved = '1';
+        when.textContent = `\u2713 In your calendar \u00B7 ${when.textContent}`;
+      }
+    };
+    if (torn) mark();
+    stub.addEventListener('click', () => {
+      // Apple devices take the calendar file; everyone else gets Google Calendar.
+      if (apple) location.href = card.dataset.ics;
+      else window.open(card.dataset.gcal, '_blank', 'noopener');
+      try { localStorage.setItem(tornKey(card), '1'); } catch (e) { /* fine */ }
+      if (!reducedMotion) {
+        const box = stub.getBoundingClientRect();
+        const fly = document.createElement('div');
+        fly.className = 'ticket-stub-fly';
+        fly.innerHTML = stub.innerHTML;
+        fly.style.cssText = `transform-origin:0 0;left:${box.left}px;top:${box.top}px;width:${box.width}px;height:${box.height}px;background:${getComputedStyle(card).backgroundColor};color:${getComputedStyle(card).color}`;
+        document.body.append(fly);
+        // A tug, a rip from the top down, then it tumbles away.
+        card.animate([{ transform: getComputedStyle(card).transform }, { transform: `${getComputedStyle(card).transform} translateX(-5px)` }, { transform: getComputedStyle(card).transform }], { duration: 220, easing: 'ease-out' });
+        fly.animate([
+          { transform: 'none', opacity: 1 },
+          { transform: 'translate(3px, 0) rotate(4deg)', opacity: 1, offset: 0.12 },
+          { transform: 'translate(14px, 6px) rotate(22deg)', opacity: 1, offset: 0.3 },
+          { transform: `translate(${70 + Math.random() * 50}px, ${innerHeight * 0.35}px) rotate(${200 + Math.random() * 160}deg) scale(.9)`, opacity: 1, offset: 0.8 },
+          { transform: `translate(${90 + Math.random() * 50}px, ${innerHeight * 0.5}px) rotate(${300 + Math.random() * 160}deg) scale(.85)`, opacity: 0 },
+        ], { duration: 1300, easing: 'cubic-bezier(.3,0,.7,1)' }).finished.then(() => fly.remove());
+        // Paper bits spray from the tear line.
+        for (let i = 0; i < 12; i++) {
+          const bit = document.createElement('i');
+          bit.className = 'ticket-bit';
+          bit.style.cssText = `left:${box.left}px;top:${box.top + Math.random() * box.height}px;background:${getComputedStyle(card).backgroundColor}`;
+          document.body.append(bit);
+          bit.animate([
+            { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1 },
+            { transform: `translate(${(Math.random() - 0.3) * 60}px, ${30 + Math.random() * 90}px) rotate(${Math.random() * 540}deg)`, opacity: 0 },
+          ], { duration: 700 + Math.random() * 500, easing: 'cubic-bezier(.2,.6,.4,1)' }).finished.then(() => bit.remove());
+        }
+      }
+      mark();
+    });
+  });
 })();
+

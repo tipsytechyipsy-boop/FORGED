@@ -1,0 +1,16 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//FORGED Run Club Goa//theforged.in//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:forged-2026-12-20-saligao@theforged.in
+DTSTAMP:20261125T000000Z
+DTSTART;VALUE=DATE:20261220
+DTEND;VALUE=DATE:20261221
+SUMMARY:FORGED run · Saligao
+LOCATION:Saligao\, Goa
+DESCRIPTION:Save the date: a FORGED run in Saligao. Time and meeting point land in the WhatsApp group first: https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ
+URL:https://theforged.in/
+END:VEVENT
+END:VCALENDAR
