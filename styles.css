@@ -2317,9 +2317,15 @@ html.has-lightbox { overflow: hidden; }
 }
 
 
-/* Jingle All The Way: the Christmas teaser card */
-.date--jingle .date__kicker { color: #FFF0B3; }
-.date--jingle .date__motto em { color: #FFF0B3; }
+/* Save the dates: two big dates side by side */
+.date--save .date__kicker { color: #FFF0B3; }
+.save-dates { display: flex; flex-wrap: wrap; gap: 8px clamp(20px, 4vw, 56px); margin-bottom: 18px; }
+.save-dates__day { display: flex; align-items: flex-end; gap: 12px; margin: 0; }
+.save-dates__day b { font: 900 clamp(5.5rem, 13vw, 10rem)/.8 var(--display); font-variation-settings: "wdth" 115; letter-spacing: -.02em; }
+.save-dates__day span { padding-bottom: .4em; font: 800 clamp(1rem, .8rem + 1vw, 1.6rem)/1.05 var(--display); text-transform: uppercase; color: #FFF0B3; }
+/* The teaser reel takes the poster's place beside the dates */
+.date--split > .reel { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
+@media (max-width: 860px) { .date--split > .reel { grid-column: auto; grid-row: auto; margin-top: 16px; } }
 .date__cta { margin-top: 18px; }
 /* A run without its reel yet: the poster, taped into the log */
 .snap { position: relative; width: 100%; max-width: 360px; margin: 0; justify-self: center; transform: rotate(1.6deg); transition: transform .3s ease-out; }

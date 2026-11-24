@@ -3133,7 +3133,7 @@ function startXmasExtras() {
     card.innerHTML = `<img class="welcome__logo" src="assets/xmas-logo-178.webp" alt="" width="178" height="224">
       <div class="welcome__body">
         <p class="welcome__title">Merry Christmas from FORGED <span aria-hidden="true">🎄</span></p>
-        <p class="welcome__text">Jingle All The Way is coming in December.</p>
+        <p class="welcome__text">Save the dates: 20 Dec in Saligao, 28 Dec in Panjim.</p>
         <a class="welcome__btn" href="${WA}" target="_blank" rel="noopener">Hear it first</a>
       </div>
       <button class="welcome__close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3158,7 +3158,7 @@ function startXmasExtras() {
   }, 1100));
 
   /* 2. Days to Christmas, on the next run's card, flipping like a desk calendar. */
-  const jingle = document.getElementById('jingle-all-the-way');
+  const jingle = document.getElementById('save-the-dates');
   if (jingle) {
     const today = new Date();
     const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
