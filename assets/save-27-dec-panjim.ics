@@ -4,10 +4,10 @@ PRODID:-//FORGED Run Club Goa//theforged.in//EN
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VEVENT
-UID:forged-2026-12-28-panjim@theforged.in
+UID:forged-2026-12-27-panjim@theforged.in
 DTSTAMP:20261125T000000Z
-DTSTART;VALUE=DATE:20261228
-DTEND;VALUE=DATE:20261229
+DTSTART;VALUE=DATE:20261227
+DTEND;VALUE=DATE:20261228
 SUMMARY:FORGED run · Panjim
 LOCATION:Panjim\, Goa
 DESCRIPTION:Save the date: a FORGED run in Panjim. Time and meeting point land in the WhatsApp group first: https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ
