@@ -3133,7 +3133,7 @@ function startXmasExtras() {
     card.innerHTML = `<img class="welcome__logo" src="assets/xmas-logo-178.webp" alt="" width="178" height="224">
       <div class="welcome__body">
         <p class="welcome__title">Merry Christmas from FORGED <span aria-hidden="true">🎄</span></p>
-        <p class="welcome__text">Save the dates: 20 Dec in Saligao, 27 Dec in Panjim.</p>
+        <p class="welcome__text">${document.documentElement.classList.contains('is-revealed') ? 'The Recovery Run with YOS: Sun 20 Dec, 6:30 AM, Saligao. Then save 27 Dec for Panjim.' : 'Our 20 Dec Saligao run drops today at 2 PM. Then 27 Dec in Panjim.'}</p>
         <a class="welcome__btn" href="${WA}" target="_blank" rel="noopener">Hear it first</a>
       </div>
       <button class="welcome__close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3380,3 +3380,80 @@ function startXmasExtras() {
   });
 })();
 
+
+/* ---------- The Recovery Run: a countdown until 2 PM on 28 Nov (India time), then the reveal ---------- */
+(function startRecoveryReveal() {
+  const card = document.getElementById('recovery-run');
+  if (!card) return;
+  const root = document.documentElement;
+  // ?reveal=soon previews the reveal: it happens 8 seconds after the page loads.
+  const preview = /[?&]reveal=soon(?:&|$)/.test(location.search);
+  const at = preview ? Date.now() + 8000 : Date.parse('2026-11-28T14:00:00+05:30');
+  if (preview) root.classList.remove('is-revealed');
+  const nextRun = document.getElementById('next-run');
+  const ticket = document.querySelector('.ticket--1');
+  const soonPop = document.querySelector('#route-soon .route__pop b');
+  const soonSmall = document.querySelector('#route-soon .route__pop small');
+  const finalLine = nextRun.textContent;
+
+  // Everything that says "Saligao, 20 Dec" picks up the real details once it's revealed.
+  function dressUp() {
+    nextRun.textContent = finalLine;
+    if (soonPop) soonPop.textContent = 'The Recovery Run';
+    if (soonSmall) soonSmall.textContent = '20 Dec, 6:30 AM, YOS Saligao';
+    if (ticket) {
+      ticket.querySelector('.ticket__run').textContent = 'The Recovery Run';
+      ticket.querySelector('.ticket__date span').textContent = 'Dec \u00B7 Sun \u00B7 6:30 AM';
+      ticket.dataset.ics = 'assets/recovery-run.ics';
+      ticket.dataset.gcal = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=The%20Recovery%20Run%20%C2%B7%20FORGED%20%C3%97%20YOS&dates=20261220T010000Z/20261220T040000Z&location=YOS%20Stays%20%26%20Atelier%2C%20Saligao%2C%20Goa&details=Come%20run%2C%20recharge%20and%20reconnect.%20Free%20to%20join%2C%20limited%20spots.%20Registrations%20in%20the%20FORGED%20WhatsApp%20group.';
+      ticket.querySelector('.ticket__stub').setAttribute('aria-label', 'Tear off the stub to save The Recovery Run, Sunday 20 December at 6:30 AM, to your calendar');
+    }
+  }
+  if (root.classList.contains('is-revealed')) {
+    dressUp();
+    return;
+  }
+  nextRun.textContent = 'Our 20 Dec Saligao run announcement drops today at 2 PM \u{1F440}';
+
+  const count = card.querySelector('[data-reveal-count]');
+  const pad = (n) => String(n).padStart(2, '0');
+  let timer = 0;
+  function tick() {
+    const left = Math.max(0, Math.ceil((at - Date.now()) / 1000));
+    count.textContent = `${pad(Math.floor(left / 3600))}:${pad(Math.floor(left / 60) % 60)}:${pad(left % 60)}`;
+    if (left === 0) {
+      clearInterval(timer);
+      reveal();
+    }
+  }
+  function burst() {
+    if (reducedMotion) return;
+    const box = card.getBoundingClientRect();
+    const tones = ['#F5C452', '#F7E9E1', '#FFFFFF', '#E8A87C', '#22C3E6'];
+    for (let i = 0; i < 60; i++) {
+      const bit = document.createElement('i');
+      bit.className = 'rec-bit';
+      const x = box.left + box.width * (0.2 + Math.random() * 0.6);
+      const y = Math.max(40, box.top + 60);
+      bit.style.cssText = `left:${x}px;top:${y}px;background:${tones[i % tones.length]}`;
+      document.body.append(bit);
+      bit.animate([
+        { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${(Math.random() - 0.5) * 300}px, ${-80 - Math.random() * 160}px) rotate(${Math.random() * 360}deg)`, opacity: 1, offset: 0.35 },
+        { transform: `translate(${(Math.random() - 0.5) * 420}px, ${200 + Math.random() * 300}px) rotate(${Math.random() * 900}deg)`, opacity: 0 },
+      ], { duration: 1600 + Math.random() * 900, easing: 'cubic-bezier(.2,.6,.4,1)' }).finished.then(() => bit.remove());
+    }
+  }
+  function reveal() {
+    card.classList.add('is-revealing');
+    setTimeout(() => {
+      card.classList.remove('is-revealing');
+      card.classList.add('just-revealed');
+      root.classList.add('is-revealed');
+      dressUp();
+      burst();
+    }, reducedMotion ? 0 : 1500);
+  }
+  tick();
+  timer = setInterval(tick, 1000);
+})();

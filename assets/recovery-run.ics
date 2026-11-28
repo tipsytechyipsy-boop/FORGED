@@ -1,0 +1,16 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//FORGED Run Club Goa//theforged.in//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:forged-2026-12-20-recovery-run@theforged.in
+DTSTAMP:20261128T000000Z
+DTSTART:20261220T010000Z
+DTEND:20261220T040000Z
+SUMMARY:The Recovery Run · FORGED × YOS
+LOCATION:YOS Stays & Atelier\, Saligao\, Goa
+DESCRIPTION:Come run\, recharge and reconnect. Mind & body reset\, 3K / 6K scenic run\, ice plunge\, recovery fuel and protein shots. Free to join\, limited spots. Registrations in the WhatsApp group: https://chat.whatsapp.com/GVBxCZZX6PT1FpaxrgBIuQ
+URL:https://theforged.in/
+END:VEVENT
+END:VCALENDAR
