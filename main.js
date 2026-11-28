@@ -3386,9 +3386,9 @@ function startXmasExtras() {
   const card = document.getElementById('recovery-run');
   if (!card) return;
   const root = document.documentElement;
-  // ?reveal=soon previews the reveal: it happens 8 seconds after the page loads.
+  // ?reveal=soon previews the reveal: it happens 22 seconds after the page loads.
   const preview = /[?&]reveal=soon(?:&|$)/.test(location.search);
-  const at = preview ? Date.now() + 8000 : Date.parse('2026-11-28T14:00:00+05:30');
+  const at = preview ? Date.now() + 22000 : Date.parse('2026-11-28T14:00:00+05:30');
   if (preview) root.classList.remove('is-revealed');
   const nextRun = document.getElementById('next-run');
   const ticket = document.querySelector('.ticket--1');
@@ -3420,39 +3420,94 @@ function startXmasExtras() {
   let timer = 0;
   function tick() {
     const left = Math.max(0, Math.ceil((at - Date.now()) / 1000));
-    count.textContent = `${pad(Math.floor(left / 3600))}:${pad(Math.floor(left / 60) % 60)}:${pad(left % 60)}`;
+    // The last ten seconds: the clock becomes one big number and the card starts to shake.
+    if (left <= 10 && left > 0) {
+      card.classList.add('is-final');
+      card.style.setProperty('--shake', `${((11 - left) * 0.35).toFixed(2)}px`);
+      count.textContent = String(left);
+      if (!reducedMotion) count.animate([{ transform: 'scale(1.6)', opacity: 0.4 }, { transform: 'scale(1)', opacity: 1 }], { duration: 450, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+    } else {
+      count.textContent = `${pad(Math.floor(left / 3600))}:${pad(Math.floor(left / 60) % 60)}:${pad(left % 60)}`;
+    }
     if (left === 0) {
       clearInterval(timer);
       reveal();
     }
   }
+  // Confetti cannons from both sides of the screen, plus a burst from the card.
   function burst() {
     if (reducedMotion) return;
     const box = card.getBoundingClientRect();
-    const tones = ['#F5C452', '#F7E9E1', '#FFFFFF', '#E8A87C', '#22C3E6'];
-    for (let i = 0; i < 60; i++) {
-      const bit = document.createElement('i');
-      bit.className = 'rec-bit';
-      const x = box.left + box.width * (0.2 + Math.random() * 0.6);
-      const y = Math.max(40, box.top + 60);
-      bit.style.cssText = `left:${x}px;top:${y}px;background:${tones[i % tones.length]}`;
-      document.body.append(bit);
-      bit.animate([
-        { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1 },
-        { transform: `translate(${(Math.random() - 0.5) * 300}px, ${-80 - Math.random() * 160}px) rotate(${Math.random() * 360}deg)`, opacity: 1, offset: 0.35 },
-        { transform: `translate(${(Math.random() - 0.5) * 420}px, ${200 + Math.random() * 300}px) rotate(${Math.random() * 900}deg)`, opacity: 0 },
-      ], { duration: 1600 + Math.random() * 900, easing: 'cubic-bezier(.2,.6,.4,1)' }).finished.then(() => bit.remove());
+    const tones = ['#F5C452', '#F7E9E1', '#FFFFFF', '#E8A87C', '#D62839', '#3FC52B'];
+    const shoot = (x, y, dirX, count) => {
+      for (let i = 0; i < count; i++) {
+        const bit = document.createElement('i');
+        bit.className = 'rec-bit';
+        if (i % 3 === 0) bit.style.borderRadius = '50%';
+        bit.style.cssText += `;left:${x}px;top:${y}px;background:${tones[i % tones.length]};width:${6 + Math.random() * 6}px;height:${4 + Math.random() * 8}px`;
+        document.body.append(bit);
+        const vx = dirX ? dirX * (180 + Math.random() * innerWidth * 0.45) : (Math.random() - 0.5) * 500;
+        const vy = -(innerHeight * (0.35 + Math.random() * 0.4));
+        bit.animate([
+          { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1 },
+          { transform: `translate(${vx * 0.7}px, ${vy}px) rotate(${Math.random() * 540}deg)`, opacity: 1, offset: 0.4 },
+          { transform: `translate(${vx}px, ${vy * 0.2 + innerHeight * 0.5}px) rotate(${Math.random() * 1080}deg)`, opacity: 0 },
+        ], { duration: 2200 + Math.random() * 1200, easing: 'cubic-bezier(.15,.6,.4,1)' }).finished.then(() => bit.remove());
+      }
+    };
+    shoot(10, innerHeight - 10, 1, 70);
+    shoot(innerWidth - 10, innerHeight - 10, -1, 70);
+    shoot(box.left + box.width / 2, Math.max(60, box.top + 80), 0, 50);
+  }
+  // The frosted poster shatters into pieces that fly out from the middle.
+  function shatter() {
+    const frost = card.querySelector('.recovery__frost');
+    const box = frost.getBoundingClientRect();
+    const src = frost.querySelector('img').currentSrc;
+    const cols = 4;
+    const rows = 5;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const shard = document.createElement('i');
+        shard.className = 'rec-shard';
+        const w = box.width / cols;
+        const h = box.height / rows;
+        shard.style.cssText = `left:${box.left + c * w}px;top:${box.top + r * h}px;width:${w + 1}px;height:${h + 1}px;background-image:url("${src}");background-size:${box.width}px ${box.height}px;background-position:${-c * w}px ${-r * h}px`;
+        document.body.append(shard);
+        const dx = (c - (cols - 1) / 2) * (60 + Math.random() * 90);
+        const dy = (r - (rows - 1) / 2) * (50 + Math.random() * 80) + 120;
+        shard.animate([
+          { transform: 'none', opacity: 1 },
+          { transform: `translate(${dx * 0.4}px, ${dy * 0.2 - 40}px) rotate(${(Math.random() - 0.5) * 40}deg)`, opacity: 1, offset: 0.25 },
+          { transform: `translate(${dx}px, ${dy + 260}px) rotate(${(Math.random() - 0.5) * 220}deg) scale(.7)`, opacity: 0 },
+        ], { duration: 1100 + Math.random() * 400, easing: 'cubic-bezier(.3,.1,.7,1)' }).finished.then(() => shard.remove());
+      }
     }
+    frost.style.visibility = 'hidden';
   }
   function reveal() {
-    card.classList.add('is-revealing');
-    setTimeout(() => {
-      card.classList.remove('is-revealing');
-      card.classList.add('just-revealed');
+    if (reducedMotion) {
       root.classList.add('is-revealed');
       dressUp();
-      burst();
-    }, reducedMotion ? 0 : 1500);
+      return;
+    }
+    card.classList.remove('is-final');
+    card.classList.add('is-revealing');
+    // The lock bursts off; then a flash, the glass breaks, and the card builds itself in.
+    setTimeout(() => {
+      const flash = document.createElement('i');
+      flash.className = 'rec-flash';
+      document.body.append(flash);
+      flash.animate([{ opacity: 0.95 }, { opacity: 0 }], { duration: 700, easing: 'ease-out' }).finished.then(() => flash.remove());
+      shatter();
+      setTimeout(() => {
+        card.classList.remove('is-revealing');
+        card.classList.add('just-revealed');
+        root.classList.add('is-revealed');
+        dressUp();
+        burst();
+      }, 380);
+    }, 900);
   }
   tick();
   timer = setInterval(tick, 1000);
