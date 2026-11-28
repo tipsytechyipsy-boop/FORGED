@@ -3427,7 +3427,18 @@ function startXmasExtras() {
       count.textContent = String(left);
       if (!reducedMotion) count.animate([{ transform: 'scale(1.6)', opacity: 0.4 }, { transform: 'scale(1)', opacity: 1 }], { duration: 450, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
     } else {
-      count.textContent = `${pad(Math.floor(left / 3600))}:${pad(Math.floor(left / 60) % 60)}:${pad(left % 60)}`;
+      // Three tiles: hours, minutes and seconds.
+      if (!count.querySelector('.rc-tile')) {
+        count.innerHTML = ['hrs', 'min', 'sec'].map((unit, i) => `${i ? '<span class="rc-colon">:</span>' : ''}<span class="rc-tile"><b>00</b><small>${unit}</small></span>`).join('');
+        count.setAttribute('aria-label', 'Time until the reveal');
+      }
+      const values = [Math.floor(left / 3600), Math.floor(left / 60) % 60, left % 60];
+      count.querySelectorAll('.rc-tile b').forEach((b, i) => {
+        const text = pad(values[i]);
+        if (b.textContent === text) return;
+        b.textContent = text;
+        if (!reducedMotion && i === 2) b.animate([{ transform: 'translateY(-30%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'ease-out' });
+      });
     }
     if (left === 0) {
       clearInterval(timer);
