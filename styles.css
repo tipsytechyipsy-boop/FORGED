@@ -2630,3 +2630,14 @@ html.has-lightbox { overflow: hidden; }
 .recovery__hints li { padding: 8px 12px; background: rgb(255 244 236 / .1); box-shadow: inset 0 0 0 1px rgb(255 244 236 / .2); font: 700 .8125rem/1 var(--mono); }
 .recovery.is-final .recovery__soon, .recovery.is-final .recovery__blurb, .recovery.is-final .recovery__hints { opacity: .35; transition: opacity .4s; }
 @media (prefers-reduced-motion: reduce) { .recovery__frost::before, .rc-colon { animation: none; } }
+
+/* When registrations open, with a countdown */
+.recovery__reg { display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; align-items: center; margin: 0 0 18px; padding: 12px 14px; background: #2E2A28; color: #F7E9E1; box-shadow: 5px 5px 0 #B08A7C; }
+.recovery__reg p { margin: 0 !important; }
+.recovery__reg-label { grid-column: 1 / -1; font: 700 .6875rem/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: #E8C3B3; }
+.recovery__reg-date { font: 900 clamp(1.25rem, 1rem + 1vw, 1.6rem)/1.1 var(--display); text-transform: uppercase; }
+.recovery__reg-count { justify-self: end; padding: 5px 9px; background: #F5C452; color: #2E2A28; font: 800 .75rem/1 var(--mono); white-space: nowrap; }
+.recovery__reg-count:empty { display: none; }
+.recovery__reg.is-open { background: #1E8A4C; box-shadow: 5px 5px 0 #2E2A28; }
+.recovery__reg.is-open .recovery__reg-count { grid-column: 1 / -1; justify-self: start; background: none; color: #F7E9E1; padding: 0; white-space: normal; }
+@media (max-width: 420px) { .recovery__reg-count { grid-column: 1 / -1; justify-self: start; margin-top: 6px !important; } }

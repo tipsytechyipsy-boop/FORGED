@@ -3523,3 +3523,28 @@ function startXmasExtras() {
   tick();
   timer = setInterval(tick, 1000);
 })();
+
+
+/* ---------- The Recovery Run: countdown to registrations opening (10 Dec, 12 PM, India time) ---------- */
+(function startRegCountdown() {
+  const out = document.querySelector('[data-reg-count]');
+  if (!out) return;
+  const opens = Date.parse('2026-12-10T12:00:00+05:30');
+  const box = out.closest('.recovery__reg');
+  function tick() {
+    const left = opens - Date.now();
+    if (left <= 0) {
+      box.classList.add('is-open');
+      box.querySelector('.recovery__reg-label').textContent = 'Registrations are open!';
+      out.textContent = 'Grab your spot in the WhatsApp group before they fill up.';
+      return;
+    }
+    const mins = Math.floor(left / 60000);
+    const d = Math.floor(mins / 1440);
+    const h = Math.floor(mins / 60) % 24;
+    const m = mins % 60;
+    out.textContent = d > 0 ? `In ${d} day${d === 1 ? '' : 's'}, ${h} hr${h === 1 ? '' : 's'}` : `In ${h} hr${h === 1 ? '' : 's'}, ${m} min`;
+    setTimeout(tick, 30000);
+  }
+  tick();
+})();
